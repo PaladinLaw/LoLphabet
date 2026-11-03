@@ -1,0 +1,24 @@
+# Copy to docker-compose.yml and edit. Your real docker-compose.yml is git-ignored.
+services:
+  lol-tracker:
+    image: node:20-alpine
+    container_name: lol-az-tracker
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server.js"]
+    environment:
+      - GOOGLE_CLIENT_ID=your-id.apps.googleusercontent.com
+      - DATA_FILE=/data/data.json
+      - PORT=3081
+      - CONTACT_EMAIL=you@example.com            # optional, shown on the privacy/terms pages
+      - COLLECTOR_DIR=/collector                 # where the collector's output is mounted (read-only)
+      - SITE_URL=https://your.domain             # used for canonical URLs and metadata
+    ports:
+      - "127.0.0.1:3081:3081"                    # bound to localhost: put a reverse proxy in front
+    volumes:
+      - ./app:/app:ro                            # index.html + server.js
+      - ./data:/data                             # accounts + progress (back this up)
+      - ./app/assets:/assets                     # images etc
+      # Read-only view of the collector's output (it holds current/ and archive/).
+      # Must be the same host folder the collector writes to.
+      - ${COLLECTOR_DATA_DIR:-../lol-meta-collector/data}:/collector:ro

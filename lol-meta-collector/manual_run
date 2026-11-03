@@ -1,0 +1,2 @@
+docker compose run --rm --entrypoint sh lol-meta-collector \
+  -c 'python -m lolmeta collect && date +%F > /app/data/scheduler-last-run.txt'

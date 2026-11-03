@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoLphabet | Free League of Legends A–Z Challenge Tracker</title>
+<meta name="description" content="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.">
+<meta name="keywords" content="League of Legends A-Z Challenge, League of Legends champion tracker, LoL champion checklist, League of Legends completion tracker, LoL completionist challenge, League of Legends champion collection, LoL role tracker, League of Legends statistics tracker">
+<meta name="author" content="PaladinLaw"><meta name="application-name" content="LoLphabet"><meta name="apple-mobile-web-app-title" content="LoLphabet">
+<!--ROBOTS-->
+<!--CANONICAL-->
+<!--JSONLD-->
+<meta property="og:type" content="website"><meta property="og:site_name" content="LoLphabet">
+<meta property="og:title" content="LoLphabet | Free League of Legends A–Z Challenge Tracker">
+<meta property="og:description" content="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.">
+<meta property="og:url" content="%SITE_URL%/"><meta property="og:image" content="%SITE_URL%/assets/og-image.png?v=2">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="LoLphabet, the League of Legends A–Z Challenge, by PaladinLaw">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="LoLphabet | Free League of Legends A–Z Challenge Tracker">
+<meta name="twitter:description" content="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds."><meta name="twitter:image" content="%SITE_URL%/assets/og-image.png?v=2">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0f1318" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.ico" sizes="any"><link id="fav" rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
+<link rel="preconnect" href="https://ddragon.leagueoflegends.com"><link rel="preconnect" href="https://ddragon.leagueoflegends.com" crossorigin>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--text:#1c1b18;--muted:#6f6b60;--line:#ddd7c8;--gold:#b8860b;--win:#2e7d4f;--winbg:#e3f3e8}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1318;--card:#171d25;--text:#e8e4d8;--muted:#8d9199;--line:#2a323d;--gold:#d4af37;--win:#5fcf8b;--winbg:#14301f}}
+:root[data-theme=dark]{--bg:#0f1318;--card:#171d25;--text:#e8e4d8;--muted:#8d9199;--line:#2a323d;--gold:#d4af37;--win:#5fcf8b;--winbg:#14301f}
+:root[data-theme=light]{--bg:#f4f1ea;--card:#fff;--text:#1c1b18;--muted:#6f6b60;--line:#ddd7c8;--gold:#b8860b;--win:#2e7d4f;--winbg:#e3f3e8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:960px;margin:0 auto;padding:24px 16px 60px}
+h1{margin:0 0 4px;font-size:26px;letter-spacing:.5px}
+h1 span{color:var(--gold)}
+.brand .bn{font-size:34px;font-weight:800;letter-spacing:.3px;line-height:1.1}.bn span{color:var(--gold)}
+.brand .tl{font-size:15px;font-weight:500;margin:3px 0 0;letter-spacing:0}
+.by{margin:2px 0 0;color:var(--muted);font-size:12px}
+.hr{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+:root{--ind:#4f46e5}@media(prefers-color-scheme:dark){:root{--ind:#818cf8}}:root[data-theme=dark]{--ind:#818cf8}:root[data-theme=light]{--ind:#4f46e5}
+.optbox{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:6px 0 10px}
+.opt{position:relative;display:block;width:100%;text-align:left;border:none;border-radius:0;background:transparent;padding:14px 16px;cursor:pointer;color:var(--text)}
+.opt+.opt{border-top:1px solid var(--line)}
+.opt:hover{background:rgba(212,175,55,.05)}
+.opt.sel{background:rgba(212,175,55,.09);box-shadow:inset 3px 0 0 var(--gold)}
+.opt b{display:block;font-size:15px}
+.opt p{margin:0;color:var(--muted);font-size:14px;font-weight:400}
+.opt .tick{position:absolute;top:14px;right:16px;color:var(--gold);font-size:13px;display:none}.opt.sel .tick{display:block}
+.bdg{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;margin:6px 0}
+.bdg.gr{color:var(--win);background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.3)}
+.bdg.i{color:var(--ind);background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.35)}
+#about{margin-top:8px;padding-top:0;color:var(--muted);font-size:14px;line-height:1.65}
+#about h1,#about h2{font-size:18px;font-weight:700;color:var(--text);margin:0 0 8px}#about h3{font-size:15px;color:var(--text);margin:18px 0 6px}
+#about dt{font-weight:600;color:var(--text)}#about dd{margin:0 0 6px}#about ul{padding-left:20px;margin:6px 0}
+.sub{color:var(--muted);margin:0 0 18px}
+.sub p{margin:0 0 10px}.sub b{color:var(--text)}
+.pri{background:var(--gold);color:#111;border-color:var(--gold);font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;z-index:10;padding:16px}
+.mc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:380px;width:100%;position:relative}
+.mc h2{margin:0 0 8px}.mc p{color:var(--muted);margin:0 0 16px}
+.mc .x{position:absolute;top:8px;right:8px;padding:2px 10px}
+#dp{white-space:pre-line}
+.nb{display:flex;gap:8px;align-items:flex-start;color:var(--muted)}
+.nb>span{padding-top:8px}
+.nbc{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.nb .un-b{font-size:12px;font-weight:400;padding:4px 10px;background:transparent;border-color:var(--line);color:var(--muted)}
+.nb .un-b:hover{color:var(--text);border-color:var(--muted)}
+.nb .un-c{border:none;background:none;padding:0 2px;font-size:inherit;color:var(--gold);text-decoration:underline;cursor:pointer}
+.un{color:var(--muted);font-style:italic}
+.opt.static{cursor:default}.opt.static:hover{background:rgba(212,175,55,.09)}
+.modes{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 14px;font-size:13px;color:var(--muted)}
+.modes button{padding:4px 10px;font-size:13px}
+.modes .on{border-color:var(--gold);color:var(--gold)}
+.c.locked{opacity:.5}
+.c.bn{position:relative;overflow:hidden;cursor:default}
+.c.bn:hover{border-color:var(--line)}
+.c.bn>*:not(.rib){opacity:.3}
+.c .rib{position:absolute;left:-5%;top:50%;width:110%;transform:translateY(-50%) rotate(-6deg);background:#d9534f;color:#fff;z-index:2;font:700 12px/1 system-ui,sans-serif;letter-spacing:.8px;text-transform:uppercase;text-align:center;padding:5px 0;box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none}
+.nt{display:block;color:var(--muted);font-style:italic;word-break:break-word}
+.nt a{color:var(--gold)}
+.mc.wide{max-width:560px}
+#cbar{position:fixed;left:12px;right:12px;bottom:12px;max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:13px;z-index:15;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+#cbar .cb{display:flex;gap:8px}#cbar button{padding:4px 12px;font-size:13px}
+.vis{color:var(--muted)}
+#home{cursor:pointer}#home:focus-visible{outline:2px solid var(--gold);outline-offset:4px;border-radius:4px}
+.note{background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:12px 16px;margin-bottom:14px}
+.note a{color:var(--gold)}
+details.howto{margin:0 0 6px;font-size:13px;color:var(--muted)}
+details.howto summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;user-select:none}
+details.howto summary::-webkit-details-marker{display:none}
+details.howto summary::after{content:"▸";font-size:11px}
+details.howto[open] summary::after{content:"▾"}
+details.howto summary:hover{color:var(--text)}
+details.howto .body{margin:6px 0 0;line-height:1.6}
+.savenote{color:var(--muted);font-size:13px;margin:0 0 12px}
+.savenote a{color:var(--gold)}
+body.ro #about,body.ro #intro,body.ro .g,body.ro .ed,body.ro .nb button,body.ro #shimg,body.ro #sharelist,body.ro #exp,body.ro #imp,body.ro #rst,body.ro #editlist,body.ro #howto,body.ro #opts,body.ro #auth,body.ro [data-r="__new"],body.ro [data-r="__settings"]{display:none!important}
+body.ro .c{cursor:default}
+body.loading #roleView,body.loading #tabs{visibility:hidden}
+.gsi{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;max-width:320px;height:44px;padding:0 18px;border-radius:999px;border:1px solid #747775;background:#fff;color:#1f1f1f;font:500 15px/1 Roboto,system-ui,sans-serif;cursor:pointer}
+.gsi svg{width:20px;height:20px;flex:none}
+.gsi:hover{border-color:#747775;box-shadow:0 1px 5px rgba(0,0,0,.35)}
+.gsi:disabled{opacity:.5;box-shadow:none}
+@media(prefers-color-scheme:dark){.gsi{background:#131314;border-color:#8e918f;color:#e3e3e3}.gsi:hover{border-color:#8e918f}}
+:root[data-theme=dark] .gsi{background:#131314;border-color:#8e918f;color:#e3e3e3}
+:root[data-theme=light] .gsi{background:#fff;border-color:#747775;color:#1f1f1f}
+button:disabled{opacity:.45;cursor:not-allowed}
+.err{color:#d9534f!important;margin:12px 0 0!important}
+#gbtn{min-height:44px}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.auth{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-height:36px}
+details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tabs [data-r="__stats"]{margin-left:auto}
+.tabs button{font-weight:600}
+.tabs small{color:var(--muted);font-weight:400;margin-left:4px}
+.next{background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.next b{font-size:22px;color:var(--gold)}
+.nxh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.nxh .nb{min-height:48px}
+.nxl{display:flex;gap:12px;align-items:center;min-width:0}
+.nxi{position:relative;flex:none;width:48px;height:48px;border-radius:8px;background:var(--line);border:1px solid var(--gold);display:grid;place-items:center;font-weight:700;font-size:20px;color:var(--gold);overflow:hidden}
+.nxi img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.nxi i{position:absolute;right:0;bottom:0;min-width:16px;padding:1px 4px;border-radius:6px 0 0 0;background:var(--gold);color:#111;font:700 11px/14px system-ui,sans-serif;text-align:center;font-style:normal}
+.nxi.noimg i{display:none}
+.nxk{font-size:11px;color:var(--muted);letter-spacing:.6px}
+.nxn{line-height:1.25}
+.next .nxp{font-size:11px;color:var(--muted);letter-spacing:.6px;font-weight:400;margin-left:6px}
+.nxs{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:12px;color:var(--muted);margin-top:3px}
+.next .nxs b{font-size:inherit;color:var(--text);font-weight:600}
+.nxb{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;display:grid;grid-template-columns:84px 1fr;row-gap:8px;column-gap:10px;align-items:center;font-size:13px}
+.nxb .k{color:var(--muted)}
+.nxb .full{grid-column:1/-1}
+.nxr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.nxr .sep{color:var(--muted)}
+.nxr .grp{display:inline-flex;gap:4px;align-items:center}
+.bi{position:relative;width:26px;height:26px;border-radius:5px;background:var(--line);flex:none;overflow:hidden;display:inline-block}
+.bi img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bi.rn{width:22px;height:22px;border-radius:50%;background:#1d242e}
+.bi.sh{width:18px;height:18px;border-radius:50%;background:#1d242e}
+.bi.st{width:20px;height:20px;border-radius:4px;background:#1d242e}
+.skill-build{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:nowrap}
+.skill-max{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;color:var(--muted);font-size:11px;line-height:22px;flex:none}
+.skill-max b{font-size:12px;color:var(--text);font-weight:600}
+.skill-sequence{display:inline-flex;align-items:flex-start;gap:3px;white-space:nowrap;overflow-x:auto;max-width:100%;padding:1px 0 3px;min-width:0}
+.skill-step{display:grid;grid-template-rows:10px 22px;justify-items:center;gap:7px;min-width:18px}
+.skill-step small{font-size:9px;line-height:10px;color:var(--muted)}
+.skill-step i{font-style:normal;display:grid;place-items:center;min-width:18px;height:22px;padding:0 3px;border-radius:4px;background:var(--line);color:var(--muted);font-size:11px;font-weight:600;position:relative;top:-5px}
+.skill-step i.r{background:var(--gold);color:#111;font-weight:700}
+.next button.lk{background:none;border:none;color:var(--gold);padding:0;font-size:13px;cursor:pointer;justify-self:start}
+.next button.lk:hover{border-color:transparent;text-decoration:underline}
+.next button.sw{background:none;border:none;color:var(--muted);padding:0 4px;font-size:12px;line-height:1;cursor:pointer;opacity:.6}
+.next button.sw:hover{border-color:transparent;color:var(--gold);opacity:1}
+.next button.pc{padding:2px 9px;font-size:11px;border-radius:999px;letter-spacing:.4px}
+.next button.pc.on{border-color:var(--gold);color:var(--gold)}
+.rp{margin-top:2px;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--muted)}
+.rp .rs{display:inline-flex;gap:6px;align-items:center;color:var(--text);font-weight:600}
+.rp .nxr+.nxr{margin-top:8px}
+.rp.full:has(.rpg){justify-self:start;width:fit-content;max-width:100%;padding:10px 14px}
+.rpg{display:grid;grid-template-columns:auto auto;gap:8px 26px;justify-items:start}
+.rcol{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.rp .rh{display:flex;align-items:center;gap:6px;color:var(--text);font-size:13px}
+.rp .rh b{font-size:13px;font-weight:600;color:var(--text)}
+.rh img{width:18px;height:18px}
+.rr{display:flex;gap:8px;justify-content:center;flex-wrap:nowrap}
+.rr.ks{gap:10px}
+.rr.sr{gap:10px}
+.rsh{display:flex;flex-direction:column;gap:6px;margin-top:2px;padding-top:8px;border-top:1px solid var(--line);align-items:center}
+.ri{width:26px;height:26px;border-radius:50%;background:#1d242e;flex:none;display:inline-block;position:relative;overflow:hidden;filter:grayscale(1);opacity:.38}
+.ri img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.ri.ks{width:32px;height:32px}
+.ri.sh{width:22px;height:22px;background:#2b3340}
+.ri.on{filter:none;opacity:1;box-shadow:0 0 0 2px var(--gold)}
+@media(max-width:420px){.rpg{gap:8px 14px}.rr,.rr.ks,.rr.sr{gap:6px}}
+.nxm{font-size:11px;color:var(--muted);line-height:1.5}
+.nxm a{color:var(--gold)}
+.nxm .wn{color:#d9534f}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0 4px}
+.bar i{display:block;height:100%;background:var(--win);width:0;transition:width .3s}
+.stats{color:var(--muted);font-size:13px;display:flex;justify-content:space-between}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+input[type=search]{flex:1;min-width:160px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit}
+button{padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+button:hover{border-color:var(--gold)}
+button.on{border-color:var(--gold);color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.c:hover{border-color:var(--gold)}
+.c.win{background:var(--winbg);border-color:var(--win)}
+.c.cur{outline:2px solid var(--gold)}
+.l{position:relative;width:40px;height:40px;border-radius:8px;background:var(--line);display:grid;place-items:center;font-weight:700;color:var(--muted);flex:none;overflow:hidden}
+.l img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.win .l{box-shadow:0 0 0 2px var(--win)}
+.ed{padding:0 4px;border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer}
+.ed:hover{color:var(--gold);border:none}
+#di[type=date]{color-scheme:light}
+@media(prefers-color-scheme:dark){#di[type=date]{color-scheme:dark}}
+:root[data-theme=dark] #di[type=date]{color-scheme:dark}
+:root[data-theme=light] #di[type=date]{color-scheme:light}
+.ck{color:var(--win);font-size:20px;font-weight:700;line-height:1}
+.n{flex:1;min-width:0}
+.n div{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.n small{color:var(--muted)}
+.g{display:flex;align-items:center;gap:4px}
+.g button{padding:2px 8px;font-size:13px}
+[hidden]{display:none!important}
+.c{flex-wrap:wrap}
+.g{flex-basis:100%;display:flex;gap:6px;align-items:center}
+.g .wb{margin-left:auto;font-weight:600}
+.c.win .wb{color:var(--win);border-color:var(--win)}
+.g button{padding:3px 10px;font-size:13px}
+.sp{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 16px 16px;margin-bottom:16px}
+.sp h3{margin:14px 0 8px;font-size:14px;color:var(--gold);text-transform:uppercase;letter-spacing:.6px}
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.t{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.t small{display:block;color:var(--muted);font-size:12px}
+.t b{font-size:15px}
+.sp table{width:100%;border-collapse:collapse;font-size:14px}
+.sp th,.sp td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)}
+.fld{padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.danger{color:#d9534f;border-color:#d9534f}
+.chips{display:flex;flex-wrap:wrap;gap:6px;max-height:420px;overflow:auto;padding:6px 0}
+.chip{padding:5px 10px;font-size:13px;border-radius:999px}
+.chip.on{background:var(--gold);color:#111;border-color:var(--gold)}
+.empty{color:var(--muted);padding:20px;text-align:center}
+#intro{margin:26px 0 0;color:var(--muted);font-size:14px;line-height:1.65}#intro h2{font-size:18px;color:var(--text);margin:0 0 8px}#intro p{margin:0 0 10px}
+.howto a{color:var(--gold)}footer a{color:inherit}.dimg{width:100%;border-radius:8px;margin-bottom:12px}
+footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<main>
+  <noscript><p>LoLphabet is a free League of Legends A–Z Challenge tracker. It needs JavaScript to show your champion lists. See the <a href="/about">About page</a> for what it does.</p></noscript>
+  <div class="hd">
+    <header class="brand" id="home" role="link" tabindex="0" title="Home">
+      <div class="bn"><span>LoL</span>phabet</div>
+      <h1 id="tl" class="tl">The League of Legends A–Z Challenge</h1>
+      <p class="by">By PaladinLaw</p>
+    </header>
+    <div class="hr"><span class="vis" id="visits"></span><div class="auth" id="auth"></div></div>
+  </div>
+  <div class="note" id="snote" hidden></div>
+  <details class="howto" id="howto">
+    <summary>How it works</summary>
+    <div class="body">Win a game with every champion, in order.<br>Click a champion or press Complete to mark a win.<br>Use + / − to log losses.<br>See our <a href="/about" id="aboutlink">about section</a> for more details</div>
+  </details>
+  <div id="opts" class="savenote">Not logged in? Progress is saved in this browser only.<span id="opt2" hidden><br><a href="#" id="loginlink">Log in</a> with your Google account to sync your progress across devices</span></div>
+  <div class="tabs" id="cats"></div>
+  <div class="tabs lists" id="tabs"></div>
+  <div class="modes" id="modes"></div>
+
+  <div id="roleView">
+  <div class="next" id="next"></div>
+  <div class="bar"><i id="fill"></i></div>
+  <div class="stats"><span id="count"></span><span id="pct"></span></div>
+
+  <div class="tools">
+    <input type="search" id="q" placeholder="Search champions…">
+    <button data-f="all" class="on">All</button>
+    <button data-f="todo">To do</button>
+    <button data-f="win">Won</button>
+    <button id="exp" hidden>Export</button>
+    <button id="imp" hidden>Import</button>
+    <button id="rst">Reset</button>
+    <button id="editlist" hidden>Edit list</button>
+    <button id="sharelist" hidden>Share list</button>
+    <button id="shimg">Share image</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <section id="intro" aria-labelledby="intro-h">
+    <h2 id="intro-h">Free League of Legends A–Z Challenge tracker</h2>
+    <p>LoLphabet helps you win a game with every League of Legends champion, one by one. Pick a list (roles, races, classes, regions or your own custom list) and a challenge mode: Classic, Random, Hard, Random + Hard, Insanity or Random + Insanity.</p>
+    <p>Your wins, attempts, dates and notes are saved in your browser, or synced across devices when you log in with Google. The Next up box shows each champion's pick rate, win rate and a popular build when data is available. It is free, with no ads and no third-party analytics. <a href="/about">Read more about LoLphabet</a>.</p>
+  </section>
+  </div>
+  <div class="sp" id="stats" hidden></div>
+  <div class="sp" id="settings" hidden></div>
+  <div class="sp" id="builder" hidden></div>
+  <section id="about" aria-labelledby="about-h">
+    <h2 id="about-h">About LoLphabet</h2>
+    <p>LoLphabet is a free completion tracker for the League of Legends A–Z Challenge: win a game with every champion on a list, working through them one by one. It keeps your progress, attempts and notes in one place, so you can see how far you've come and what is left.</p>
+    <h3>What you can track</h3>
+    <ul>
+      <li><strong>Roles:</strong> Top, Jungle, Mid, Bot / ADC and Support, kept up to date from community-maintained champion data.</li>
+      <li><strong>Races:</strong> Yordles, Vastayan, Darkin, Void creatures, Celestials and the Undead.</li>
+      <li><strong>Classes:</strong> Fighter, Mage, Assassin, Tank, Marksman and Support.</li>
+      <li><strong>Regions:</strong> Demacia, Noxus, Ionia, Piltover &amp; Zaun, Freljord, Shadow Isles, Bilgewater, Shurima, Targon, Bandle City, Ixtal and the Void.</li>
+      <li><strong>Custom lists:</strong> build your own list from the full champion roster and share it with friends.</li>
+    </ul>
+    <h3>Challenge modes</h3>
+    <dl>
+      <dt>Classic</dt><dd>Work through a list alphabetically, completing champions in any order you like.</dd>
+      <dt>Random</dt><dd>The same list in a shuffled order that stays fixed until you reset it.</dd>
+      <dt>Hard</dt><dd>Only the next champion can be completed. A loss sends you back one champion: you have to beat the previous one again before trying the one you lost with.</dd>
+      <dt>Random + Hard</dt><dd>A shuffled order combined with the go-back-one-champion rule.</dd>
+      <dt>Insanity</dt><dd>Only the next champion can be completed, and a loss sends you back to the start of the run.</dd>
+      <dt>Random + Insanity</dt><dd>A shuffled order combined with the restart-on-loss rule.</dd>
+    </dl>
+    <h3>How progress works</h3>
+    <p>Pick a list, win a game with the champion shown as Next up, and mark it complete. Each champion keeps your attempts, completion date and an optional note. Progress bars and a statistics page (win rate, average attempts, pace and estimated finish) show how you are doing, and you can share a read-only view of your progress with a link. Role lists update as new champions are released.</p>
+    <h3>Where the champion data comes from</h3>
+    <p>Champion roles come from the community-maintained <a href="https://github.com/meraki-analytics/lolstaticdata" target="_blank" rel="noopener noreferrer">lolstaticdata</a> project and are refreshed automatically each day, so newly released champions appear without anyone editing a list. Champion icons and classes (Fighter, Mage and so on) come from Riot\u2019s Data Dragon. Races and regions are lists maintained by hand, and a few champions sit in more than one on purpose. Builds and statistics under Next up are collected weekly from OP.GG.</p>
+    <h3>Not the official League of Legends client</h3>
+    <p>LoLphabet is an independent fan project. It is not the League of Legends client, it does not connect to your Riot account or match history, and you record your own wins. It is not endorsed by Riot Games.</p>
+  </section>
+  <footer><span id="fnote"></span><br>Copyright © <span id="yr">2026</span>. PaladinLaw. All Rights Reserved. <a href="/about">About</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="#" id="cookieprefs">Cookie preferences</a><br><span id="legal">Build data from <a href="https://op.gg" target="_blank" rel="noopener noreferrer" style="color:inherit">OP.GG</a>. LoLphabet isn’t affiliated with OP.GG. LoLphabet isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.</span></footer>
+</main>
+<div id="cbar" hidden><span>No tracking or advertising cookies here. This site only stores what it needs to work on your device.</span><span class="cb"><button id="cdet">Details</button><button id="cok" class="pri">OK</button></span></div>
+<div class="modal" id="dlg" hidden style="z-index:20"><div class="mc" id="dmc"><h2 id="dt"></h2><p id="dp"></p><img id="dimg" class="dimg" hidden alt=""><input class="fld" id="di" hidden style="width:100%;margin-bottom:14px"><div class="row" id="db" style="justify-content:flex-end;margin:0"></div></div></div>
+<div class="modal" id="modal" hidden><div class="mc"><button class="x" id="mx">×</button><h2 id="mt"></h2><p id="mp"></p><div id="gbtn"></div><p class="err" id="me"></p></div></div>
+
+<script>
+// ---- Champion data: add more lanes later by adding entries with a different role ----
+let LISTS = {};
+LISTS.Jungle = `Aatrox
+Amumu
+Bel'Veth
+Briar
+Cho'Gath
+Darius
+Diana
+Dr. Mundo
+Ekko
+Elise
+Evelynn
+Fiddlesticks
+Fizz
+Gragas
+Graves
+Gwen
+Hecarim
+Ivern
+Jarvan IV
+Jax
+Jayce
+Karthus
+Kayn
+Kha'Zix
+Kindred
+Lee Sin
+Lillia
+Locke
+Malphite
+Master Yi
+Mordekaiser
+Naafiri
+Nidalee
+Nocturne
+Nunu & Willump
+Pantheon
+Qiyana
+Quinn
+Rammus
+Rek'Sai
+Rengar
+Sejuani
+Shaco
+Shyvana
+Sion
+Skarner
+Sylas
+Taliyah
+Talon
+Teemo
+Trundle
+Tryndamere
+Udyr
+Vi
+Viego
+Volibear
+Warwick
+Wukong
+Xin Zhao
+Zac
+Zed
+Zyra`;
+LISTS.Top = `Aatrox
+Akali
+Ambessa
+Camille
+Cho'Gath
+Darius
+Dr. Mundo
+Fiora
+Gangplank
+Garen
+Gnar
+Gragas
+Gwen
+Heimerdinger
+Illaoi
+Irelia
+Jax
+Jayce
+K'Sante
+Kayle
+Kennen
+Kled
+Malphite
+Malzahar
+Master Yi
+Mordekaiser
+Nasus
+Olaf
+Ornn
+Pantheon
+Poppy
+Quinn
+Renekton
+Riven
+Rumble
+Sett
+Shen
+Singed
+Sion
+Swain
+Sylas
+Tahm Kench
+Teemo
+Trundle
+Tryndamere
+Urgot
+Varus
+Vayne
+Vladimir
+Volibear
+Warwick
+Wukong
+Yasuo
+Yone
+Yorick
+Zaahen`;
+LISTS.Mid = `Ahri
+Akali
+Akshan
+Anivia
+Annie
+Aurelion Sol
+Aurora
+Azir
+Brand
+Cassiopeia
+Cho'Gath
+Diana
+Ekko
+Ezreal
+Fizz
+Galio
+Garen
+Heimerdinger
+Hwei
+Irelia
+Jayce
+Kassadin
+Katarina
+LeBlanc
+Lissandra
+Locke
+Lux
+Malphite
+Malzahar
+Mel
+Morgana
+Naafiri
+Nasus
+Orianna
+Pantheon
+Qiyana
+Ryze
+Sion
+Smolder
+Swain
+Sylas
+Syndra
+Taliyah
+Talon
+Tristana
+Twisted Fate
+Veigar
+Vel'Koz
+Vex
+Viktor
+Vladimir
+Xerath
+Yasuo
+Yone
+Zed
+Ziggs
+Zoe`;
+LISTS["Bot / ADC"] = `Aphelios
+Ashe
+Caitlyn
+Corki
+Draven
+Ezreal
+Hwei
+Jhin
+Jinx
+Kai'Sa
+Kalista
+Katarina
+Kog'Maw
+Lucian
+Lux
+Mel
+Miss Fortune
+Nilah
+Samira
+Senna
+Sivir
+Smolder
+Swain
+Syndra
+Tristana
+Twitch
+Varus
+Vayne
+Veigar
+Viktor
+Xayah
+Xerath
+Yasuo
+Yunara
+Zeri
+Ziggs`;
+LISTS.Support = `Alistar
+Amumu
+Ashe
+Bard
+Blitzcrank
+Brand
+Braum
+Camille
+Galio
+Hwei
+Janna
+Karma
+LeBlanc
+Leona
+Lulu
+Lux
+Malphite
+Maokai
+Mel
+Milio
+Miss Fortune
+Morgana
+Nami
+Nautilus
+Neeko
+Pantheon
+Poppy
+Pyke
+Rakan
+Rell
+Renata Glasc
+Senna
+Seraphine
+Shaco
+Shen
+Sona
+Soraka
+Swain
+Sylas
+Tahm Kench
+Taric
+Teemo
+Thresh
+Veigar
+Vel'Koz
+Xerath
+Yuumi
+Zilean
+Zoe
+Zyra`;
+for(const r in LISTS) LISTS[r]=LISTS[r].split("\n").map(s=>s.trim()).filter(Boolean).map(name=>({name,role:r}));
+const ROLE_KEYS=["Top","Jungle","Mid","Bot / ADC","Support"];
+const SETS={
+"race:Yordles":"Amumu,Corki,Fizz,Gnar,Heimerdinger,Kennen,Kled,Lulu,Poppy,Rumble,Teemo,Tristana,Veigar,Vex,Ziggs",
+"race:Vastayan":"Ahri,Aurora,Nami,Neeko,Nidalee,Rakan,Rengar,Sett,Wukong,Xayah",
+"race:Darkin":"Aatrox,Kayn,Naafiri,Varus,Zaahen",
+"race:Void creatures":"Bel'Veth,Cho'Gath,Kai'Sa,Kassadin,Kha'Zix,Kog'Maw,Malzahar,Rek'Sai,Vel'Koz",
+"race:Celestials":"Aurelion Sol,Kayle,Leona,Morgana,Pantheon,Soraka,Taric,Zoe",
+"race:Undead":"Amumu,Briar,Hecarim,Kalista,Karthus,Mordekaiser,Nautilus,Pyke,Sion,Thresh,Viego,Yone",
+"region:Demacia":"Fiora,Galio,Garen,Jarvan IV,Kayle,Locke,Lucian,Lux,Morgana,Poppy,Quinn,Shyvana,Sona,Sylas,Vayne,Xin Zhao",
+"region:Noxus":"Ambessa,Briar,Cassiopeia,Darius,Draven,Katarina,Kled,LeBlanc,Mel,Mordekaiser,Rell,Riven,Samira,Sion,Swain,Talon,Vladimir",
+"region:Ionia":"Ahri,Akali,Hwei,Irelia,Ivern,Jhin,Karma,Kayn,Kennen,Lee Sin,Lillia,Master Yi,Rakan,Sett,Shen,Syndra,Varus,Wukong,Xayah,Yasuo,Yone,Yunara,Zed",
+"region:Piltover & Zaun":"Blitzcrank,Caitlyn,Camille,Corki,Dr. Mundo,Ekko,Ezreal,Heimerdinger,Janna,Jayce,Jinx,Orianna,Renata Glasc,Seraphine,Singed,Twitch,Urgot,Vi,Viktor,Warwick,Zac,Zeri,Ziggs",
+"region:Freljord":"Anivia,Ashe,Aurora,Braum,Gnar,Gragas,Lissandra,Nunu & Willump,Olaf,Ornn,Sejuani,Trundle,Tryndamere,Udyr,Volibear",
+"region:Shadow Isles":"Elise,Gwen,Hecarim,Kalista,Karthus,Maokai,Thresh,Vex,Viego,Yorick",
+"region:Bilgewater":"Fizz,Gangplank,Graves,Illaoi,Miss Fortune,Nautilus,Nilah,Pyke,Tahm Kench,Twisted Fate",
+"region:Shurima":"Akshan,Amumu,Azir,K'Sante,Naafiri,Nasus,Rammus,Renekton,Sivir,Taliyah,Xerath",
+"region:Targon":"Aphelios,Aurelion Sol,Diana,Leona,Pantheon,Soraka,Taric,Zoe",
+"region:Bandle City":"Corki,Lulu,Rumble,Teemo,Tristana,Veigar,Yuumi",
+"region:Ixtal":"Malphite,Milio,Neeko,Nidalee,Qiyana,Rengar,Skarner,Zyra",
+"region:Void":"Bel'Veth,Cho'Gath,Kai'Sa,Kassadin,Kha'Zix,Kog'Maw,Malzahar,Rek'Sai,Vel'Koz"};
+for(const k in SETS) LISTS[k]=SETS[k].split(",").sort((a,b)=>a.localeCompare(b,"en",{sensitivity:"base"})).map(name=>({name,role:k}));
+{const o={};for(const r of [...ROLE_KEYS,...Object.keys(SETS)])o[r]=LISTS[r];LISTS=o;}
+const BUILTIN={...LISTS};
+var DD=null;
+try{localStorage.removeItem("lol-az-rolesrc")}catch(e){}   // retired setting (Curated Lists was removed)
+var ROLEDATA=null; try{ROLEDATA=JSON.parse(localStorage.getItem("lol-az-roles"))}catch(e){}
+const CLASS_KEYS=["Fighter","Mage","Assassin","Tank","Marksman","Support"].map(c=>"class:"+c);
+const CATS=[["roles","Roles",ROLE_KEYS],["races","Races",Object.keys(SETS).filter(k=>k.startsWith("race:"))],["classes","Classes",CLASS_KEYS],["regions","Regions",Object.keys(SETS).filter(k=>k.startsWith("region:"))],["custom","Custom",null]];
+const catOf=r=>r.startsWith("race:")?"races":r.startsWith("region:")?"regions":r.startsWith("class:")?"classes":r.startsWith("c:")?"custom":"roles";
+const keysIn=c=>c==="custom"?Object.keys(LISTS).filter(k=>k.startsWith("c:")):CATS.find(x=>x[0]===c)[2];
+const lastIn={};
+function classChamps(k){const t=k.slice(6);return DD&&DD.tags?Object.keys(DD.tags).filter(n=>DD.tags[n].includes(t)).sort((a,b)=>a.localeCompare(b,"en",{sensitivity:"base"})).map(name=>({name,role:k})):[]}
+
+// ---- State ----
+const SHARE=(location.pathname.match(/^\/s\/([\w-]+)/)||[])[1], READONLY=!!SHARE;
+if(READONLY) document.body.classList.add("ro","loading");
+const KEY="lol-az-tracker-v2";
+let all={};              // role -> name -> {won:bool, date:string|null, games:number}
+if(!READONLY)try{all=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+if(!READONLY&&!all.Jungle){try{const old=JSON.parse(localStorage.getItem("lol-az-tracker-v1"));if(old)all.Jungle=old}catch(e){}}
+let role="Top", CHAMPS, mode="classic";
+if(!READONLY)try{const m=localStorage.getItem("lol-az-mode");if(["classic","random","hard","randhard","hardcore","randhc"].includes(m))mode=m}catch(e){}
+rebuildLists();
+if(!READONLY)try{const r=localStorage.getItem("lol-az-role");if(LISTS[r])role=r}catch(e){}
+CHAMPS=LISTS[role];
+const save=()=>{if(READONLY)return;try{localStorage.setItem(KEY,JSON.stringify(all));localStorage.setItem("lol-az-role",role)}catch(e){}
+  push();};
+const MODES=[["classic","Classic","A–Z, any order"],["random","Random","a fixed shuffled order; reset to reshuffle"],["hard","Hard","lose a game and you go back one champion"],["randhard","Random + Hard","shuffled order, and a loss sends you back one champion"],["hardcore","Insanity","lose a game and the whole run restarts"],["randhc","Random + Insanity","shuffled order, and a loss restarts the run"]];   // ids "hardcore"/"randhc" are kept so existing Insanity (ex-Hardcore) progress is not lost
+const pkey=r=>mode==="classic"?r:r+"|"+mode, isRand=()=>mode==="random"||mode==="randhc"||mode==="randhard", isHC=()=>mode==="hardcore"||mode==="randhc", isHard=()=>mode==="hard"||mode==="randhard", isLock=()=>isHC()||isHard();
+const st=()=>all[pkey(role)]||(all[pkey(role)]={});
+const meta=()=>st().__meta||(st().__meta={});
+const get=n=>st()[n]||(st()[n]={won:false,date:null,games:0});
+let filter="all",query="";
+
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const ROSTER="Aatrox,Ahri,Akali,Akshan,Alistar,Ambessa,Amumu,Anivia,Annie,Aphelios,Ashe,Aurelion Sol,Aurora,Azir,Bard,Bel'Veth,Blitzcrank,Brand,Braum,Briar,Caitlyn,Camille,Cassiopeia,Cho'Gath,Corki,Darius,Diana,Dr. Mundo,Draven,Ekko,Elise,Evelynn,Ezreal,Fiddlesticks,Fiora,Fizz,Galio,Gangplank,Garen,Gnar,Gragas,Graves,Gwen,Hecarim,Heimerdinger,Hwei,Illaoi,Irelia,Ivern,Janna,Jarvan IV,Jax,Jayce,Jhin,Jinx,K'Sante,Kai'Sa,Kalista,Karma,Karthus,Kassadin,Katarina,Kayle,Kayn,Kennen,Kha'Zix,Kindred,Kled,Kog'Maw,LeBlanc,Lee Sin,Leona,Lillia,Lissandra,Lucian,Lulu,Lux,Malphite,Malzahar,Maokai,Master Yi,Mel,Milio,Miss Fortune,Mordekaiser,Morgana,Naafiri,Nami,Nasus,Nautilus,Neeko,Nidalee,Nilah,Nocturne,Nunu & Willump,Olaf,Orianna,Ornn,Pantheon,Poppy,Pyke,Qiyana,Quinn,Rakan,Rammus,Rek'Sai,Rell,Renata Glasc,Renekton,Rengar,Riven,Rumble,Ryze,Samira,Sejuani,Senna,Seraphine,Sett,Shaco,Shen,Shyvana,Singed,Sion,Sivir,Skarner,Smolder,Sona,Soraka,Swain,Sylas,Syndra,Tahm Kench,Taliyah,Talon,Taric,Teemo,Thresh,Tristana,Trundle,Tryndamere,Twisted Fate,Twitch,Udyr,Urgot,Varus,Vayne,Veigar,Vel'Koz,Vex,Vi,Viego,Viktor,Vladimir,Volibear,Warwick,Wukong,Xayah,Xerath,Xin Zhao,Yasuo,Yone,Yorick,Yunara,Yuumi,Zaahen,Zac,Zed,Zeri,Ziggs,Zilean,Zoe,Zyra";
+const cmp=(a,b)=>a.localeCompare(b,"en",{sensitivity:"base"});
+const THEME_KEY="lol-az-theme";
+function applyTheme(){let t="auto";try{t=localStorage.getItem(THEME_KEY)||"auto"}catch(e){}
+  if(t==="auto")delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;}
+function label(r){return r.startsWith("c:")?((all.__lists||[]).find(l=>"c:"+l.id===r)||{}).name||"Custom":r.includes(":")?r.split(":")[1]:r}
+function rebuildLists(){
+  const o={};for(const r in BUILTIN)o[r]=BUILTIN[r];
+  if(ROLEDATA&&ROLEDATA.lists){
+    for(const r of ROLE_KEYS){const a=ROLEDATA.lists[r]; if(!a||!a.length) continue;
+      o[r]=a.map(name=>({name,role:r}));}
+  }
+  for(const k of CLASS_KEYS)o[k]=classChamps(k);
+  for(const l of all.__lists||[])o["c:"+l.id]=l.champs.map(name=>({name,role:"c:"+l.id}));
+  LISTS=o; if(!LISTS[role])role="Top"; CHAMPS=LISTS[role];
+}
+function roster(extra){
+  const set=new Set(ROSTER.split(","));
+  for(const r in BUILTIN)BUILTIN[r].forEach(c=>set.add(c.name));
+  if(DD&&DD.ids)Object.keys(DD.ids).forEach(n=>set.add(n));
+  (all.__lists||[]).forEach(l=>l.champs.forEach(n=>set.add(n)));
+  (extra||[]).forEach(n=>set.add(n));
+  return [...set].sort(cmp);
+}
+function ask(o){
+  return new Promise(res=>{
+    $("dt").textContent=o.title; $("dp").textContent=o.body||"";
+    const inp=$("di"), bx=$("db"), inf=o.type||o.input; inp.hidden=!inf; inp.value=(o.input&&o.input.value)||""; inp.placeholder=o.type||(o.input&&o.input.placeholder)||""; inp.maxLength=(o.input&&o.input.max)||100; inp.readOnly=!!(o.input&&o.input.readonly); $("dimg").hidden=!o.img; if(o.img)$("dimg").src=o.img; $("dmc").classList.toggle("wide",!!o.img); inp.type=(o.input&&o.input.type)||"text"; inp.max=(o.input&&o.input.maxv)||""; bx.innerHTML="";
+    inp.onkeydown=o.input?(e=>{if(e.key==="Enter")done(inp.value.trim())}):null;
+    const key=e=>{if(e.key==="Escape"&&"cancel" in o)done(o.cancel)};
+    const done=v=>{$("dlg").hidden=true;document.removeEventListener("keydown",key);inp.oninput=null;inp.onkeydown=null;res(v)};
+    for(const b of o.buttons){const el=document.createElement("button");el.textContent=b.label;
+      if(b.cls)el.className=b.cls; if(b.needs){el.dataset.n="1";el.disabled=true}
+      el.onclick=()=>done(b.input?inp.value.trim():b.value); bx.appendChild(el)}
+    inp.oninput=()=>bx.querySelectorAll("[data-n]").forEach(b=>b.disabled=inp.value!==o.type);
+    document.addEventListener("keydown",key);
+    $("dlg").hidden=false; if(inf){inp.focus(); if(inp.readOnly)inp.select()}
+  });
+}
+const confirmDlg=(title,body,yes,danger)=>ask({title,body,cancel:false,buttons:[{label:"Cancel",value:false},{label:yes,value:true,cls:danger?"danger":"pri"}]});
+const info=(title,body)=>ask({title,body,cancel:true,buttons:[{label:"OK",value:true,cls:"pri"}]});
+let shareTok, shareLoading=false;
+function loadShare(){
+  if(shareLoading) return; shareLoading=true;
+  api("GET","/api/share").then(r=>{shareTok=r.token||null}).catch(()=>{shareTok=null}).finally(()=>{shareLoading=false;renderSettings()});
+}
+DD=null;
+try{DD=JSON.parse(localStorage.getItem("lol-az-dd"))}catch(e){}
+function iconUrl(name){
+  if(!DD||!DD.ver) return "";
+  const id=(DD.ids&&DD.ids[name])||name.replace(/[^A-Za-z]/g,"");
+  return "https://ddragon.leagueoflegends.com/cdn/"+DD.ver+"/img/champion/"+id+".png";
+}
+function loadDD(){
+  if(DD&&DD.tags&&DD.t&&Date.now()-DD.t<864e5) return;
+  fetch("https://ddragon.leagueoflegends.com/api/versions.json").then(r=>r.json()).then(v=>{
+    const ver=v[0];
+    return fetch("https://ddragon.leagueoflegends.com/cdn/"+ver+"/data/en_US/champion.json").then(r=>r.json()).then(d=>{
+      const ids={},tags={}; for(const k in d.data){ids[d.data[k].name]=d.data[k].id;tags[d.data[k].name]=d.data[k].tags||[]}
+      DD={ver,ids,tags,t:Date.now()};
+      try{localStorage.setItem("lol-az-dd",JSON.stringify(DD))}catch(e){}
+      rebuildLists(); render();
+    });
+  }).catch(()=>{});
+}
+async function editDate(name){
+  const s=get(name), t=today();
+  const v=await ask({title:"Edit completion date",body:"When did you actually win with "+name+"?",cancel:null,
+    input:{value:s.date||t,type:"date",maxv:t},buttons:[{label:"Cancel",value:null},{label:"Save",cls:"pri",input:true}]});
+  if(v&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&v<=t){s.date=v;save();render();}
+}
+const linkify=t=>esc(t).replace(/https?:\/\/[^\s<]+/g,u=>`<a href="${u}" target="_blank" rel="noopener noreferrer">${u.length>32?u.slice(0,30)+"…":u}</a>`);
+function ordered(){
+  if(!isRand()) return CHAMPS;
+  const names=CHAMPS.map(c=>c.name), m=meta();
+  if(READONLY&&!m.order) return CHAMPS;
+  const o=(m.order||[]).filter(n=>names.includes(n)), miss=names.filter(n=>!o.includes(n));
+  if(!m.order||miss.length||o.length!==m.order.length){
+    for(let i=miss.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[miss[i],miss[j]]=[miss[j],miss[i]]}
+    m.order=o.concat(miss); save();
+  }
+  return m.order.map(n=>({name:n}));
+}
+// Champions temporarily marked "unavailable" (banned / picked in champ select) are skipped by Next up.
+// Stored per list + mode in that run's __meta.skip. Cleared when the Next up champion is won or lost.
+function availNext(L){const sk=meta().skip||[]; return L.find(c=>!get(c.name).won&&!sk.includes(c.name))||L.find(c=>!get(c.name).won);}
+function clearSkip(name,wasCur){const m=meta(); if(!m.skip) return;
+  if(wasCur) delete m.skip; else {m.skip=m.skip.filter(n=>n!==name); if(!m.skip.length) delete m.skip;}}
+const nextUp=()=>availNext(ordered());
+async function hcLose(name){
+  const run=st(), m=meta(), w=ordered().filter(c=>get(c.name).won).length;
+  if(!await confirmDlg("Lost with "+name+"?","Your run ends at "+w+" win"+(w===1?"":"s")+" and you start again from the beginning.","Restart run",true)) return;
+  delete m.skip; m.resets=(m.resets||0)+1; m.best=Math.max(m.best||0,w); m.last={champ:name,date:today(),wins:w};
+  for(const c of CHAMPS){const n=run[c.name]&&run[c.name].note; delete run[c.name]; if(n) run[c.name]={won:false,date:null,games:0,note:n}}
+  if(isRand()) delete m.order;
+  save(); render();
+}
+async function hardLose(name){
+  const L=ordered(), i=L.findIndex(c=>c.name===name), m=meta(); let p=-1;
+  for(let k=i-1;k>=0;k--) if(get(L[k].name).won){p=k;break}
+  const prev=p>=0?L[p].name:null;
+  if(!await confirmDlg("Lost with "+name+"?",prev?"You go back to "+prev+" and have to win with it again before you can try "+name+" again.":"You haven’t won anything yet, so this just logs the loss and you try "+name+" again.","Log loss",true)) return;
+  get(name).games++;
+  if(prev){const ps=get(prev); ps.won=false; ps.date=null; m.setbacks=(m.setbacks||0)+1; m.last={champ:name,back:prev,date:today()};}
+  clearSkip(name,true); save(); render();
+}
+const LOSTLAB=()=>isHard()?"✗ Lost - Back one":"✗ Lost - Restart";
+const loseRun=name=>isHard()?hardLose(name):hcLose(name);
+async function editNote(name){
+  const s=get(name);
+  const v=await ask({title:"Note for "+name,body:"A short note, e.g. “ranked win, 12 kills” or a clip link.",cancel:null,
+    input:{value:s.note||"",placeholder:"Add a note…",max:140},buttons:[{label:"Cancel",value:null},{label:"Save",cls:"pri",input:true}]});
+  if(v===null) return;
+  if(v) s.note=v.slice(0,140); else delete s.note;
+  save(); render();
+}
+function renderNav(){
+  const cat=catOf(role), away=view==="stats"||view==="settings"||view==="about";
+  $("cats").innerHTML=(away?`<button data-home="1">← Back</button>`:CATS.map(([id,lab])=>`<button data-cat="${id}" class="${id===cat&&view==="role"?"on":""}">${lab}</button>`).join(""))
+    +`<button data-r="__stats" class="${view==="stats"?"on":""}"><svg aria-hidden="true" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M2 13.5h12"/><path d="M3.5 12V8.5h2V12M7 12V4.5h2V12M10.5 12V2.5h2V12"/></svg>Stats</button><button data-r="__settings" class="${view==="settings"?"on":""}">⚙ Settings</button>`;
+  $("tabs").hidden=away||view==="build"; $("modes").hidden=away||view==="build";
+  $("tabs").innerHTML=keysIn(cat).map(r=>`<button data-r="${esc(r)}" class="${r===role&&view==="role"?"on":""}">${esc(label(r))}<small>${entriesFor(r).filter(e=>e.s.won).length}/${LISTS[r].length}</small></button>`).join("")+(cat==="custom"?'<button data-r="__new">＋ New list</button>':"");
+  $("modes").innerHTML="<span>Challenge:</span>"+MODES.map(([id,lab,tip])=>`<button data-m="${id}" class="${id===mode?"on":""}" title="${esc(tip)}">${lab}</button>`).join("");
+}
+async function shareImage(){
+  const L=ordered(), won=L.filter(c=>get(c.name).won).length, total=L.length, cur=availNext(L);
+  const who=session?(session.given||session.name):"", ml=MODES.find(m=>m[0]===mode)[1];
+  const cv=document.createElement("canvas"); cv.width=1200; cv.height=630; const g=cv.getContext("2d");
+  const bg=g.createLinearGradient(0,0,1200,630); bg.addColorStop(0,"#16202e"); bg.addColorStop(1,"#0a0e14"); g.fillStyle=bg; g.fillRect(0,0,1200,630);
+  g.strokeStyle="#d4af37"; g.lineWidth=6; g.strokeRect(24,24,1152,582);
+  const img=new Image(); img.src=$("fav").href; await new Promise(r=>{img.onload=r;img.onerror=r}); g.drawImage(img,70,62,110,110);
+  g.fillStyle="#e8e4d8"; g.font="bold 42px Georgia,serif"; g.fillText("LoLphabet",205,112);
+  g.fillStyle="#8d9199"; g.font="28px system-ui,sans-serif"; g.fillText(location.host,205,156);
+  g.fillStyle="#d4af37"; g.font="bold 170px Georgia,serif"; g.fillText(won+" / "+total,70,350);
+  const line=(who?who+" is on ":"")+label(role)+(mode!=="classic"?" · "+ml:""); let fs=54; g.fillStyle="#e8e4d8";
+  do{g.font="bold "+fs+"px system-ui,sans-serif";fs-=2}while(g.measureText(line).width>1060&&fs>24); g.fillText(line,70,432);
+  g.fillStyle="#2a323d"; g.fillRect(70,470,1060,26); g.fillStyle="#5fcf8b"; g.fillRect(70,470,total?1060*won/total:0,26);
+  g.fillStyle="#8d9199"; g.font="32px system-ui,sans-serif"; g.fillText(cur?"Next up: "+cur.name:total?"A–Z complete!":"",70,566);
+  const url=cv.toDataURL("image/png");
+  const v=await ask({title:"Share your progress",body:"Save the image or copy it, then post it in Discord.",cancel:null,img:url,buttons:[{label:"Close",value:null},{label:"Download",value:"dl"},{label:"Copy image",cls:"pri",value:"cp"}]});
+  if(v==="dl"){const a=document.createElement("a");a.href=url;a.download="lol-az-progress.png";a.click()}
+  if(v==="cp"){try{const blob=await new Promise(r=>cv.toBlob(r,"image/png"));await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);await info("Copied","Paste it into Discord.")}catch(x){await info("Couldn't copy","Use Download instead.")}}
+}
+$("shimg").onclick=shareImage;
+$("sharelist").onclick=async()=>{
+  if(!session){await info("Log in to share lists","Sharing a list creates a link on the server, so you need to be logged in.");return}
+  const l=(all.__lists||[]).find(x=>"c:"+x.id===role); if(!l) return;
+  try{
+    const r=await api("POST","/api/template",{name:l.name,champs:l.champs}), link=location.origin+"/t/"+r.token;
+    const v=await ask({title:"Share this list",body:"Anyone with this link can add a copy of the list to their own tracker.",cancel:null,input:{value:link,readonly:true},buttons:[{label:"Close",value:null},{label:"Copy link",cls:"pri",input:true}]});
+    if(v){try{await navigator.clipboard.writeText(v)}catch(x){} await info("Link copied",link)}
+  }catch(x){await info("Couldn't create the link","Error "+(x.status||"network")+". A 404 means the server.js on your host is out of date: replace it and restart the container.")}
+};
+function loadRoles(){
+  fetch("/api/roles").then(r=>r.ok?r.json():Promise.reject()).then(d=>{
+    if(!d||!d.lists) return;
+    ROLEDATA=d; try{localStorage.setItem("lol-az-roles",JSON.stringify(d))}catch(e){}
+    rebuildLists(); render();
+  }).catch(()=>{});
+}
+let bld=null;
+function openBuilder(key){
+  const l=key?(all.__lists||[]).find(x=>"c:"+x.id===key):null;
+  bld={id:l?l.id:null,champs:new Set(l?l.champs:[]),q:""};
+  view="build";
+  $("builder").innerHTML=`<h3>${l?"Edit list":"New custom list"}</h3>
+    <div class="row"><input class="fld" id="bname" maxlength="30" placeholder="List name (e.g. Mages)" value="${esc(l?l.name:"")}"></div>
+    <div class="row"><input class="fld" type="search" id="bq" placeholder="Search champions…">
+      <select class="fld" id="bfrom"><option value="">Start from a list…</option>${Object.keys(LISTS).filter(k=>!k.startsWith("c:")).map(r=>`<option value="${esc(r)}">${esc(label(r))}</option>`).join("")}</select>
+      <button data-b="all">Select shown</button><button data-b="none">Clear</button></div>
+    <small id="bcount"></small><div class="chips" id="bchips"></div>
+    <div class="row"><button class="pri" data-b="save">Save list</button><button data-b="cancel">Cancel</button>${l?'<button class="danger" data-b="del" style="margin-left:auto">Delete list</button>':""}</div>
+    <p class="err" id="berr"></p>`;
+  render();
+}
+function drawChips(){
+  if(view!=="build"||!bld) return;
+  const q=bld.q.trim().toLowerCase(), ros=roster([...bld.champs]);
+  const shown=ros.filter(n=>n.toLowerCase().includes(q)), exact=ros.some(n=>n.toLowerCase()===q);
+  $("bchips").innerHTML=shown.map(n=>`<button class="chip ${bld.champs.has(n)?"on":""}" data-c="${esc(n)}">${esc(n)}</button>`).join("")
+    +(q&&!exact?`<button class="chip" data-new="${esc(bld.q.trim())}">＋ Add “${esc(bld.q.trim())}” as a new champion</button>`:"");
+  $("bcount").textContent=bld.champs.size+" selected · "+shown.length+" shown";
+}
+async function deleteList(id){
+  const l=(all.__lists||[]).find(x=>x.id===id); if(!l) return;
+  if(!await confirmDlg("Delete this list?",'"'+l.name+'" and its progress will be removed.',"Delete list",true)) return;
+  all.__lists=all.__lists.filter(x=>x.id!==id); for(const k of Object.keys(all)) if(k==="c:"+id||k.startsWith("c:"+id+"|")) delete all[k];
+  rebuildLists(); view="role"; save(); render();
+}
+$("builder").addEventListener("input",e=>{if(e.target.id==="bq"){bld.q=e.target.value;drawChips()}});
+$("builder").addEventListener("change",e=>{
+  if(e.target.id==="bfrom"&&e.target.value){bld.champs=new Set(LISTS[e.target.value].map(c=>c.name));e.target.value="";drawChips()}});
+$("builder").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.c){const n=b.dataset.c; bld.champs.has(n)?bld.champs.delete(n):bld.champs.add(n); drawChips();}
+  else if(b.dataset.new){bld.champs.add(b.dataset.new); bld.q=""; $("bq").value=""; drawChips();}
+  else if(b.dataset.b==="all"){roster([...bld.champs]).filter(n=>n.toLowerCase().includes(bld.q.trim().toLowerCase())).forEach(n=>bld.champs.add(n)); drawChips();}
+  else if(b.dataset.b==="none"){bld.champs.clear(); drawChips();}
+  else if(b.dataset.b==="cancel"){view="role"; render();}
+  else if(b.dataset.b==="del"){deleteList(bld.id);}
+  else if(b.dataset.b==="save"){
+    const err=m=>{$("berr").textContent=m}, name=$("bname").value.trim().slice(0,30);
+    if(!name) return err("Give your list a name.");
+    if(!bld.champs.size) return err("Pick at least one champion.");
+    const lists=all.__lists||(all.__lists=[]);
+    if(lists.some(l=>l.id!==bld.id&&l.name.toLowerCase()===name.toLowerCase())||Object.keys(LISTS).filter(k=>!k.startsWith("c:")).some(r=>label(r).toLowerCase()===name.toLowerCase())) return err("You already have a list with that name.");
+    const champs=[...bld.champs].sort(cmp); let l=bld.id&&lists.find(x=>x.id===bld.id);
+    if(l){l.name=name;l.champs=champs}else{l={id:Math.random().toString(36).slice(2,8),name,champs};lists.push(l)}
+    rebuildLists(); role="c:"+l.id; CHAMPS=LISTS[role]; view="role"; save(); render();
+  }
+});
+function renderSettings(){
+  if(view!=="settings") return;
+  const lists=all.__lists||[]; let theme="auto"; try{theme=localStorage.getItem(THEME_KEY)||"auto"}catch(e){}
+  const acct=session
+    ?`<p>Logged in as <b>${esc(session.email||"")}</b></p>
+      ${nameEdit
+        ?`<div class="row"><input class="fld" id="sname" maxlength="40" value="${esc(session.given||session.name||"")}"><button data-s="savename">Save name</button><small id="smsg"></small></div>`
+        :`<div class="row"><span>Name: <b>${esc(session.given||session.name||"")}</b></span><button data-s="editname">Edit</button><small id="smsg"></small></div>`}`
+    :authOn?`<p>You're not logged in. Progress is saved in this browser only.</p><button class="pri" data-s="login">Log in / Sign up</button>`
+    :`<p>Accounts aren't available on this site. Progress is saved in this browser only.</p>`;
+  const link=shareTok?location.origin+"/s/"+shareTok:"";
+  const share=session?(shareTok===undefined?(loadShare(),"<p><small>Loading…</small></p>"):shareTok
+    ?`<p>Anyone with this link can view your progress, but can't change anything.</p>
+      <div class="row"><input class="fld" id="slink" readonly value="${esc(link)}" style="flex:1;min-width:200px"><button data-s="copyshare">Copy</button><small id="cmsg"></small></div>
+      <div class="row"><button data-s="newshare">New link</button><button class="danger" data-s="stopshare">Stop sharing</button></div>`
+    :`<p>Create a link your friends can open to see your progress. It's read-only.</p><button data-s="mkshare">Create share link</button>`)
+    :authOn?"<p><small>Log in to create a share link.</small></p>":"<p><small>Sharing needs an account.</small></p>";
+  $("settings").innerHTML=`<h3>Account</h3>${acct}
+    <h3>Share your progress</h3>${share}
+    <h3>Preferences</h3><div class="row"><label for="stheme">Theme</label><select class="fld" id="stheme">${["auto","light","dark"].map(t=>`<option value="${t}"${t===theme?" selected":""}>${t[0].toUpperCase()+t.slice(1)}</option>`).join("")}</select></div>
+    <h3>Your lists</h3>${lists.map(l=>`<div class="row"><span>${esc(l.name)} <small>(${l.champs.length} champions)</small></span><button data-s="editlist" data-id="${l.id}">Edit</button><button class="danger" data-s="dellist" data-id="${l.id}">Delete</button></div>`).join("")||"<p><small>No custom lists yet.</small></p>"}
+    <button data-s="newlist">＋ New list</button>
+    <h3>Your data</h3><div class="row"><button data-s="export">Export</button><button data-s="import">Import</button><button class="pri" data-s="save" style="margin-left:auto">Save</button></div>
+    <div style="background:#d9534f;color:#fff;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:10px 16px;margin:22px -16px 0">Danger Zone</div>
+    <div class="row" style="margin-top:14px"><button class="danger" data-s="resetall">Reset all progress</button>${session?'<button class="danger" data-s="delacct">Delete account</button>':""}</div>`;
+}
+let nameEdit=false;
+$("settings").addEventListener("click",async e=>{
+  const b=e.target.closest("button"); if(!b) return; const a=b.dataset.s, id=b.dataset.id;
+  if(a==="login") openAuth();
+  else if(a==="signout") signOut();
+  else if(a==="savename"){
+    const n=$("sname").value.trim(); if(!n) return;
+    try{const r=await api("PUT","/api/profile",{name:n}); session.name=session.given=r.name;
+      localStorage.setItem("lol-az-session",JSON.stringify(session)); nameEdit=false; renderAuth();
+    }catch(x){$("smsg").textContent="Couldn't save ("+(x.status||"network error")+")"}
+  }
+  else if(a==="editname"){ nameEdit=true; renderSettings(); const i=$("sname"); if(i){i.focus();i.select()} }
+  else if(a==="delacct"){
+    const ok=await ask({title:"Delete your account?",body:"This permanently deletes your account and saved progress from the server. Progress stored in this browser is kept.\n\nType DELETE to confirm.",type:"DELETE",cancel:false,
+      buttons:[{label:"Cancel",value:false},{label:"Delete account",value:true,cls:"danger",needs:true}]});
+    if(ok){try{await api("DELETE","/api/account"); signOut()}catch(x){await info("Couldn't delete the account","Error "+(x.status||"network")+". A 404 means the server.js on your host is out of date: replace it and restart the container.")}}
+  }
+  else if(a==="mkshare"||a==="newshare"){
+    if(a==="newshare"&&!await confirmDlg("Create a new link?","Your current link will stop working.","Create new link",false)) return;
+    try{const r=await api("POST","/api/share"); shareTok=r.token; renderSettings()}
+    catch(x){await info("Couldn't create the link","Error "+(x.status||"network")+". A 404 means the server.js on your host is out of date: replace it and restart the container.")}
+  }
+  else if(a==="stopshare"){
+    if(!await confirmDlg("Stop sharing?","The link will stop working for everyone who has it.","Stop sharing",true)) return;
+    try{await api("DELETE","/api/share"); shareTok=null; renderSettings()}catch(x){await info("Couldn't stop sharing","Error "+(x.status||"network"))}
+  }
+  else if(a==="copyshare"){
+    const i=$("slink"); i.select();
+    try{await navigator.clipboard.writeText(i.value)}catch(x){document.execCommand&&document.execCommand("copy")}
+    $("cmsg").textContent="Copied";
+  }
+  else if(a==="save"){ view="role"; render(); window.scrollTo&&window.scrollTo(0,0); }
+  else if(a==="newlist") openBuilder(null);
+  else if(a==="editlist") openBuilder("c:"+id);
+  else if(a==="dellist") deleteList(id);
+  else if(a==="export") $("exp").click();
+  else if(a==="import") $("imp").click();
+  else if(a==="resetall"){
+    if(!await confirmDlg("Reset all progress?","Every list will be cleared"+(session?", including your saved account progress":"")+". Your custom lists are kept.","Reset everything",true)) return;
+    for(const k in all) if(k!=="__lists") delete all[k]; save(); render();}
+});
+$("settings").addEventListener("change",e=>{if(e.target.id==="stheme"){try{localStorage.setItem(THEME_KEY,e.target.value)}catch(x){} applyTheme()}});
+$("editlist").onclick=()=>openBuilder(role);
+let view="role";
+if(!READONLY&&location.pathname==="/about")view="about";
+function entriesFor(r){return LISTS[r].map(c=>({name:c.name,s:(all[pkey(r)]||{})[c.name]||{won:false,games:0,date:null}}))}
+function tiles(es){
+  const won=es.filter(e=>e.s.won), games=es.reduce((a,e)=>a+e.s.games,0), left=es.length-won.length;
+  const avg=won.length?won.reduce((a,e)=>a+e.s.games,0)/won.length:0;
+  const first=won.filter(e=>e.s.games===1).length;
+  const sorted=[...won].sort((a,b)=>a.s.games-b.s.games), hard=sorted[sorted.length-1];
+  const stuck=es.filter(e=>!e.s.won&&e.s.games>0).sort((a,b)=>b.s.games-a.s.games)[0];
+  const wk=Date.now()-7*864e5;
+  const week=won.filter(e=>e.s.date&&new Date(e.s.date).getTime()>=wk).length;
+  const dates=won.map(e=>e.s.date).filter(Boolean).sort();
+  let pace="–",eta="–";
+  if(!left&&es.length) eta="Done";
+  else if(dates.length){
+    const days=Math.max(7,(Date.now()-new Date(dates[0]).getTime())/864e5), pw=won.length/days*7;
+    pace=pw.toFixed(1)+" / wk"; eta=new Date(Date.now()+left/pw*7*864e5).toISOString().slice(0,10);
+  }
+  const T=[["Win rate",games?Math.round(won.length/games*100)+"%":"–"],["Games played",games],["Losses",games-won.length],
+    ["Avg attempts / win",won.length?avg.toFixed(2):"–"],["First-try wins",won.length?first+" ("+Math.round(first/won.length*100)+"%)":"–"],
+    ["Fewest attempts",sorted[0]?sorted[0].name+" ("+sorted[0].s.games+")":"–"],["Most attempts",hard?hard.name+" ("+hard.s.games+")":"–"],
+    ["Stuck on",stuck?stuck.name+" ("+stuck.s.games+" losses)":"–"],["Won this week",week],["Pace",pace],
+    ["Est. games left",won.length?Math.round(avg*left):"–"],["Est. finish",eta]];
+  return T.map(([l,v])=>`<div class="t"><small>${l}</small><b>${esc(String(v))}</b></div>`).join("");
+}
+function renderStats(){
+  $("stats").hidden=view!=="stats"; $("roleView").hidden=view!=="role"; $("settings").hidden=view!=="settings"; $("builder").hidden=view!=="build";
+  if(view!=="stats") return;
+  const roles=Object.keys(LISTS);
+  const rows=roles.map(r=>{const es=entriesFor(r),w=es.filter(e=>e.s.won);
+    return `<tr><td>${esc(label(r))}</td><td>${w.length}/${es.length}</td><td>${es.reduce((a,e)=>a+e.s.games,0)}</td><td>${w.length?(w.reduce((a,e)=>a+e.s.games,0)/w.length).toFixed(2):"–"}</td></tr>`}).join("");
+  $("stats").innerHTML=`<p><small>Showing ${esc(MODES.find(m=>m[0]===mode)[1])} progress.</small></p><h3>All lists</h3><div class="tg">${tiles(roles.flatMap(entriesFor))}</div>
+    <h3>By list</h3><table><tr><th>List</th><th>Won</th><th>Games</th><th>Avg attempts</th></tr>${rows}</table>
+    ${isHC()?`<h3>Insanity runs</h3><table><tr><th>List</th><th>Current run</th><th>Best run</th><th>Restarts</th></tr>${roles.map(r=>{const mm=(all[pkey(r)]||{}).__meta||{},cu=entriesFor(r).filter(e=>e.s.won).length;return `<tr><td>${esc(label(r))}</td><td>${cu}</td><td>${Math.max(mm.best||0,cu)}</td><td>${mm.resets||0}</td></tr>`}).join("")}</table>`:""}
+    ${isHard()?`<h3>Hard runs</h3><table><tr><th>List</th><th>Won</th><th>Setbacks</th></tr>${roles.map(r=>{const mm=(all[pkey(r)]||{}).__meta||{},cu=entriesFor(r).filter(e=>e.s.won).length;return `<tr><td>${esc(label(r))}</td><td>${cu}</td><td>${mm.setbacks||0}</td></tr>`}).join("")}</table>`:""}
+    <h3>Per list</h3>${roles.map(r=>`<details${r===role?" open":""}><summary>${esc(label(r))}</summary><div class="tg">${tiles(entriesFor(r))}</div></details>`).join("")}`;
+}
+
+addEventListener("popstate",()=>{if(READONLY)return;const p=location.pathname;if(p==="/"||p==="/about"){view=p==="/about"?"about":"role";render()}});
+// ---- Next up: build data from /api/builds (collected weekly by the separate lol-meta-collector; never fetched from OP.GG in the browser) ----
+const POSMAP={"Top":"TOP","Jungle":"JUNGLE","Mid":"MID","Bot / ADC":"ADC","Support":"SUPPORT"};   // role list -> collector position
+const POSNAME={TOP:"top",JUNGLE:"jungle",MID:"mid",ADC:"adc",SUPPORT:"support"}, POSORDER=["TOP","JUNGLE","MID","ADC","SUPPORT"];
+let bopen={runes:false}, pospick={}, BUILDS={}, BPEND={};
+if(!READONLY)try{const o=JSON.parse(localStorage.getItem("lol-az-bopen"));if(o&&typeof o==="object")bopen=Object.assign(bopen,o);const p=JSON.parse(localStorage.getItem("lol-az-pospick"));if(p&&typeof p==="object")pospick=p}catch(e){}
+const bsave=()=>{if(READONLY)return;try{localStorage.setItem("lol-az-bopen",JSON.stringify(bopen));localStorage.setItem("lol-az-pospick",JSON.stringify(pospick))}catch(e){}};
+const bkey=(n,p)=>n+"|"+(p||"*");
+const pct=v=>typeof v==="number"&&isFinite(v)?v.toFixed(1)+"%":"–", nfmt=v=>typeof v==="number"&&isFinite(v)?Math.round(v).toLocaleString():"–";
+function loadBuild(name,pos){
+  const k=bkey(name,pos), e=BUILDS[k];
+  if(BPEND[k]||(e&&Date.now()-e.t<6e5)) return;                       // cached for 10 min; refreshed quietly after that
+  BPEND[k]=1;
+  fetch("/api/builds?champion="+encodeURIComponent(name)+(pos?"&position="+pos:"")).then(r=>r.ok?r.json():Promise.reject(r.status))
+    .then(j=>{BUILDS[k]={t:Date.now(),j}})
+    .catch(()=>{if(!BUILDS[k])BUILDS[k]={t:Date.now()-5.5e5,j:{state:"error"}}})   // an error is retried after ~50 s
+    .finally(()=>{delete BPEND[k];renderNext()});
+}
+let BPOS={};   // champion -> positions the collector has (kept so the chips stay put while another position loads)
+const posChips=(list,sel)=>`<span class="k">Position</span><div class="nxr">${POSORDER.filter(p=>list.some(x=>x.position===p)).map(p=>`<button class="pc${p===sel?" on":""}" data-bt="pos" data-p="${p}" aria-pressed="${p===sel}">${POSNAME[p]}</button>`).join("")}</div>`;
+const btip=x=>[x.name,x.pick_rate!=null?pct(x.pick_rate)+" pick":"",x.win_rate!=null?pct(x.win_rate)+" win":"",x.sample_size?nfmt(x.sample_size)+" games":""].filter(Boolean).join(" · ");
+const bimg=(x,c)=>`<span class="bi ${c||""}" title="${esc(btip(x))}">${x.image?`<img src="${esc(x.image)}" alt="${esc(x.name||"")}" onerror="this.remove()">`:""}</span>`;
+function freshHtml(d){
+  if(!d) return "";
+  const dt=d.collected_at?new Date(d.collected_at):null, when=dt&&isFinite(dt)?dt.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}):"date unknown";
+  const dd=d.age_days==null?null:Math.floor(d.age_days), age=dd==null?"":dd<1?" (today)":" ("+dd+" day"+(dd===1?"":"s")+" ago)", w=[];
+  if(d.from==="archive") w.push("The latest collection was empty or failed, so this is the last good snapshot.");
+  if(d.stale) w.push(d.age_days==null?"The collection date is unknown.":"This data is more than "+d.stale_after_days+" days old, so the collector may have stopped.");
+  return `<div class="nxm full">Build data: <a href="https://op.gg" target="_blank" rel="noopener noreferrer">OP.GG</a> · ${esc(d.rank||"")} · Last Updated ${esc(when)}</div>`;
+}
+// ---- Rune page: the full rune trees come from Riot Data Dragon (same host as the champion icons); the collector's build only says which runes are picked ----
+let RD=null; try{RD=JSON.parse(localStorage.getItem("lol-az-runes"))}catch(e){}
+let RDPEND=false;
+function loadRunes(){
+  if(RDPEND||(RD&&RD.trees&&RD.t&&Date.now()-RD.t<864e5)) return; RDPEND=true;
+  (DD&&DD.ver?Promise.resolve(DD.ver):fetch("https://ddragon.leagueoflegends.com/api/versions.json").then(r=>r.json()).then(v=>v[0]))
+    .then(ver=>fetch("https://ddragon.leagueoflegends.com/cdn/"+ver+"/data/en_US/runesReforged.json"))
+    .then(r=>r.json()).then(d=>{
+      RD={t:Date.now(),trees:d.map(t=>({id:t.id,name:t.name,icon:t.icon,slots:t.slots.map(sl=>sl.runes.map(x=>({id:x.id,name:x.name,icon:x.icon})))}))};
+      try{localStorage.setItem("lol-az-runes",JSON.stringify(RD))}catch(e){}
+    }).catch(()=>{}).finally(()=>{RDPEND=false;renderNext()});
+}
+const RIMG="https://ddragon.leagueoflegends.com/cdn/img/", SHIMG="https://raw.communitydragon.org/latest/game/assets/perks/statmods/";
+const SHARDS=[[5008,5005,5007],[5008,5010,5001],[5011,5013,5001]];   // offense / flex / defense rows
+const SHN={5008:["Adaptive Force","statmodsadaptiveforceicon"],5005:["Attack Speed","statmodsattackspeedicon"],5007:["Ability Haste","statmodscdrscalingicon"],5010:["Move Speed","statmodsmovementspeedicon"],5001:["Scaling Health","statmodshealthscalingicon"],5011:["Health","statmodshealthplusicon"],5013:["Tenacity and Slow Resist","statmodstenacityicon"]};
+const sameR=(a,b)=>(a.id!=null&&b.id!=null&&String(a.id)===String(b.id))||(a.name&&b.name&&a.name.toLowerCase()===b.name.toLowerCase());
+const ri=(src,name,on,c)=>`<span class="ri ${c}${on?" on":""}" title="${esc(name)}"><img src="${esc(src)}" alt="${esc(name)}" onerror="this.remove()"></span>`;
+function runePage(r){
+  if(!RD||!RD.trees||!r.primary_style) return "";
+  const find=st=>st&&RD.trees.find(t=>sameR(t,st)), pt=find(r.primary_style), stt=r.secondary_style?find(r.secondary_style):null;
+  if(!pt||!r.primary.some(x=>pt.slots.some(sl=>sl.some(y=>sameR(x,y))))) return "";       // ids/names don't line up -> flat fallback
+  const head=t=>`<div class="rh"><img src="${RIMG+esc(t.icon)}" alt="" onerror="this.remove()"><b>${esc(t.name)}</b></div>`;
+  const rowsOf=(t,sel,from)=>t.slots.slice(from).map((sl,i)=>`<div class="rr${from===0&&i===0?" ks":""}">${sl.map(x=>ri(RIMG+x.icon,x.name,sel.some(y=>sameR(x,y)),from===0&&i===0?"ks":"")).join("")}</div>`).join("");
+  const sh=r.stat_shards||[], shRows=SHARDS.map((ids,i)=>{const p=sh[i], pid=p&&p.id!=null&&ids.includes(Number(p.id))?Number(p.id):(p&&ids.find(id=>SHN[id][0].toLowerCase()===String(p.name||"").toLowerCase()));
+    return `<div class="rr sr">${ids.map(id=>ri(SHIMG+SHN[id][1]+".png",SHN[id][0],id===pid,"sh")).join("")}</div>`}).join("");
+  return `<div class="rpg"><div class="rcol">${head(pt)}${rowsOf(pt,r.primary,0)}</div><div class="rcol">${stt?head(stt)+rowsOf(stt,r.secondary,1):""}<div class="rsh">${shRows}</div></div></div>`;
+}
+function buildRows(j,fixed){
+  const b=j.build, rows=[];
+  if(!fixed&&j.positions&&j.positions.length) rows.push(posChips(j.positions,j.position));
+  if(b.summoner_spells.length){
+    const ss=b.summoner_spells.slice(), fi=ss.findIndex(x=>/^flash$/i.test(x.name||""));
+    if(fi>=0&&fi!==ss.length-1) ss.push(ss.splice(fi,1)[0]);          // Flash goes last (right) by default
+    if(bopen.swap) ss.reverse();                                        // user's swap toggle
+    rows.push(`<span class="k">Summoners</span><div class="nxr">${ss.map(s=>bimg(s)).join("")}${ss.length>1?`<button class="sw" data-bt="swap" title="Swap summoner spell order" aria-label="Swap summoner spell order">⇄</button>`:""}</div>`);
+  }
+  if(b.skill_order.length){
+    const maxOrder=b.skill_order.slice(0,3).join(" → ");
+    const levels=b.skill_order.map((k,i)=>`<span class="skill-step" title="Level ${i+1}: ${esc(k)}"><small>${i+1}</small><i${k==="R"?' class="r"':""}>${esc(k)}</i></span>`).join("");
+    rows.push(`<span class="k">Skill order</span><div class="skill-build"><span class="skill-max">Max: <b>${esc(maxOrder).replaceAll(" → "," → ")}</b></span><span class="skill-sequence" aria-label="Skill levels 1 to ${b.skill_order.length}">${levels}</span></div>`);
+  }
+  const seen=new Set(), sitAll=["fourth","fifth","sixth","last"].flatMap(k=>b.situational_items[k]||[]).filter(x=>{const id=x.id!=null?x.id:x.name; if(seen.has(id))return false; seen.add(id); return true});
+  const groups=[["Starting items",b.starting_items],["Boots",b.core_items.boots],["Core items",b.core_items.items],["Situational items",sitAll]].filter(g=>g[1].length);
+  if(groups.length) rows.push(`<span class="k">Items</span><div class="nxr">${groups.map(g=>`<span class="grp" title="${g[0]}">${g[1].map(x=>bimg(x)).join("")}</span>`).join('<span class="sep">›</span>')}</div>`);
+  const r=b.runes; if(bopen.runes) loadRunes();
+  if(r&&r.primary_style&&r.primary.length){
+    rows.push(`<button class="lk full" data-bt="runes" aria-expanded="${bopen.runes}">${bopen.runes?"▾":"▸"} Runes</button>`);
+    if(bopen.runes){
+      const page=runePage(r);
+      if(page) rows.push(`<div class="rp full">${page}${r.sample_size?`<div class="nxm" style="margin-top:8px">Rune page: ${pct(r.pick_rate)} pick · ${pct(r.win_rate)} win · ${nfmt(r.sample_size)} games</div>`:""}</div>`);
+      else{
+        const tree=(s,a)=>`<span class="rs">${bimg(s,"st")}${esc(s.name)}</span>${a.map(x=>bimg(x,"rn")).join("")}`;
+        rows.push(`<div class="rp full"><div class="nxr">${tree(r.primary_style,r.primary)}${r.secondary_style?`<span class="sep">+</span>${tree(r.secondary_style,r.secondary)}`:""}</div>`
+          +(r.stat_shards.length?`<div class="nxr"><span>Shards</span>${r.stat_shards.map(x=>`<span class="rs">${bimg(x,"sh")}<span style="font-weight:400">${esc(x.name)}</span></span>`).join("")}</div>`:"")
+          +(r.sample_size?`<div class="nxm" style="margin-top:8px">Rune page: ${pct(r.pick_rate)} pick · ${pct(r.win_rate)} win · ${nfmt(r.sample_size)} games</div>`:"")+`</div>`);
+      }
+    }
+  }
+  return rows.join("");
+}
+function nextBox(cur,hc,m,won,total){
+  const fixed=!!POSMAP[role], want=POSMAP[role]||pospick[cur.name]||"";     // role lists fix the position; other lists use the user's chip (or the most-played position, shown openly)
+  loadBuild(cur.name,want);
+  const e=BUILDS[bkey(cur.name,want)], j=e&&e.j, ok=j&&j.state==="ok", pos=(j&&j.position)||want, letter=esc(cur.name[0]);
+  const ic=iconUrl(cur.name)||(ok&&j.champion_icon)||"", st=ok?j.statistics:null;
+  const sk=m.skip||[], left=ordered().filter(c=>!get(c.name).won), nSk=left.filter(c=>sk.includes(c.name)).length, canSkip=left.filter(c=>!sk.includes(c.name)).length>1;
+  let panel;
+  if(j&&j.positions&&j.positions.length) BPOS[cur.name]=j.positions;
+  if(!j) panel=`<div class="nxm full">Loading build…</div>`+(!fixed&&BPOS[cur.name]?posChips(BPOS[cur.name],want):"");
+  else if(ok) panel=buildRows(j,fixed)+freshHtml(j.data);
+  else{
+    const chips=!fixed&&j.positions&&j.positions.length?posChips(j.positions,""):"";
+    const avail=fixed&&j.positions&&j.positions.length?" Collected for: "+POSORDER.filter(p=>j.positions.some(x=>x.position===p)).map(p=>POSNAME[p]).join(", ")+".":"";
+    const msg=j.state==="no_position"?`No build data for ${esc(cur.name)} in ${esc(POSNAME[pos]||"that position")}.${avail}`
+      :j.state==="no_champion"?`No build data for ${esc(cur.name)} yet.`
+      :j.state==="no_data"?"No build data has been collected yet.":"Build data isn’t available right now.";
+    panel=`<div class="nxm full" style="font-size:13px">${msg}</div>${chips}${j.state==="error"||j.state==="no_data"?"":freshHtml(j.data)}`;
+  }
+  return `<div class="nxh"><div class="nxl"><div class="nxi${ic?"":" noimg"}"><span>${letter}</span>${ic?`<img src="${esc(ic)}" alt="" onerror="var p=this.parentNode;this.remove();p.classList.add('noimg')">`:""}<i>${letter}</i></div>
+    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b>${pos?`<span class="nxp">(${esc(POSNAME[pos]||pos)})</span>`:""}</div>
+    ${st?`<div class="nxs"><span>Pick Rate: <b>${pct(st.pick_rate)}</b></span><span>Win Rate: <b>${pct(st.win_rate)}</b></span><span title="Games analysed for this champion in this position">Sample Size: <b>${nfmt(st.games)}</b></span></div>`:""}</div></div>
+    <div class="nb"><span>${total-won} to go${nSk?` · ${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button>`:""}</span>${hc?`<button class="danger" data-a="x">${LOSTLAB()}</button>`:""}<div class="nbc"><button class="pri" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div></div></div>
+    <div class="nxb">${panel}</div>`;
+}
+function renderNext(){
+  const L=ordered(), hc=isLock(), m=meta(), won=L.filter(c=>get(c.name).won).length, total=L.length, cur=availNext(L);
+  $("next").innerHTML=cur?nextBox(cur,hc,m,won,total)
+    :`<div class="nxh"><div><b>${total?"A–Z complete 🎉":role.startsWith("class:")?"Loading class data…":"This list is empty"}</b></div></div>`;
+}
+function swapTag(id,tag){const e=document.getElementById(id); if(!e||e.tagName.toLowerCase()===tag)return; const n=document.createElement(tag); for(const a of e.attributes)n.setAttribute(a.name,a.value); n.innerHTML=e.innerHTML; e.replaceWith(n);}
+function render(){
+  if(!READONLY){const p=location.pathname;
+    if(view==="about"&&p!=="/about")history.pushState(null,"","/about");
+    else if(view!=="about"&&p==="/about")history.pushState(null,"","/");}
+  renderStats(); renderSettings(); drawChips(); renderNav();
+  $("about").hidden=view!=="about";
+  if(!READONLY){
+    const T={stats:"Stats | LoLphabet",settings:"Settings | LoLphabet",build:"List builder | LoLphabet",about:"About LoLphabet | League of Legends A–Z Challenge Tracker"};
+    document.title=T[view]||"LoLphabet | Free League of Legends A–Z Challenge Tracker";
+    // one H1 per view: the tagline on the home view, "About LoLphabet" on /about
+    const ab=view==="about"; swapTag("tl",ab?"p":"h1"); swapTag("about-h",ab?"h1":"h2");
+  }
+  $("editlist").hidden=!role.startsWith("c:"); $("sharelist").hidden=!role.startsWith("c:");
+  const L=ordered(), hc=isLock(), m=meta(), won=L.filter(c=>get(c.name).won).length, total=L.length;
+  const cur=availNext(L);
+  $("fill").style.width=(total?won/total*100:0)+"%";
+  $("count").textContent=won+" / "+total+" won"; $("pct").textContent=(total?Math.round(won/total*100):0)+"%";
+  renderNext();
+  const q=query.toLowerCase(), skl=m.skip||[];
+  const list=L.filter(c=>{const w=get(c.name).won;return (filter==="all"||(filter==="win"?w:!w)) && c.name.toLowerCase().includes(q)});
+  $("grid").innerHTML=list.length?list.map(c=>{
+    const s=get(c.name), isCur=!!cur&&cur.name===c.name, locked=hc&&!s.won&&!isCur;
+    const sub=s.won?`Won ${s.date||""} <button class="ed" data-a="d" title="Edit date">✎</button> • ${s.games} attempt${s.games===1?"":"s"}`:(s.games?`${s.games} loss${s.games===1?"":"es"}`:"&nbsp;");
+    const acts=hc
+      ?(s.won?'<button data-a="w" class="wb">↺ Undo</button>':isCur?'<button data-a="x" class="danger">'+LOSTLAB()+'</button><button data-a="w" class="wb">✓ Complete</button>':"")
+      :`<button data-a="m" title="${s.won?"Remove an attempt":"Remove a logged loss"}">−</button><button data-a="p" title="${s.won?"Add an attempt":"Log a loss"}">+</button><button data-a="w" class="wb">${s.won?"↺ Undo":"✓ Complete"}</button>`;
+    const bn=!READONLY&&!s.won&&!isCur&&skl.includes(c.name);
+    return `<div class="c ${s.won?"win":""} ${isCur?"cur":""} ${locked?"locked":""} ${bn?"bn":""}"${bn?" inert":""} data-n="${esc(c.name)}">
+      <div class="l"><span>${esc(c.name[0])}</span>${iconUrl(c.name)?`<img src="${iconUrl(c.name)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div>
+      <div class="n"><div>${esc(c.name)}</div><small>${sub}</small>${s.note?`<small class="nt">${linkify(s.note)}</small>`:""}</div>
+      ${s.won?'<div class="ck" title="Completed">✓</div>':""}
+      ${bn?'<div class="rib">Picked / Banned</div>':""}
+      <div class="g"><button data-a="n" title="${s.note?"Edit note":"Add a note"}">✎</button>${acts}</div>
+    </div>`}).join(""):`<div class="empty" style="grid-column:1/-1">${role.startsWith("class:")&&!total?"Loading class data…":"No champions match."}</div>`;
+}
+
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+$("grid").addEventListener("click",e=>{
+  const card=e.target.closest(".c"); if(!card||READONLY||card.classList.contains("bn")||e.target.closest("a")) return;
+  const name=card.dataset.n, s=get(name), a=e.target.closest("button")?.dataset.a, cur=nextUp();
+  if(a==="d"){editDate(name);return}
+  if(a==="n"){editNote(name);return}
+  if(a==="x"){loseRun(name);return}
+  if(isLock()&&!s.won&&(!cur||cur.name!==name)) return;
+  const wasCur=!!cur&&cur.name===name;
+  if(a==="p"){ s.games++; clearSkip(name,wasCur); }
+  else if(a==="m") s.games=Math.max(s.won?1:0,s.games-1);
+  else if(!s.won){ s.won=true; s.date=today(); s.games++; clearSkip(name,wasCur); }
+  else { s.won=false; s.date=null; s.games=Math.max(0,s.games-1); }
+  save(); render();
+});
+$("next").addEventListener("click",e=>{
+  const t=e.target.closest("[data-bt]");                       // build panel controls (also work in read-only share views)
+  if(t){const k=t.dataset.bt, cur=nextUp();
+    if(k==="runes"){bopen.runes=!bopen.runes; if(bopen.runes) loadRunes();}
+    else if(k==="swap") bopen.swap=!bopen.swap;
+    else if(k==="pos"&&cur&&POSORDER.includes(t.dataset.p)) pospick[cur.name]=t.dataset.p;
+    bsave(); renderNext(); return;}
+  const b=e.target.closest("button"); if(!b||READONLY) return;
+  const cur=nextUp(); if(!cur) return;
+  if(b.dataset.a==="x") loseRun(cur.name);
+  else if(b.dataset.a==="u"){const m=meta(); m.skip=(m.skip||[]).concat(cur.name); save(); render();}
+  else if(b.dataset.a==="uc"){delete meta().skip; save(); render();}
+  else if(b.dataset.a==="w"){const s=get(cur.name); if(!s.won){s.won=true;s.date=today();s.games++;clearSkip(cur.name,true);save();render();}}
+});
+function navClick(e){
+  const b=e.target.closest("button"); if(!b) return; const d=b.dataset;
+  if(d.home){ view="role"; render(); return; }
+  if(d.m){ mode=d.m; try{localStorage.setItem("lol-az-mode",mode)}catch(x){} if(view==="settings"||view==="build") view="role"; render(); return; }
+  if(d.cat){
+    const keys=keysIn(d.cat);
+    if(d.cat==="custom"&&!keys.length){ openBuilder(null); return; }
+    role=keys.includes(lastIn[d.cat])?lastIn[d.cat]:keys[0]; CHAMPS=LISTS[role]; view="role"; save(); render(); return;
+  }
+  const r=d.r; if(!r) return;
+  if(r==="__stats") view="stats";
+  else if(r==="__settings"){ view="settings"; nameEdit=false; }
+  else if(r==="__new"){ openBuilder(null); return; }
+  else{ view="role"; role=r; lastIn[catOf(r)]=r; CHAMPS=LISTS[role]; save(); }
+  render();
+}
+$("tabs").addEventListener("click",navClick); $("cats").addEventListener("click",navClick); $("modes").addEventListener("click",navClick);
+$("q").addEventListener("input",e=>{query=e.target.value;render()});
+document.querySelectorAll("[data-f]").forEach(b=>b.addEventListener("click",()=>{
+  filter=b.dataset.f;
+  document.querySelectorAll("[data-f]").forEach(x=>x.classList.toggle("on",x===b));
+  render();
+}));
+$("exp").onclick=()=>{
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(all,null,2)],{type:"application/json"}));
+  a.download="lol-az-progress.json";a.click();
+};
+$("imp").onclick=()=>{
+  const i=document.createElement("input");i.type="file";i.accept="application/json";
+  i.onchange=()=>i.files[0].text().then(t=>{
+    try{const d=JSON.parse(t);if(d&&typeof d==="object"){if(d.Jungle||d.Top||d.__lists)all=d;else all[role]=d;rebuildLists();save();render();}}catch(e){info("Import failed","That file isn't a valid progress export.")}
+  });i.click();
+};
+$("rst").onclick=async()=>{if(await confirmDlg("Reset this list?","All progress on "+label(role)+" will be cleared"+(session?", including in your account":"")+".","Reset list",true)){all[pkey(role)]={};save();render();}};
+
+// ---- Optional Google accounts (only active when served by server.js) ----
+let session=null, authOn=false, gReady=false, tokenClient, pushT, visitN=0, gcid="", gLoading=false;
+try{session=JSON.parse(localStorage.getItem("lol-az-session"))}catch(e){}
+const api=(m,u,b)=>fetch(u,{method:m,headers:{"Content-Type":"application/json",...(session?{Authorization:"Bearer "+session.token}:{})},body:b===undefined?undefined:JSON.stringify(b)})
+  .then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||r.status),{status:r.status});return j});
+const setSync=t=>{const e=$("sync");if(e)e.textContent=t==="Sync failed"?t:""};
+function push(){
+  if(!session) return;
+  setSync("Saving…"); clearTimeout(pushT);
+  pushT=setTimeout(()=>api("PUT","/api/progress",all).then(()=>setSync("Saved")).catch(e=>{
+    if(e.status===401) signOut(); else setSync("Sync failed");}),600);
+}
+const hasData=o=>o&&Object.values(o).some(r=>r&&typeof r==="object"&&Object.keys(r).length);
+async function pull(fresh){
+  const {data,name}=await api("GET","/api/progress");
+  if(name&&session){session.name=session.given=name;try{localStorage.setItem("lol-az-session",JSON.stringify(session))}catch(e){}renderAuth();}
+  if(hasData(data)){
+    if(fresh&&hasData(all)&&JSON.stringify(all)!==JSON.stringify(data)){
+      const useAcct=await ask({title:"Which progress do you want to keep?",body:"This browser and your account both have saved progress.\n\nUsing your account's progress replaces what's in this browser. Keeping this browser's progress overwrites your account.",
+        buttons:[{label:"Keep this browser's",value:false},{label:"Use my account's",value:true,cls:"pri"}]});
+      if(!useAcct){push();return;}
+    }
+    all=data; rebuildLists(); try{localStorage.setItem(KEY,JSON.stringify(all))}catch(e){} render();
+  } else push();
+  setSync("Saved");
+}
+function loadGIS(ok,fail){
+  if(gReady) return ok(); if(gLoading) return; gLoading=true;
+  const sc=document.createElement("script"); sc.src="https://accounts.google.com/gsi/client";
+  sc.onload=()=>{
+    tokenClient=google.accounts.oauth2.initTokenClient({client_id:gcid,scope:"openid email profile",
+      callback:r=>{if(r&&r.access_token)login(r.access_token);else $("me").textContent="Google sign-in failed. Please try again."},
+      error_callback:e=>{if(e&&e.type!=="popup_closed")$("me").textContent="Google sign-in was blocked. Allow popups for this site and try again."}});
+    gReady=true; gLoading=false; ok();};
+  sc.onerror=()=>{gLoading=false; fail&&fail()};
+  document.head.appendChild(sc);
+}
+function openAuth(){
+  $("mt").textContent="Log in / Sign up";
+  $("mp").textContent="Continue with Google. Your account is created automatically the first time, and any progress already in this browser is saved to it.";
+  $("me").textContent=""; $("gbtn").innerHTML=""; $("modal").hidden=false;
+  $("gbtn").innerHTML=`<button class="gsi" id="gbt"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Sign in with Google</span></button>`;
+  const wire=()=>{$("gbt").disabled=false; $("gbt").onclick=()=>{$("me").textContent="";tokenClient.requestAccessToken({prompt:"select_account"})}};
+  if(gReady) wire();
+  else{$("gbt").disabled=true; loadGIS(wire,()=>{$("me").textContent="Couldn't load Google sign-in. Check your connection and try again."});}
+}
+const closeAuth=()=>{$("modal").hidden=true};
+$("mx").onclick=closeAuth;
+$("modal").addEventListener("click",e=>{if(e.target===$("modal"))closeAuth()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAuth()});
+async function chooseName(){
+  const n=await ask({title:"Choose your display name",body:"This is the name shown at the top of the page. You can change it any time in Settings.",
+    input:{value:session.given||session.name||"",placeholder:"Display name",max:40},
+    buttons:[{label:"Continue",cls:"pri",input:true}]});
+  const name=(n||"").trim();
+  if(name&&name!==(session.given||session.name)){
+    try{const r=await api("PUT","/api/profile",{name}); session.name=session.given=r.name; localStorage.setItem("lol-az-session",JSON.stringify(session));}catch(e){}
+  }
+}
+async function login(credential){
+  try{
+    session=await api("POST","/api/login",{access_token:credential}); shareTok=undefined;
+    const isNew=session.isNew; delete session.isNew;
+    localStorage.setItem("lol-az-session",JSON.stringify(session));
+    closeAuth();
+    if(isNew) await chooseName();
+    renderAuth(); await pull(true);
+  }catch(e){
+    session=null;
+    $("me").textContent="Sign-in failed. Please try again.";
+  }
+}
+function signOut(){
+  if(session) api("POST","/api/logout",{}).catch(()=>{});
+  session=null; shareTok=undefined; try{localStorage.removeItem("lol-az-session")}catch(e){}
+  renderAuth();
+}
+function renderVisits(){ $("visits").textContent=visitN?"You are visitor #"+visitN.toLocaleString():""; }
+function renderAuth(){
+  renderSettings(); updateFooter();
+  const el=$("auth");
+  $("opt2").hidden=!authOn; $("opts").hidden=!!session;
+  if(session){
+    el.innerHTML=`<span>Hi, ${esc(session.given||session.name||"there")}</span><small id="sync"></small><button id="so">Sign out</button>`;
+    $("so").onclick=signOut;
+  }else{
+    el.innerHTML=authOn?'<button id="bl" class="pri">Log in / Sign up</button>':"";
+    if(authOn) $("bl").onclick=openAuth;
+  }
+}
+if(!READONLY) fetch("/api/config").then(r=>r.ok?r.json():Promise.reject()).then(cfg=>{
+  if(!cfg.googleClientId) return;
+  authOn=true; renderAuth();
+  gcid=cfg.googleClientId;
+  if(session) pull(false).catch(e=>{if(e.status===401)signOut()});
+}).catch(()=>{});
+
+const TPL=(location.pathname.match(/^\/t\/([\w-]+)/)||[])[1];
+if(TPL&&!READONLY){
+  fetch("/api/template/"+TPL).then(r=>r.ok?r.json():Promise.reject()).then(async t=>{
+    history.replaceState(null,"","/");
+    if(!await confirmDlg("Add shared list?",(t.by||"Someone")+" shared the list “"+t.name+"” with "+t.champs.length+" champions. Add a copy to your lists?","Add list",false)) return;
+    const lists=all.__lists||(all.__lists=[]); let name=t.name.slice(0,30), n=2;
+    const taken=x=>lists.some(l=>l.name.toLowerCase()===x.toLowerCase())||Object.keys(LISTS).filter(k=>!k.startsWith("c:")).some(k=>label(k).toLowerCase()===x.toLowerCase());
+    while(taken(name)) name=t.name.slice(0,26)+" ("+(n++)+")";
+    const l={id:Math.random().toString(36).slice(2,8),name,champs:t.champs.slice().sort(cmp)}; lists.push(l);
+    rebuildLists(); role="c:"+l.id; CHAMPS=LISTS[role]; view="role"; save(); render();
+  }).catch(()=>info("Link not found","That shared list link is invalid or has been removed."));
+}
+const goHome=()=>{if(READONLY){location.href="/";return} view="role"; render(); window.scrollTo&&window.scrollTo(0,0)};
+$("home").onclick=goHome; $("home").onkeydown=e=>{if(e.key==="Enter")goHome()};
+if(READONLY){
+  $("snote").hidden=false; $("snote").textContent="Loading…";
+  fetch("/api/shared/"+SHARE).then(r=>r.ok?r.json():Promise.reject()).then(d=>{
+    all=d.data||{}; rebuildLists(); role="Top"; CHAMPS=LISTS[role];
+    $("snote").innerHTML="Viewing <b>"+esc(d.name||"a friend")+"</b>'s progress (read-only). <a href=\"/\">Track your own</a>";
+    document.title=(d.name||"A friend")+"'s progress | LoLphabet"; document.body.classList.remove("loading"); render();
+  }).catch(()=>{$("snote").innerHTML="This share link is invalid or has been turned off. <a href=\"/\">Go to the tracker</a>"});
+}
+$("loginlink").onclick=e=>{e.preventDefault();openAuth()};
+$("aboutlink").onclick=e=>{e.preventDefault();view="about";render();window.scrollTo&&window.scrollTo(0,0)};
+function updateFooter(){
+  $("fnote").textContent=READONLY?"":session
+    ?"Your progress is saved to your account and synced across all your devices. Export/Import is there if you want a backup."
+    :"Progress is saved in this browser (localStorage). Use Export/Import to move it between devices.";
+}
+const hw=$("howto");
+try{if(localStorage.getItem("lol-az-howto")==="1")hw.open=true}catch(e){}
+hw.addEventListener("toggle",()=>{try{localStorage.setItem("lol-az-howto",hw.open?"1":"0")}catch(e){}});
+lastIn[catOf(role)]=role;
+applyTheme();
+render(); updateFooter();
+fetch("/api/visit",{method:"POST"}).then(r=>r.ok?r.json():Promise.reject()).then(d=>{visitN=d.n;renderVisits()}).catch(()=>{});
+$("yr").textContent=new Date().getFullYear();
+function cookieDetails(){
+  return ask({title:"Cookies & stored data",cancel:null,
+    body:"Cookies: this site sets none.\n\nStored on your device (essential): your progress and lists, your preferences (theme, challenge mode, role-list source, build panel position and open/closed state, collapsed hints), and your login session if you sign in.\n\nOptional cookies: none. There is no analytics, advertising or social-media tracking, and nothing is sold or shared. Global Privacy Control signals are respected, because there is nothing to opt out of.\n\nThird parties: champion icons load from Riot Games, and Google's script loads only when you choose to log in.\n\nThe visitor counter uses no cookie or stored ID.",
+    buttons:[{label:"Close",value:null},{label:"Clear data stored here",cls:"danger",value:"clear"}]
+  }).then(async v=>{
+    if(v==="clear"&&await confirmDlg("Clear everything stored here?","This removes your progress, lists, preferences and login from this browser. Anything saved to your account is not affected.","Clear it all",true)){try{localStorage.clear()}catch(e){} location.reload()}
+  });
+}
+{let seen=false; try{seen=!!localStorage.getItem("lol-az-notice")}catch(e){}
+ $("cbar").hidden=seen;
+ $("cok").onclick=()=>{try{localStorage.setItem("lol-az-notice","1")}catch(e){} $("cbar").hidden=true};
+ $("cdet").onclick=cookieDetails; $("cookieprefs").onclick=e=>{e.preventDefault();cookieDetails()};}
+loadDD(); loadRoles();
+</script>
+</body>
+</html>
