@@ -1,0 +1,21 @@
+services:
+  lol-tracker:
+    image: node:20-alpine
+    container_name: ${CONTAINER_NAME:?CONTAINER_NAME is required}
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server.js"]
+    environment:
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
+      DATA_FILE: /data/data.json
+      PORT: ${APP_PORT:?APP_PORT is required}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-}                                                                           # optional, shown on the privacy/terms pages
+      COLLECTOR_DIR: /collector                                                                                   # where the collector's output is mounted (read-only)
+      SITE_URL: ${SITE_URL:?SITE_URL is required}                                                                 # used for canonical URLs and metadata
+    ports:
+      - "${BIND_IP:?BIND_IP is required}:${HOST_PORT:?HOST_PORT is required}:${APP_PORT:?APP_PORT is required}"   # bound to localhost: put a reverse proxy in front
+    volumes:
+      - ${TRACKER_APP_DIR:?TRACKER_APP_DIR is required}:/app:ro                                                   # index.html + server.js
+      - ${TRACKER_DATA_DIR:?TRACKER_DATA_DIR is required}:/data                                                   # accounts + progress (back this up)
+      - ${TRACKER_APP_DIR:?TRACKER_APP_DIR is required}/assets:/assets:ro                                         # images etc
+      - ${COLLECTOR_DATA_DIR:?COLLECTOR_DATA_DIR is required}:/collector:ro                                       # read-only view of the collector's output

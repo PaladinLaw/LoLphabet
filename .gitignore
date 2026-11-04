@@ -3,8 +3,6 @@
 lol-az-tracker/data/
 
 # Real compose files are local to each install. Commit the *.example.yml versions instead.
-docker-compose.yml
-docker-compose.yml_bak
 *.yml_bak
 .env
 *.env

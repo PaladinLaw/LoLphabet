@@ -1,0 +1,12 @@
+services:
+  lol-meta-collector:
+    build: .
+    container_name: ${COLLECTOR_CONTAINER_NAME:?COLLECTOR_CONTAINER_NAME is required}
+    restart: unless-stopped
+    command: ["python", "-m", "lolmeta", "schedule", "--interval-days", "7"]
+    volumes:
+      - ${COLLECTOR_DATA_DIR:?COLLECTOR_DATA_DIR is required}:/app/data                     # Shared output directory. Must match COLLECTOR_DATA_DIR in the tracker stack.
+      - ${COLLECTOR_LOG_DIR:?COLLECTOR_LOG_DIR is required}:/app/logs                       # Collector logs.
+      - ${COLLECTOR_CONFIG_FILE:?COLLECTOR_CONFIG_FILE is required}:/app/config.json:ro     # Private configuration file, mounted read-only.
+    environment:
+      TZ: ${TZ:?TZ is required}                                                             # change to your timezone; the schedule runs around 03:15 local time
