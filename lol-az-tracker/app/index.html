@@ -126,7 +126,7 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
 .next .nxp{font-size:11px;color:var(--muted);letter-spacing:.6px;font-weight:400;margin-left:6px}
 .nxs{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:12px;color:var(--muted);margin-top:3px}
 .next .nxs b{font-size:inherit;color:var(--text);font-weight:600}
-.nxb{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;display:grid;grid-template-columns:84px 1fr;row-gap:8px;column-gap:10px;align-items:center;font-size:13px}
+.nxb{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;display:grid;grid-template-columns:100px minmax(0,1fr);row-gap:8px;column-gap:10px;align-items:center;font-size:13px}
 .nxb .k{color:var(--muted)}
 .nxb .full{grid-column:1/-1}
 .nxr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -137,9 +137,8 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
 .bi.rn{width:22px;height:22px;border-radius:50%;background:#1d242e}
 .bi.sh{width:18px;height:18px;border-radius:50%;background:#1d242e}
 .bi.st{width:20px;height:20px;border-radius:4px;background:#1d242e}
-.skill-build{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:nowrap}
-.skill-max{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;color:var(--muted);font-size:11px;line-height:22px;flex:none}
-.skill-max b{font-size:12px;color:var(--text);font-weight:600}
+.skill-max{display:inline-flex;align-items:center;white-space:nowrap;color:var(--text);font-size:12px;line-height:22px;font-weight:600}
+.skill-max b{font-size:12px;color:var(--text);font-weight:700}
 .skill-sequence{display:inline-flex;align-items:flex-start;gap:3px;white-space:nowrap;overflow-x:auto;max-width:100%;padding:1px 0 3px;min-width:0}
 .skill-step{display:grid;grid-template-rows:10px 22px;justify-items:center;gap:7px;min-width:18px}
 .skill-step small{font-size:9px;line-height:10px;color:var(--muted)}
@@ -1016,9 +1015,10 @@ function buildRows(j,fixed){
     rows.push(`<span class="k">Summoners</span><div class="nxr">${ss.map(s=>bimg(s)).join("")}${ss.length>1?`<button class="sw" data-bt="swap" title="Swap summoner spell order" aria-label="Swap summoner spell order">⇄</button>`:""}</div>`);
   }
   if(b.skill_order.length){
-    const maxOrder=b.skill_order.slice(0,3).join(" → ");
+    const maxOrder=(Array.isArray(b.skill_max_order)?b.skill_max_order:[]).join(" → ");
     const levels=b.skill_order.map((k,i)=>`<span class="skill-step" title="Level ${i+1}: ${esc(k)}"><small>${i+1}</small><i${k==="R"?' class="r"':""}>${esc(k)}</i></span>`).join("");
-    rows.push(`<span class="k">Skill order</span><div class="skill-build"><span class="skill-max">Max: <b>${esc(maxOrder).replaceAll(" → "," → ")}</b></span><span class="skill-sequence" aria-label="Skill levels 1 to ${b.skill_order.length}">${levels}</span></div>`);
+    rows.push(`<span class="k">Level-up order</span><div class="skill-sequence" aria-label="Skill levels 1 to ${b.skill_order.length}">${levels}</div>`);
+    if(maxOrder) rows.push(`<span class="k">Max priority</span><div class="skill-max" aria-label="Max abilities in this order">${esc(maxOrder)}</div>`);
   }
   const seen=new Set(), sitAll=["fourth","fifth","sixth","last"].flatMap(k=>b.situational_items[k]||[]).filter(x=>{const id=x.id!=null?x.id:x.name; if(seen.has(id))return false; seen.add(id); return true});
   const groups=[["Starting items",b.starting_items],["Boots",b.core_items.boots],["Core items",b.core_items.items],["Situational items",sitAll]].filter(g=>g[1].length);

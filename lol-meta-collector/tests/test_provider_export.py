@@ -81,3 +81,26 @@ def test_normalise_rejects_missing_stats_or_build():
     champ = {"name": "Ahri", "id": "Ahri", "key": "103", "image": {"full": "Ahri.png"}}
     with pytest.raises(ValueError, match="Incomplete champion record"):
         normalise_record(champ, "mid", "16.21.1", {"data": {}}, _static_fixture())
+
+
+def test_skill_max_priority_uses_full_order_not_first_three_levels():
+    from lolmeta.collector import _skill_max_order
+    order = ["Q", "W", "E", "Q", "Q", "R", "Q", "E", "Q", "E", "R", "E", "E", "W", "W"]
+    assert _skill_max_order(order) == ["Q", "E", "W"]
+
+
+def test_projection_uses_most_played_skill_mastery_build_and_exports_max_order():
+    from lolmeta.collector import _build_projection
+    static = _static_fixture()
+    order_qew = ["Q", "W", "E", "Q", "Q", "R", "Q", "E", "Q", "E", "R", "E", "E", "W", "W"]
+    order_qwe = ["Q", "W", "E", "Q", "Q", "R", "Q", "W", "Q", "W", "R", "W", "W", "E", "E"]
+    data = {
+        "skill_masteries": {"builds": [
+            {"order": order_qwe, "play": 100, "win": 55, "pick_rate": 0.2},
+            {"order": order_qew, "play": 500, "win": 280, "pick_rate": 0.6},
+        ]}
+    }
+    projection = _build_projection(data, "16.21.1", static)
+    assert projection["skill_order"] == order_qew
+    assert projection["skill_max_order"] == ["Q", "E", "W"]
+    assert projection["skill_order_sample_size"] == 500

@@ -66,3 +66,15 @@ LolGetChampionAnalysis("AHRI","MID",Data(Summary(AverageStats(238107,0.51,0.11,0
     assert stats["win_rate"] == 0.51
     assert decoded["data"]["core_items"]["ids"] == [3118]
     assert decoded["data"]["skills"]["order"] == ["W", "Q", "E"]
+
+
+def test_build_args_passes_configured_all_rank_tier():
+    tool = {
+        "name": "lol_get_champion_analysis",
+        "inputSchema": {"type": "object", "properties": {
+            "champion": {"type": "string"}, "tier": {"type": "string"},
+            "desired_output_fields": {"type": "array", "items": {"type": "string"}},
+        }, "required": ["champion", "tier", "desired_output_fields"]},
+    }
+    args = build_tool_arguments(tool, "Ahri", "MID", "ranked", "en_US", "all")
+    assert args["tier"] == "all"

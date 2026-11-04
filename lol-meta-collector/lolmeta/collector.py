@@ -37,8 +37,61 @@ def read_json(path: Path) -> Any:
 
 
 def write_json(path: Path, data: Any) -> None:
+    """Write JSON atomically so an interrupted collection cannot truncate a published file."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    temporary = path.with_name(path.name + ".tmp")
+    temporary.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    temporary.replace(path)
+
+
+def _record_key(record: dict[str, Any]) -> tuple[str, str]:
+    return (str(record.get("champion_id") or record.get("champion") or "").casefold(),
+            str(record.get("position") or "").casefold())
+
+
+def _load_existing_records(current_dir: Path, archive_dir: Path, patch: str) -> dict[tuple[str, str], dict[str, Any]]:
+    """Load current records and same-patch archived records, preferring current over archives."""
+    existing: dict[tuple[str, str], dict[str, Any]] = {}
+
+    def add_records(payload: Any, source: str) -> None:
+        if not isinstance(payload, list):
+            return
+        for record in payload:
+            if not isinstance(record, dict) or not record.get("champion") or not record.get("position"):
+                continue
+            key = _record_key(record)
+            if key[0] and key[1] and record.get("patch") == patch and key not in existing:
+                existing[key] = record
+
+    # The aggregate is useful when per-champion files were removed by an older collector.
+    aggregate = current_dir / "champions.json"
+    if aggregate.exists():
+        try:
+            add_records(read_json(aggregate), "current aggregate")
+        except Exception as exc:
+            LOG.warning("Could not read existing aggregate %s: %s", aggregate, exc)
+
+    champions_dir = current_dir / "champions"
+    if champions_dir.exists():
+        for path in champions_dir.glob("*.json"):
+            try:
+                record = read_json(path)
+                if isinstance(record, dict):
+                    key = _record_key(record)
+                    if key[0] and key[1] and record.get("patch") == patch:
+                        existing[key] = record
+            except Exception as exc:
+                LOG.warning("Could not read existing champion record %s: %s", path, exc)
+
+    # Older collector versions archived champions.json at the archive root.
+    if archive_dir.exists():
+        for path in sorted(archive_dir.glob("*/champions.json"), reverse=True):
+            try:
+                add_records(read_json(path), str(path))
+            except Exception as exc:
+                LOG.warning("Could not read archived champion records %s: %s", path, exc)
+
+    return existing
 
 
 def fetch_ddragon(locale: str, cache_dir: Path) -> tuple[str, dict[str, Any], dict[str, Any]]:
@@ -203,6 +256,59 @@ def _pick_popular(groups: Any) -> dict[str, Any] | None:
     return max(candidates, key=popularity) if candidates else None
 
 
+def _normalise_skill_sequence(value: Any) -> list[str]:
+    """Normalise OP.GG skill orders represented as strings or level mappings."""
+    if isinstance(value, str):
+        return [part.strip().upper() for part in re.split(r"[>,\s]+", value) if part.strip()]
+    if not isinstance(value, list):
+        return []
+    result = []
+    for entry in value:
+        if isinstance(entry, dict):
+            entry = entry.get("skill") or entry.get("ability") or entry.get("name") or entry.get("key")
+        if entry is not None:
+            token = str(entry).strip().upper()
+            if token:
+                result.append(token)
+    return result
+
+
+def _skill_max_order(skill_order: list[str]) -> list[str]:
+    """Infer max priority from the 15-level order, excluding ultimate R.
+
+    Sort by total ranks allocated to Q/W/E, then by the level at which each
+    ability reaches its final observed rank. This handles cases such as
+    Q5/E5/W3 => Q, E, W rather than assuming the initial three points are max order.
+    """
+    basic = ("Q", "W", "E")
+    counts = {skill: 0 for skill in basic}
+    reach_level = {skill: 99 for skill in basic}
+    for level, skill in enumerate(skill_order, 1):
+        if skill in counts:
+            counts[skill] += 1
+            reach_level[skill] = level
+    return sorted(basic, key=lambda skill: (-counts[skill], reach_level[skill], basic.index(skill)))
+
+
+def _select_skill_build(data: dict[str, Any]) -> tuple[list[str], dict[str, Any]]:
+    """Choose the most-played full skill mastery sequence when available."""
+    mastery = data.get("skill_masteries")
+    builds = mastery.get("builds", []) if isinstance(mastery, dict) else []
+    candidates = [b for b in builds if isinstance(b, dict) and _normalise_skill_sequence(b.get("order"))]
+    if candidates:
+        selected = max(candidates, key=lambda b: _safe_play_count(b.get("play")))
+        return _normalise_skill_sequence(selected.get("order")), selected
+    skills = data.get("skills") if isinstance(data.get("skills"), dict) else {}
+    return _normalise_skill_sequence(skills.get("order")), skills
+
+
+def _safe_play_count(value: Any) -> float:
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _build_projection(data: dict[str, Any], patch: str, static: dict[str, Any]) -> dict[str, Any]:
     manifest = build_asset_manifest(patch, static)
     def item_group(field: str):
@@ -217,11 +323,25 @@ def _build_projection(data: dict[str, Any], patch: str, static: dict[str, Any]) 
         for index, item_id in enumerate(ids):
             key = str(item_id)
             metadata = manifest["items"].get(key, {})
-            name = names[index] if index < len(names) and names[index] not in (None, item_id, str(item_id)) else metadata.get("name")
+            supplied_name = names[index] if index < len(names) else None
+            name = supplied_name if supplied_name not in (None, item_id, str(item_id), "") else metadata.get("name")
             if not name:
-                raise ValueError(f"Unknown Data Dragon item id {item_id}")
+                # OP.GG occasionally emits IDs that are not present in the current
+                # Data Dragon item manifest (e.g. 3/4). Do not fabricate an item or
+                # reject an otherwise usable champion build because of one entry.
+                LOG.warning(
+                    "Skipping unresolved OP.GG item: champion=%s position=%s field=%s id=%r ids_names=%r patch=%s",
+                    data.get("champion", "unknown"), data.get("position", "unknown"),
+                    field, item_id, names, patch,
+                )
+                continue
+            try:
+                numeric_id = int(item_id)
+            except (TypeError, ValueError):
+                LOG.warning("Skipping non-numeric OP.GG item id %r in %s", item_id, field)
+                continue
             output.append({
-                "id": int(item_id), "name": name, "image": metadata.get("image"),
+                "id": numeric_id, "name": str(name), "image": metadata.get("image"),
                 "pick_rate": _as_rate(group.get("pick_rate")),
                 "win_rate": _ratio(group.get("win"), group.get("play")),
                 "sample_size": group.get("play"),
@@ -281,8 +401,8 @@ def _build_projection(data: dict[str, Any], patch: str, static: dict[str, Any]) 
                 raise ValueError(f"Unknown stat shard id {shard_id}")
             runes["stat_shards"].append({"id": int(shard_id), **shard})
 
-    skills = data.get("skills") or {}
-    skill_order = skills.get("order", []) if isinstance(skills, dict) else []
+    skill_order, selected_skill_build = _select_skill_build(data)
+    skill_max_order = _skill_max_order(skill_order) if len(skill_order) >= 15 else []
     return {
         "starting_items": starters,
         "core_items": {"boots": boots, "items": core},
@@ -290,6 +410,11 @@ def _build_projection(data: dict[str, Any], patch: str, static: dict[str, Any]) 
         "summoner_spells": spells,
         "runes": runes,
         "skill_order": skill_order,
+        "skill_max_order": skill_max_order,
+        "skill_max_order_label": " → ".join(skill_max_order) if skill_max_order else None,
+        "skill_order_sample_size": selected_skill_build.get("play"),
+        "skill_order_pick_rate": _as_rate(selected_skill_build.get("pick_rate")),
+        "skill_order_win_rate": _ratio(selected_skill_build.get("win"), selected_skill_build.get("play")),
     }
 
 
@@ -456,16 +581,18 @@ def _component_rows(record: dict[str, Any], component: str):
         for idx, spell in enumerate(record.get("build", {}).get("summoner_spells", []), 1):
             yield emit("summoner_spells", idx, spell.get("id"), spell.get("name"), spell.get("pick_rate"), spell.get("win_rate"), spell)
     elif component == "skill_orders":
-        skills = data.get("skills", {})
-        if isinstance(skills, dict):
-            for level, skill in enumerate(skills.get("order", []), 1):
-                yield emit("skills", level, skill, f"Level {level}: {skill}", _as_rate(skills.get("pick_rate")), _ratio(skills.get("win"), skills.get("play")), skills)
-        mastery = data.get("skill_masteries", {})
-        if isinstance(mastery, dict):
-            for build_rank, build in enumerate(mastery.get("builds", []), 1):
-                if isinstance(build, dict):
-                    for level, skill in enumerate(build.get("order", []), 1):
-                        yield emit(f"skill_mastery_build_{build_rank}", level, skill, f"Level {level}: {skill}", _as_rate(build.get("pick_rate")), _ratio(build.get("win"), build.get("play")), build)
+        build = record.get("build", {})
+        selected_order = build.get("skill_order", [])
+        sample_size = build.get("skill_order_sample_size")
+        pick_rate = build.get("skill_order_pick_rate")
+        win_rate = build.get("skill_order_win_rate")
+        for level, skill in enumerate(selected_order, 1):
+            yield emit("selected_skill_order", level, skill, f"Level {level}: {skill}", pick_rate, win_rate,
+                       {"skill": skill, "play": sample_size, "pick_rate": pick_rate, "win_rate": win_rate})
+        max_order = build.get("skill_max_order", [])
+        if max_order:
+            yield emit("skill_max_order", 1, " -> ".join(max_order), "Max: " + " → ".join(max_order), pick_rate, win_rate,
+                       {"max_order": max_order, "play": sample_size})
 
     # Backwards-compatible support for generic JSON-shaped provider payloads.
     legacy_aliases = {
@@ -534,9 +661,11 @@ def collect(config: dict[str, Any], champion_filter: str | None = None, position
     patch, champions, static = fetch_ddragon(config.get("ddragon_locale", "en_US"), cache_dir)
     asset_manifest = build_asset_manifest(patch, static)
     current_dir.mkdir(parents=True, exist_ok=True)
-    # Never leave stale champion JSON files from a previous run appearing current.
-    shutil.rmtree(current_dir / "champions", ignore_errors=True)
-    (current_dir / "champions").mkdir(parents=True, exist_ok=True)
+    champions_dir = current_dir / "champions"
+    champions_dir.mkdir(parents=True, exist_ok=True)
+    # Preserve the last good dataset. Filtered runs update only requested records;
+    # failed records remain available instead of disappearing from the frontend.
+    existing_records = _load_existing_records(current_dir, root / "archive", patch)
     write_json(current_dir / "static-assets.json", asset_manifest)
     selected = sorted(champions.values(), key=lambda c: c["name"].lower())
     if champion_filter:
@@ -561,9 +690,14 @@ def collect(config: dict[str, Any], champion_filter: str | None = None, position
         write_json(root / "mcp-tool-schema.json", tool)
         for index, (champ, pos) in enumerate(tasks, 1):
             LOG.info("[%s/%s] %s %s", index, len(tasks), champ["name"], pos.upper())
+            raw = None
             try:
                 opgg_champion = re.sub(r"(?<!^)(?=[A-Z])", "_", champ["id"]).upper()
-                args = build_tool_arguments(tool, opgg_champion, POSITIONS[pos], config.get("game_mode", "ranked"), config.get("language", "en_US"))
+                args = build_tool_arguments(
+                    tool, opgg_champion, POSITIONS[pos],
+                    config.get("game_mode", "ranked"), config.get("language", "en_US"),
+                    str(config.get("tier", "all")),
+                )
                 result = mcp.call_tool("lol_get_champion_analysis", args)
                 raw = decode_tool_result(result)
                 record = normalise_record(champ, pos, patch, raw, static)
@@ -572,27 +706,53 @@ def collect(config: dict[str, Any], champion_filter: str | None = None, position
                 records.append(record)
             except Exception as exc:  # keep collecting other champions
                 LOG.exception("Failed %s %s", champ["name"], pos)
-                failures.append({"champion": champ["name"], "position": pos.upper(), "error": str(exc)})
-            delay = float(config.get("request_delay_seconds", 1.0))
+                failure = {"champion": champ["name"], "position": pos.upper(), "error": str(exc)}
+                failures.append(failure)
+                if raw is not None:
+                    debug_name = re.sub(r"[^a-z0-9_-]+", "-", champ["id"].lower())
+                    debug_path = root / "debug-failures" / f"{debug_name}-{pos}.json"
+                    write_json(debug_path, {
+                        "champion": champ["name"], "position": pos.upper(),
+                        "error": str(exc), "provider_payload": raw,
+                    })
+                    LOG.error("Saved failed raw provider payload to %s", debug_path)
+            delay = float(config.get("request_delay_seconds", 0.5))
             if delay > 0 and index < len(tasks):
                 time.sleep(delay)
 
-    # Write empty aggregates too: failed/incomplete runs must not leave old data published as current.
-    write_json(current_dir / "champions.json", records)
-    write_csvs(records, current_dir)
+    # Merge newly successful records over the last good same-patch records.
+    # This also makes --champion/--position safe for targeted refreshes.
+    merged = dict(existing_records)
+    for record in records:
+        merged[_record_key(record)] = record
+    published_records = sorted(
+        merged.values(),
+        key=lambda r: (str(r.get("champion", "")).casefold(), str(r.get("position", "")).casefold()),
+    )
+    # Rebuild per-champion files from the merged dataset; no failed record is deleted.
+    for record in published_records:
+        filename = re.sub(r"[^a-z0-9_-]+", "-", str(record.get("champion_id", record["champion"])).lower())
+        write_json(champions_dir / f"{filename}-{str(record['position']).lower()}.json", record)
+    write_json(current_dir / "champions.json", published_records)
+    write_csvs(published_records, current_dir)
     metadata = {
         "data_dragon_patch": patch,
         "asset_manifest": "static-assets.json",
         "collected_at": datetime.now(timezone.utc).isoformat(),
         "requested_records": len(tasks),
         "successful_records": len(records),
+        "published_records": len(published_records),
+        "retained_previous_records": max(0, len(published_records) - len(records)),
         "failed_records": len(failures),
         "positions": [p.upper() for p in positions],
         "build_rank_filter": (
-            config.get("tier", "emerald_plus")
+            config.get("tier", "all")
             if any(k in tool.get("inputSchema", {}).get("properties", {}) for k in ("tier", "rank", "rank_tier"))
             else "provider default (live tool schema exposes no rank filter)"
         ),
+        "build_region": "provider default (OP.GG MCP schema exposes no region parameter)",
+        "aggregate_stats_tier": config.get("tier", "all"),
+        "aggregate_stats_region": config.get("region", "EUW"),
         "source": "OP.GG MCP",
         "source_url": "https://op.gg",
         "failures": failures,
@@ -613,28 +773,34 @@ def collect(config: dict[str, Any], champion_filter: str | None = None, position
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         archive = root / "archive" / f"ddragon-{patch}-{stamp}"
         archive.mkdir(parents=True, exist_ok=True)
-        for snapshot_file in current_dir.iterdir():
-            if snapshot_file.is_file():
-                shutil.copy2(snapshot_file, archive / snapshot_file.name)
+        shutil.copytree(current_dir, archive, dirs_exist_ok=True)
     return metadata
 
 
 def collect_opggpy_stats(config: dict[str, Any], root: Path, patch: str) -> None:
     """Optional OPGG.py aggregate stats export; this endpoint is not a build endpoint."""
     from opgg.opgg import OPGG
-    from opgg.params import Queue, StatsRegion, Tier
+    from opgg.params import Queue, Tier
 
-    tier_name = str(config.get("tier", "emerald_plus")).upper()
-    tier = getattr(Tier, tier_name, Tier.EMERALD_PLUS)
+    tier_name = str(config.get("tier", "all")).upper()
+    if not hasattr(Tier, tier_name):
+        raise ValueError(f"Unsupported OPGG.py tier {tier_name!r}; valid values: {[item.name.lower() for item in Tier]}")
+    tier = getattr(Tier, tier_name)
+    region = str(config.get("region", "EUW")).upper()
+    if not region:
+        raise ValueError("OPGG.py region must not be empty")
     async def fetch_stats():
         async with OPGG() as client:
-            return await client.get_champion_stats_async(tier=tier, region=StatsRegion.GLOBAL, queue_type=Queue.SOLO)
+            # The installed OPGG.py implementation interpolates this value into
+            # its endpoint URL; EUW is verified to work although StatsRegion
+            # currently only defines GLOBAL.
+            return await client.get_champion_stats_async(tier=tier, region=region, queue_type=Queue.SOLO)
 
     stats = asyncio.run(fetch_stats())
     write_json(root / "current" / "opggpy-aggregate-stats.json", {
         "patch_requested": patch,
         "tier": tier.value,
-        "region": "global",
+        "region": region,
         "queue": "solo ranked",
         "source": "OPGG.py / OP.GG Champion API",
         "source_url": "https://op.gg",

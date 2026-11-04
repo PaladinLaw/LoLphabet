@@ -153,7 +153,7 @@ def _enum_default(schema: dict[str, Any], preferred: list[str]) -> str | None:
 
 
 def build_tool_arguments(
-    tool: dict[str, Any], champion: str, position: str, game_mode: str, language: str
+    tool: dict[str, Any], champion: str, position: str, game_mode: str, language: str, tier: str = "all"
 ) -> dict[str, Any]:
     """Build arguments from the live tool schema; do not assume undocumented keys."""
     schema = tool.get("inputSchema", {})
@@ -167,9 +167,9 @@ def build_tool_arguments(
         "lang": [language, language.replace("_", "-"), "en"],
         "language": [language, language.replace("_", "-"), "en"],
         "locale": [language, language.replace("_", "-"), "en"],
-        "tier": ["emerald_plus", "EMERALD_PLUS", "emerald+"],
-        "rank": ["emerald_plus", "EMERALD_PLUS", "emerald+"],
-        "rank_tier": ["emerald_plus", "EMERALD_PLUS", "emerald+"],
+        "tier": [tier, tier.upper()],
+        "rank": [tier, tier.upper()],
+        "rank_tier": [tier, tier.upper()],
     }
     for key, candidates in values.items():
         if key in properties:
@@ -216,26 +216,43 @@ _MODEL_FIELDS = {
 }
 
 
-def _ast_value(node: ast.AST) -> Any:
-    """Safely decode OP.GG's typed-model repr without evaluating provider text."""
+def _ast_value(node: ast.AST, model_fields: dict[str, tuple[str, ...]] | None = None) -> Any:
+    """Safely decode OP.GG's typed-model repr using its response-local model declarations."""
+    model_fields = model_fields or _MODEL_FIELDS
     if isinstance(node, ast.Constant):
         return node.value
     if isinstance(node, (ast.List, ast.Tuple)):
-        return [_ast_value(item) for item in node.elts]
+        return [_ast_value(item, model_fields) for item in node.elts]
     if isinstance(node, ast.Dict):
-        return {_ast_value(k): _ast_value(v) for k, v in zip(node.keys, node.values)}
+        return {_ast_value(k, model_fields): _ast_value(v, model_fields) for k, v in zip(node.keys, node.values)}
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
         name = node.func.id
-        fields = _MODEL_FIELDS.get(name)
-        values = [_ast_value(arg) for arg in node.args]
+        fields = model_fields.get(name)
+        values = [_ast_value(arg, model_fields) for arg in node.args]
         if fields:
+            # OP.GG's typed repr can mix positional and keyword arguments. An
+            # optional field emitted by keyword must not shift every later
+            # positional value onto the wrong field name.
             result = dict(zip(fields, values))
+            for keyword in node.keywords:
+                if keyword.arg is None:
+                    # **kwargs is not expected in the provider repr. Preserve
+                    # it explicitly rather than silently dropping its content.
+                    result.setdefault("_extra_kwargs", []).append(_ast_value(keyword.value, model_fields))
+                else:
+                    result[keyword.arg] = _ast_value(keyword.value, model_fields)
             result["_model"] = name
             return result
-        # Unknown typed models are preserved as named positional values.
-        return {"_model": name, "_args": values}
+        # Unknown typed models are preserved, including keyword arguments.
+        result = {"_model": name, "_args": values}
+        if node.keywords:
+            result["_kwargs"] = {
+                keyword.arg: _ast_value(keyword.value, model_fields)
+                for keyword in node.keywords if keyword.arg is not None
+            }
+        return result
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
-        return -_ast_value(node.operand)
+        return -_ast_value(node.operand, model_fields)
     raise ValueError(f"Unsupported value in OP.GG model response: {type(node).__name__}")
 
 
@@ -245,8 +262,16 @@ def _decode_opgg_model_repr(text: str) -> Any | None:
     if start < 0:
         return None
     try:
+        # OP.GG includes the actual field declarations in the text response.
+        # Use those declarations instead of assuming a fixed Data model layout:
+        # optional fields can be absent in some champion/position responses.
+        model_fields = dict(_MODEL_FIELDS)
+        for model_name, field_list in re.findall(r"(?m)^\s*class\s+(\w+)\s*:\s*([^\r\n]+)", text):
+            parsed_fields = tuple(part.strip() for part in field_list.split(",") if part.strip())
+            if parsed_fields:
+                model_fields[model_name] = parsed_fields
         expression = ast.parse(text[start:], mode="eval").body
-        value = _ast_value(expression)
+        value = _ast_value(expression, model_fields)
         return value if isinstance(value, dict) else None
     except (SyntaxError, ValueError, TypeError):
         return None

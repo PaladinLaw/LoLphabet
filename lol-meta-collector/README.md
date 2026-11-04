@@ -60,9 +60,13 @@ Edit `config.json`:
 - `positions`: `top`, `jungle`, `mid`, `adc`, `support`
 - `game_mode`: requested mode; the live MCP schema is checked and enum values are matched before calls
 - `language`: normally `en_US`
-- `request_delay_seconds`: throttle between calls; keep this conservative
+- `request_delay_seconds`: throttle between calls (default 0.5 seconds); increase it if OP.GG starts rate-limiting requests
+- `tier`: rank filter sent to the live MCP analysis tool when its schema exposes `tier` (default in this package: `all`)
+- `region`: region for the separate OPGG.py aggregate statistics endpoint (default in this package: `EUW`). The verified OPGG.py implementation accepts `EUW` as a region string even though its `StatsRegion` enum only defines `GLOBAL`.
 - `include_opggpy_aggregate_stats`: also call OPGG.py's aggregate stats endpoint (separate from the build data)
 - `archive_snapshots`: retain timestamped snapshots
+
+The MCP build-analysis tool supports an all-ranks tier request. Its currently inspected schema has no region argument, so build data is not labelled as EUW-specific. The OPGG.py aggregate statistics export is configured separately for EUW + all ranks.
 
 Important: OPGG.py's documented aggregate stats API has tier/queue/version controls but returns champion statistics, not build runes/items/skill order. The complete build payload is requested from OP.GG's official MCP `lol_get_champion_analysis` tool.
 
@@ -87,10 +91,12 @@ Each per-champion JSON record contains:
 - champion name, Data Dragon ID/key, position and the same patch value in `patch` and `data_dragon_patch` (OP.GG's response in the tested payload did not include its analytics patch, so this is explicitly the Data Dragon asset patch, not a claim about OP.GG's independent data window)
 - normalized champion statistics (`win_rate`, `pick_rate`, `ban_rate` as percentages; `games` from OP.GG `summary.average_stats.play`; tier)
 - a structured `build` object with `starting_items`, `core_items` (boots and core items), `situational_items`, `summoner_spells`, `runes`, and the 15-level `skill_order`
+- `skill_max_order` and `skill_max_order_label`, calculated from the full 15-level order by counting Q/W/E allocations (ultimate R excluded). This is distinct from the first three starting points. For example, Q5/E5/W3 produces `Q → E → W`.
+- `skill_order_sample_size`, `skill_order_pick_rate`, and `skill_order_win_rate` from the most-played `skill_masteries.builds[]` entry when available; otherwise the collector falls back to `skills.order`
 - Data Dragon item, spell, rune, style and champion image URLs; stat-shard labels are mapped by ID and their icons use CommunityDragon's stat-mod assets
 - `provider_payload`, containing the complete decoded OP.GG response for traceability
 
-The collector selects one build only: for item alternatives in a slot it chooses the group with the largest `play` sample count. It does not export alternative skill-maxing builds. Situational item slots are represented as the most-played choice for each available slot (`fourth`, `fifth`, `sixth`, `last`).
+The collector selects one build only: for item alternatives in a slot it chooses the group with the largest `play` sample count. For skill order, it selects the `skill_masteries.builds[]` sequence with the largest `play` count when available, then derives the Q/W/E max priority from the full sequence. It does not export alternative skill-maxing builds. Situational item slots are represented as the most-played choice for each available slot (`fourth`, `fifth`, `sixth`, `last`).
 
 Win rates for item, spell, rune and skill components are calculated as `win / play * 100`, using that component's own sample denominator. They are not calculated against the champion-wide games count. CSV component exports use the same percentage convention for records produced by the current normalizer.
 

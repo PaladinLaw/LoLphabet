@@ -2,10 +2,16 @@
   "mcp_url": "https://mcp-api.op.gg/mcp",
   "language": "en_US",
   "game_mode": "ranked",
-  "positions": ["top", "jungle", "mid", "adc", "support"],
-  "tier": "emerald_plus",
+  "positions": [
+    "top",
+    "jungle",
+    "mid",
+    "adc",
+    "support"
+  ],
+  "tier": "all",
   "include_opggpy_aggregate_stats": true,
-  "request_delay_seconds": 2.0,
+  "request_delay_seconds": 0.5,
   "request_timeout_seconds": 45,
   "max_retries": 3,
   "ddragon_locale": "en_US",
@@ -14,5 +20,6 @@
   "opgg_attribution": {
     "name": "OP.GG",
     "url": "https://op.gg"
-  }
+  },
+  "region": "EUW"
 }

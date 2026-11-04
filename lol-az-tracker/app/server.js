@@ -212,6 +212,7 @@ function trimBuild(b){                                    // only what the front
       primary:trimList(ru.primary,"runes"),secondary:trimList(ru.secondary,"runes"),stat_shards:trimList(ru.stat_shards,"stat_shards"),
       pick_rate:num(ru.pick_rate),win_rate:num(ru.win_rate),sample_size:num(ru.sample_size)},
     skill_order:(Array.isArray(b.skill_order)?b.skill_order:[]).map(String).filter(k=>/^[QWER]$/.test(k)),
+    skill_max_order:(Array.isArray(b.skill_max_order)?b.skill_max_order:[]).map(String).filter(k=>/^[QWE]$/.test(k)),
   };
 }
 function buildResponse(champion,position){
