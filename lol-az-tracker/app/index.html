@@ -178,6 +178,21 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
 .ri.sh{width:22px;height:22px;background:#2b3340}
 .ri.on{filter:none;opacity:1;box-shadow:0 0 0 2px var(--gold)}
 @media(max-width:420px){.rpg{gap:8px 14px}.rr,.rr.ks,.rr.sr{gap:6px}}
+.nxb{position:relative}
+.rsp{height:16px}
+.rp.side{position:absolute;top:10px;right:0;margin:0;padding:6px 8px;background:transparent;border-color:var(--line)}
+.rp.side .rpg{gap:6px 16px}
+.rp.side .rcol{gap:4px}
+.rp.side .rh{font-size:11px;gap:4px}.rp.side .rh b{font-size:11px}
+.rp.side .rh img{width:14px;height:14px}
+.rp.side .rr{gap:5px}.rp.side .rr.ks,.rp.side .rr.sr{gap:6px}
+.rp.side .ri{width:20px;height:20px}
+.rp.side .ri.ks{width:26px;height:26px}
+.rp.side .ri.sh{width:16px;height:16px}
+.rp.side .ri.on{box-shadow:0 0 0 1.5px var(--gold)}
+.rp.side .rsh{gap:4px;padding-top:5px;margin-top:0}
+@media(min-width:760px){.nxb:has(.rp.side){padding-right:250px}}
+@media(max-width:759px){.rp.side{position:static;grid-column:1/-1;justify-self:end;margin-top:2px}.rsp{display:none}}
 .nxm{font-size:11px;color:var(--muted);line-height:1.5}
 .nxm a{color:var(--gold)}
 .nxm .wn{color:#d9534f}
@@ -1124,18 +1139,17 @@ function buildRows(j,fixed){
   const seen=new Set(), sitAll=["fourth","fifth","sixth","last"].flatMap(k=>b.situational_items[k]||[]).filter(x=>{const id=x.id!=null?x.id:x.name; if(seen.has(id))return false; seen.add(id); return true});
   const groups=[["Starting items",b.starting_items],["Boots",b.core_items.boots],["Core items",b.core_items.items],["Situational items",sitAll]].filter(g=>g[1].length);
   if(groups.length) rows.push(`<span class="k">Items</span><div class="nxr">${groups.map(g=>`<span class="grp" title="${g[0]}">${g[1].map(x=>bimg(x)).join("")}</span>`).join('<span class="sep">›</span>')}</div>`);
-  const r=b.runes; if(bopen.runes) loadRunes();
+  const r=b.runes; loadRunes();
   if(r&&r.primary_style&&r.primary.length){
-    rows.push(`<button class="lk full" data-bt="runes" aria-expanded="${bopen.runes}">${bopen.runes?"▾":"▸"} Runes</button>`);
-    if(bopen.runes){
-      const page=runePage(r);
-      if(page) rows.push(`<div class="rp full">${page}${r.sample_size?`<div class="nxm" style="margin-top:8px">Rune page: ${pct(r.pick_rate)} pick · ${pct(r.win_rate)} win · ${nfmt(r.sample_size)} games</div>`:""}</div>`);
-      else{
-        const tree=(s,a)=>`<span class="rs">${bimg(s,"st")}${esc(s.name)}</span>${a.map(x=>bimg(x,"rn")).join("")}`;
-        rows.push(`<div class="rp full"><div class="nxr">${tree(r.primary_style,r.primary)}${r.secondary_style?`<span class="sep">+</span>${tree(r.secondary_style,r.secondary)}`:""}</div>`
-          +(r.stat_shards.length?`<div class="nxr"><span>Shards</span>${r.stat_shards.map(x=>`<span class="rs">${bimg(x,"sh")}<span style="font-weight:400">${esc(x.name)}</span></span>`).join("")}</div>`:"")
-          +(r.sample_size?`<div class="nxm" style="margin-top:8px">Rune page: ${pct(r.pick_rate)} pick · ${pct(r.win_rate)} win · ${nfmt(r.sample_size)} games</div>`:"")+`</div>`);
-      }
+    rows.push(`<div class="full rsp" aria-hidden="true"></div>`);          // keeps the row height the old "Runes" link used to take
+    const page=runePage(r), tip=r.sample_size?`Rune page: ${pct(r.pick_rate)} pick · ${pct(r.win_rate)} win · ${nfmt(r.sample_size)} games`:"";
+    if(page) rows.push(`<div class="rp side" title="${esc(tip)}">${page}</div>`);
+    else if(!(RD&&RD.trees)&&RDPEND){}                                       // rune trees still loading: show nothing rather than flashing the flat list
+    else{
+      const tree=(s,a)=>`<span class="rs">${bimg(s,"st")}${esc(s.name)}</span>${a.map(x=>bimg(x,"rn")).join("")}`;
+      rows.push(`<div class="rp full"><div class="nxr">${tree(r.primary_style,r.primary)}${r.secondary_style?`<span class="sep">+</span>${tree(r.secondary_style,r.secondary)}`:""}</div>`
+        +(r.stat_shards.length?`<div class="nxr"><span>Shards</span>${r.stat_shards.map(x=>`<span class="rs">${bimg(x,"sh")}<span style="font-weight:400">${esc(x.name)}</span></span>`).join("")}</div>`:"")
+        +(tip?`<div class="nxm" style="margin-top:8px">${tip}</div>`:"")+`</div>`);
     }
   }
   return rows.join("");
@@ -1234,8 +1248,7 @@ $("grid").addEventListener("click",e=>{
 $("next").addEventListener("click",e=>{
   const t=e.target.closest("[data-bt]");                       // build panel controls (also work in read-only share views)
   if(t){const k=t.dataset.bt, cur=nextUp();
-    if(k==="runes"){bopen.runes=!bopen.runes; if(bopen.runes) loadRunes();}
-    else if(k==="swap") bopen.swap=!bopen.swap;
+    if(k==="swap") bopen.swap=!bopen.swap;
     else if(k==="pos"&&cur&&POSORDER.includes(t.dataset.p)) pospick[cur.name]=t.dataset.p;
     bsave(); renderNext(); return;}
   const b=e.target.closest("button"); if(!b||READONLY) return;
