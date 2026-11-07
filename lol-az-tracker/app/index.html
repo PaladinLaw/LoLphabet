@@ -64,6 +64,13 @@ h1 span{color:var(--gold)}
 .nb .un-b{font-size:12px;font-weight:400;padding:4px 10px;background:transparent;border-color:var(--line);color:var(--muted)}
 .nb .un-b:hover{color:var(--text);border-color:var(--muted)}
 .nb .un-c{border:none;background:none;padding:0 2px;font-size:inherit;color:var(--gold);text-decoration:underline;cursor:pointer}
+.nbg{display:grid;grid-template-columns:auto auto;gap:6px 8px;align-items:center}
+.nbg .nbl{justify-self:center}.nbg .nbr{justify-self:end}
+.nb .nb-loss{font-size:12px;font-weight:400;padding:4px 10px}
+.nb .nat{font-size:12px;white-space:nowrap}
+body.ro .nb .nat{display:none}
+.nxw{margin-top:10px;padding:8px 10px;border:1px solid #e0a030;background:rgba(224,160,48,.12);border-radius:8px;font-size:13px;line-height:1.4;color:var(--text)}
+.nxw .un-c{border:none;background:none;padding:0 2px;font-size:inherit;color:var(--gold);text-decoration:underline;cursor:pointer}
 .un{color:var(--muted);font-style:italic}
 .opt.static{cursor:default}.opt.static:hover{background:rgba(212,175,55,.09)}
 .modes{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 14px;font-size:13px;color:var(--muted)}
@@ -262,7 +269,7 @@ footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center;line-
     <button id="rst">Reset</button>
     <button id="editlist" hidden>Edit list</button>
     <button id="sharelist" hidden>Share list</button>
-    <button id="shimg">Share image</button>
+    <button id="shimg">Share</button>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -715,14 +722,22 @@ function ordered(){
 }
 // Champions temporarily marked "unavailable" (banned / picked in champ select) are skipped by Next up.
 // Stored per list + mode in that run's __meta.skip. Cleared when the Next up champion is won or lost.
-function availNext(L){const sk=meta().skip||[]; return L.find(c=>!get(c.name).won&&!sk.includes(c.name))||L.find(c=>!get(c.name).won);}
+function listNext(L){const sk=meta().skip||[]; return L.find(c=>!get(c.name).won&&!sk.includes(c.name))||L.find(c=>!get(c.name).won);}
+// A champion clicked in the list is "focused": Next up shows it (with a warning) instead of the real next champion.
+// Stored per list + mode in that run's __meta.focus. Ignored in Hard/Insanity (only the next champion may be played) and in read-only share views.
+function availNext(L){
+  if(!READONLY&&!isLock()){const f=meta().focus; if(f){const c=L.find(x=>x.name===f); if(c&&!get(f).won) return c;}}
+  return listNext(L);
+}
+// Remember which list/mode was played most recently (share links use it to open on the list you're actually busy with).
+const touch=()=>{meta().t=Date.now(); queueShareImage()};
 function clearSkip(name,wasCur){const m=meta(); if(!m.skip) return;
   if(wasCur) delete m.skip; else {m.skip=m.skip.filter(n=>n!==name); if(!m.skip.length) delete m.skip;}}
 const nextUp=()=>availNext(ordered());
 async function hcLose(name){
   const run=st(), m=meta(), w=ordered().filter(c=>get(c.name).won).length;
   if(!await confirmDlg("Lost with "+name+"?","Your run ends at "+w+" win"+(w===1?"":"s")+" and you start again from the beginning.","Restart run",true)) return;
-  delete m.skip; m.resets=(m.resets||0)+1; m.best=Math.max(m.best||0,w); m.last={champ:name,date:today(),wins:w};
+  delete m.skip; m.t=Date.now(); queueShareImage(); m.resets=(m.resets||0)+1; m.best=Math.max(m.best||0,w); m.last={champ:name,date:today(),wins:w};
   for(const c of CHAMPS){const n=run[c.name]&&run[c.name].note; delete run[c.name]; if(n) run[c.name]={won:false,date:null,games:0,note:n}}
   if(isRand()) delete m.order;
   save(); render();
@@ -732,7 +747,7 @@ async function hardLose(name){
   for(let k=i-1;k>=0;k--) if(get(L[k].name).won){p=k;break}
   const prev=p>=0?L[p].name:null;
   if(!await confirmDlg("Lost with "+name+"?",prev?"You go back to "+prev+" and have to win with it again before you can try "+name+" again.":"You haven’t won anything yet, so this just logs the loss and you try "+name+" again.","Log loss",true)) return;
-  get(name).games++;
+  get(name).games++; m.t=Date.now(); queueShareImage();
   if(prev){const ps=get(prev); ps.won=false; ps.date=null; m.setbacks=(m.setbacks||0)+1; m.last={champ:name,back:prev,date:today()};}
   clearSkip(name,true); save(); render();
 }
@@ -754,27 +769,104 @@ function renderNav(){
   $("tabs").innerHTML=keysIn(cat).map(r=>`<button data-r="${esc(r)}" class="${r===role&&view==="role"?"on":""}">${esc(label(r))}<small>${entriesFor(r).filter(e=>e.s.won).length}/${LISTS[r].length}</small></button>`).join("")+(cat==="custom"?'<button data-r="__new">＋ New list</button>':"");
   $("modes").innerHTML="<span>Challenge:</span>"+MODES.map(([id,lab,tip])=>`<button data-m="${id}" class="${id===mode?"on":""}" title="${esc(tip)}">${lab}</button>`).join("");
 }
-async function shareImage(){
-  const L=ordered(), won=L.filter(c=>get(c.name).won).length, total=L.length, cur=availNext(L);
-  const who=session?(session.given||session.name):"", ml=MODES.find(m=>m[0]===mode)[1];
+// ---- Sharing: the Share button copies your share link, which previews with a progress image (Open Graph) ----
+const RAND_MODES=["random","randhc","randhard"], LOCK_MODES=["hardcore","randhc","hard","randhard"];
+// The list + mode played most recently. Uses the per-run timestamp (__meta.t); older data without timestamps falls back to the run with the most wins.
+function latestRun(d){
+  let best=null;
+  for(const k in d){
+    if(k==="__lists"||!d[k]||typeof d[k]!=="object") continue;
+    const i=k.lastIndexOf("|"), r=i<0?k:k.slice(0,i), md=i<0?"classic":k.slice(i+1);
+    if(!LISTS[r]||!MODES.some(x=>x[0]===md)) continue;
+    const t=(d[k].__meta&&d[k].__meta.t)||0, w=Object.keys(d[k]).filter(n=>n!=="__meta"&&d[k][n]&&d[k][n].won).length;
+    if(!best||t>best.t||(t===best.t&&w>best.w)) best={role:r,mode:md,t,w};
+  }
+  return best&&(best.t||best.w)?best:null;
+}
+// Side-effect free summary of one run, used for the share image.
+function runSnapshot(r,md){
+  const names=(LISTS[r]||[]).map(c=>c.name), run=all[md==="classic"?r:r+"|"+md]||{}, m=run.__meta||{}, isW=n=>!!(run[n]&&run[n].won);
+  let order=names; if(RAND_MODES.includes(md)&&m.order){const o=m.order.filter(n=>names.includes(n)); order=o.concat(names.filter(n=>!o.includes(n)))}
+  const sk=m.skip||[], left=order.filter(n=>!isW(n));
+  let nxt=left.find(n=>!sk.includes(n))||left[0]||null;
+  if(!LOCK_MODES.includes(md)&&m.focus&&names.includes(m.focus)&&!isW(m.focus)) nxt=m.focus;
+  return {role:r,mode:md,won:names.filter(isW).length,total:names.length,next:nxt,listName:label(r),modeName:MODES.find(x=>x[0]===md)[1]};
+}
+function shareTarget(){const t=latestRun(all); return runSnapshot(t?t.role:role,t?t.mode:mode)}
+async function shareCanvas(sn){
+  const who=session?(session.given||session.name):"";
   const cv=document.createElement("canvas"); cv.width=1200; cv.height=630; const g=cv.getContext("2d");
   const bg=g.createLinearGradient(0,0,1200,630); bg.addColorStop(0,"#16202e"); bg.addColorStop(1,"#0a0e14"); g.fillStyle=bg; g.fillRect(0,0,1200,630);
   g.strokeStyle="#d4af37"; g.lineWidth=6; g.strokeRect(24,24,1152,582);
   const img=new Image(); img.src=$("fav").href; await new Promise(r=>{img.onload=r;img.onerror=r}); g.drawImage(img,70,62,110,110);
   g.fillStyle="#e8e4d8"; g.font="bold 42px Georgia,serif"; g.fillText("LoLphabet",205,112);
   g.fillStyle="#8d9199"; g.font="28px system-ui,sans-serif"; g.fillText(location.host,205,156);
-  g.fillStyle="#d4af37"; g.font="bold 170px Georgia,serif"; g.fillText(won+" / "+total,70,350);
-  const line=(who?who+" is on ":"")+label(role)+(mode!=="classic"?" · "+ml:""); let fs=54; g.fillStyle="#e8e4d8";
+  g.fillStyle="#d4af37"; g.font="bold 170px Georgia,serif"; g.fillText(sn.won+" / "+sn.total,70,350);
+  const line=(who?who+" is on ":"")+sn.listName+(sn.mode!=="classic"?" · "+sn.modeName:""); let fs=54; g.fillStyle="#e8e4d8";
   do{g.font="bold "+fs+"px system-ui,sans-serif";fs-=2}while(g.measureText(line).width>1060&&fs>24); g.fillText(line,70,432);
-  g.fillStyle="#2a323d"; g.fillRect(70,470,1060,26); g.fillStyle="#5fcf8b"; g.fillRect(70,470,total?1060*won/total:0,26);
-  g.fillStyle="#8d9199"; g.font="32px system-ui,sans-serif"; g.fillText(cur?"Next up: "+cur.name:total?"A–Z complete!":"",70,566);
-  const url=cv.toDataURL("image/png");
-  const v=await ask({title:"Share your progress",body:"Save the image or copy it, then post it in Discord.",cancel:null,img:url,buttons:[{label:"Close",value:null},{label:"Download",value:"dl"},{label:"Copy image",cls:"pri",value:"cp"}]});
-  if(v==="dl"){const a=document.createElement("a");a.href=url;a.download="lol-az-progress.png";a.click()}
-  if(v==="cp"){try{const blob=await new Promise(r=>cv.toBlob(r,"image/png"));await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);await info("Copied","Paste it into Discord.")}catch(x){await info("Couldn't copy","Use Download instead.")}}
+  g.fillStyle="#2a323d"; g.fillRect(70,470,1060,26); g.fillStyle="#5fcf8b"; g.fillRect(70,470,sn.total?1060*sn.won/sn.total:0,26);
+  g.fillStyle="#8d9199"; g.font="32px system-ui,sans-serif"; g.fillText(sn.next?"Next up: "+sn.next:sn.total?"A–Z complete!":"",70,566);
+  return cv;
 }
-$("shimg").onclick=shareImage;
-$("sharelist").onclick=async()=>{
+// Renders the progress image and stores it on the server so the share link previews with it. Best effort: the link still works without it.
+async function uploadShareImage(){
+  try{
+    const sn=shareTarget(), cv=await shareCanvas(sn);
+    const img=cv.toDataURL("image/jpeg",0.9).split(",")[1];     // JPEG keeps the gradient image small (~100 KB); chat apps skip big preview images
+    await api("PUT","/api/share/image",{img,desc:sn.listName+(sn.mode!=="classic"?" · "+sn.modeName:"")+": "+sn.won+" / "+sn.total+" won"});
+    return true;
+  }catch(e){return false}
+}
+// Keeps the share link's preview image up to date: after any win/loss/undo, re-render it and replace the stored one (debounced, only if you have a share link).
+let imgT, imgBusy=false, imgDirty=false;
+function queueShareImage(){
+  if(READONLY||!session) return;
+  clearTimeout(imgT);
+  imgT=setTimeout(async()=>{
+    if(shareTok===undefined){try{const r=await api("GET","/api/share"); shareTok=r.token||null}catch(e){return}}
+    if(!shareTok) return;
+    if(imgBusy){imgDirty=true;return}
+    imgBusy=true; try{do{imgDirty=false; await uploadShareImage()}while(imgDirty)}finally{imgBusy=false}
+  },3000);
+}
+// Copies text that may only be known after an async step. Passing a promise to ClipboardItem keeps the copy tied to the click (needed on Safari).
+async function copyText(textPromise){
+  try{
+    if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+      await navigator.clipboard.write([new ClipboardItem({"text/plain":Promise.resolve(textPromise).then(t=>new Blob([t],{type:"text/plain"}))})]); return true;
+    }
+  }catch(e){}
+  try{await navigator.clipboard.writeText(await textPromise); return true}catch(e){return false}
+}
+const shareFail=x=>info("Couldn't create the link","Error "+(x.status||"network")+". A 404 means the server.js on your host is out of date: replace it and restart the container.");
+async function shareProgress(){
+  if(!session){
+    if(!authOn){await info("Sharing isn't available","Share links need an account, and accounts aren't available on this site.");return}
+    const v=await ask({title:"Log in to share",body:"A share link lets anyone open your progress (read-only), and it needs a free account. Log in, then press Share again.",cancel:null,buttons:[{label:"Not now",value:null},{label:"Log in / Sign up",cls:"pri",value:"login"}]});
+    if(v==="login") openAuth(); return;
+  }
+  let created=false;
+  try{ if(shareTok===undefined){const r=await api("GET","/api/share"); shareTok=r.token||null} }
+  catch(x){ if(x.status===401) return signOut(); await shareFail(x); return }
+  if(!shareTok){
+    const yes=await ask({title:"Create a share link?",cancel:false,
+      body:"A share link lets anyone who has it see your progress (read-only). When you paste it in Discord or a chat, it shows a preview image of your progress.\n\nYou can stop sharing at any time from Settings.\n\nIf you'd rather not, that's fine, but your progress can only be shared if you create a share link.",
+      buttons:[{label:"No thanks",value:false},{label:"Create link",cls:"pri",value:true}]});
+    if(!yes) return;
+    try{const r=await api("POST","/api/share"); shareTok=r.token; created=true; renderSettings()}catch(x){await shareFail(x); return}
+  }
+  const link=location.origin+"/s/"+shareTok;
+  const copied=await copyText(uploadShareImage().then(()=>link));
+  if(created||!copied){
+    const v=await ask({title:created?"Share link created":"Your share link",cancel:null,
+      body:(copied?"Link copied to your clipboard.":"Copy your link below.")+(created?" You can stop sharing at any time from Settings.":""),
+      input:{value:link,readonly:true},buttons:[{label:"Close",value:null},{label:"Copy link",cls:"pri",input:true}]});
+    if(v) await copyText(v);
+  }else{
+    const b=$("shimg"), old=b.textContent; b.textContent="✓ Link copied"; setTimeout(()=>{b.textContent=old},2200);
+  }
+}
+$("shimg").onclick=shareProgress;$("sharelist").onclick=async()=>{
   if(!session){await info("Log in to share lists","Sharing a list creates a link on the server, so you need to be logged in.");return}
   const l=(all.__lists||[]).find(x=>"c:"+x.id===role); if(!l) return;
   try{
@@ -886,7 +978,7 @@ $("settings").addEventListener("click",async e=>{
   }
   else if(a==="mkshare"||a==="newshare"){
     if(a==="newshare"&&!await confirmDlg("Create a new link?","Your current link will stop working.","Create new link",false)) return;
-    try{const r=await api("POST","/api/share"); shareTok=r.token; renderSettings()}
+    try{const r=await api("POST","/api/share"); shareTok=r.token; renderSettings(); uploadShareImage()}
     catch(x){await info("Couldn't create the link","Error "+(x.status||"network")+". A 404 means the server.js on your host is out of date: replace it and restart the container.")}
   }
   else if(a==="stopshare"){
@@ -894,7 +986,7 @@ $("settings").addEventListener("click",async e=>{
     try{await api("DELETE","/api/share"); shareTok=null; renderSettings()}catch(x){await info("Couldn't stop sharing","Error "+(x.status||"network"))}
   }
   else if(a==="copyshare"){
-    const i=$("slink"); i.select();
+    const i=$("slink"); i.select(); uploadShareImage();
     try{await navigator.clipboard.writeText(i.value)}catch(x){document.execCommand&&document.execCommand("copy")}
     $("cmsg").textContent="Copied";
   }
@@ -1044,6 +1136,7 @@ function nextBox(cur,hc,m,won,total){
   loadBuild(cur.name,want);
   const e=BUILDS[bkey(cur.name,want)], j=e&&e.j, ok=j&&j.state==="ok", pos=(j&&j.position)||want, letter=esc(cur.name[0]);
   const ic=iconUrl(cur.name)||(ok&&j.champion_icon)||"", st=ok?j.statistics:null;
+  const att=get(cur.name).games, real=listNext(ordered()), warn=(!READONLY&&!isLock()&&real&&real.name!==cur.name)?`<div class="nxw" role="status">⚠ <strong>This isn’t the next champion in your list.</strong> The next one is <strong>${esc(real.name)}</strong>. <button class="un-c" data-a="bf">Switch back to ${esc(real.name)}</button></div>`:"";
   const sk=m.skip||[], left=ordered().filter(c=>!get(c.name).won), nSk=left.filter(c=>sk.includes(c.name)).length, canSkip=left.filter(c=>!sk.includes(c.name)).length>1;
   let panel;
   if(j&&j.positions&&j.positions.length) BPOS[cur.name]=j.positions;
@@ -1058,9 +1151,12 @@ function nextBox(cur,hc,m,won,total){
     panel=`<div class="nxm full" style="font-size:13px">${msg}</div>${chips}${j.state==="error"||j.state==="no_data"?"":freshHtml(j.data)}`;
   }
   return `<div class="nxh"><div class="nxl"><div class="nxi${ic?"":" noimg"}"><span>${letter}</span>${ic?`<img src="${esc(ic)}" alt="" onerror="var p=this.parentNode;this.remove();p.classList.add('noimg')">`:""}<i>${letter}</i></div>
-    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b>${pos?`<span class="nxp">(${esc(POSNAME[pos]||pos)})</span>`:""}</div>
+    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(total-won)+" left to go")})</span></div>
     ${st?`<div class="nxs"><span>Pick Rate: <b>${pct(st.pick_rate)}</b></span><span>Win Rate: <b>${pct(st.win_rate)}</b></span><span title="Games analysed for this champion in this position">Sample Size: <b>${nfmt(st.games)}</b></span></div>`:""}</div></div>
-    <div class="nb"><span>${total-won} to go${nSk?` · ${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button>`:""}</span>${hc?`<button class="danger" data-a="x">${LOSTLAB()}</button>`:""}<div class="nbc"><button class="pri" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div></div></div>
+    <div class="nb">${nSk?`<span>${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button></span>`:""}${hc
+      ?`<button class="danger nb-loss" data-a="x">${LOSTLAB()}</button><div class="nbc"><button class="pri" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`
+      :`<div class="nbg"><button class="danger nb-loss nbl" data-a="l" title="Log a loss (adds an attempt, same as the + button on the champion's card)">Loss</button><button class="pri nbr" data-a="w">✓ Complete</button><span class="nat nbl">${att} attempt${att===1?"":"s"}</span>${canSkip?'<button class="un-b nbr" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`}</div></div>
+    ${warn}
     <div class="nxb">${panel}</div>`;
 }
 function renderNext(){
@@ -1108,16 +1204,22 @@ function render(){
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 $("grid").addEventListener("click",e=>{
   const card=e.target.closest(".c"); if(!card||READONLY||card.classList.contains("bn")||e.target.closest("a")) return;
-  const name=card.dataset.n, s=get(name), a=e.target.closest("button")?.dataset.a, cur=nextUp();
+  const name=card.dataset.n, s=get(name), a=e.target.closest("button")?.dataset.a, cur=nextUp(), real=listNext(ordered());
   if(a==="d"){editDate(name);return}
   if(a==="n"){editNote(name);return}
   if(a==="x"){loseRun(name);return}
   if(isLock()&&!s.won&&(!cur||cur.name!==name)) return;
-  const wasCur=!!cur&&cur.name===name;
-  if(a==="p"){ s.games++; clearSkip(name,wasCur); }
-  else if(a==="m") s.games=Math.max(s.won?1:0,s.games-1);
-  else if(!s.won){ s.won=true; s.date=today(); s.games++; clearSkip(name,wasCur); }
-  else { s.won=false; s.date=null; s.games=Math.max(0,s.games-1); }
+  if(!a){                                    // clicking the champion itself only opens it in Next up; it no longer marks it complete
+    if(isLock()||s.won) return;
+    if(!cur||cur.name!==name){const m=meta(); if(real&&real.name===name) delete m.focus; else m.focus=name; save(); render();}
+    $("next").scrollIntoView({behavior:"smooth",block:"start"});
+    return;
+  }
+  const wasCur=(!!cur&&cur.name===name)||(!!real&&real.name===name);
+  if(a==="p"){ s.games++; clearSkip(name,wasCur); touch(); }
+  else if(a==="m"){ s.games=Math.max(s.won?1:0,s.games-1); touch(); }
+  else if(!s.won){ s.won=true; s.date=today(); s.games++; clearSkip(name,wasCur); if(meta().focus===name) delete meta().focus; touch(); }
+  else { s.won=false; s.date=null; s.games=Math.max(0,s.games-1); touch(); }
   save(); render();
 });
 $("next").addEventListener("click",e=>{
@@ -1130,9 +1232,11 @@ $("next").addEventListener("click",e=>{
   const b=e.target.closest("button"); if(!b||READONLY) return;
   const cur=nextUp(); if(!cur) return;
   if(b.dataset.a==="x") loseRun(cur.name);
-  else if(b.dataset.a==="u"){const m=meta(); m.skip=(m.skip||[]).concat(cur.name); save(); render();}
+  else if(b.dataset.a==="u"){const m=meta(); m.skip=(m.skip||[]).concat(cur.name); if(m.focus===cur.name) delete m.focus; save(); render();}
+  else if(b.dataset.a==="l"){const s=get(cur.name); s.games++; clearSkip(cur.name,true); touch(); save(); render();}   // same as the + (add an attempt) button on the champion's card
+  else if(b.dataset.a==="bf"){delete meta().focus; save(); render();}
   else if(b.dataset.a==="uc"){delete meta().skip; save(); render();}
-  else if(b.dataset.a==="w"){const s=get(cur.name); if(!s.won){s.won=true;s.date=today();s.games++;clearSkip(cur.name,true);save();render();}}
+  else if(b.dataset.a==="w"){const s=get(cur.name); if(!s.won){s.won=true;s.date=today();s.games++;clearSkip(cur.name,true);if(meta().focus===cur.name) delete meta().focus;touch();save();render();}}
 });
 function navClick(e){
   const b=e.target.closest("button"); if(!b) return; const d=b.dataset;
@@ -1285,6 +1389,8 @@ if(READONLY){
   $("snote").hidden=false; $("snote").textContent="Loading…";
   fetch("/api/shared/"+SHARE).then(r=>r.ok?r.json():Promise.reject()).then(d=>{
     all=d.data||{}; rebuildLists(); role="Top"; CHAMPS=LISTS[role];
+    {const t=latestRun(all); if(t){role=t.role; mode=t.mode; CHAMPS=LISTS[role]}}   // open on the list/mode the owner last played, not always Top
+    lastIn[catOf(role)]=role;
     $("snote").innerHTML="Viewing <b>"+esc(d.name||"a friend")+"</b>'s progress (read-only). <a href=\"/\">Track your own</a>";
     document.title=(d.name||"A friend")+"'s progress | LoLphabet"; document.body.classList.remove("loading"); render();
   }).catch(()=>{$("snote").innerHTML="This share link is invalid or has been turned off. <a href=\"/\">Go to the tracker</a>"});

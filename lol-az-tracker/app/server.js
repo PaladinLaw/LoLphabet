@@ -3,6 +3,12 @@
 const http=require("http"),fs=require("fs"),path=require("path"),crypto=require("crypto"),zlib=require("zlib");
 const PORT=process.env.PORT||3081, CID=process.env.GOOGLE_CLIENT_ID||"";
 const FILE=process.env.DATA_FILE||path.join(__dirname,"data.json");
+// Share-link preview images (Open Graph), one JPEG per share token, stored next to the data file so they persist with it.
+const IMG_DIR=path.join(path.dirname(FILE),"share-images");
+try{fs.mkdirSync(IMG_DIR,{recursive:true})}catch(e){console.log("share-images dir:",e.message)}
+const imgFile=tok=>/^[\w-]+$/.test(String(tok||""))?path.join(IMG_DIR,tok+".jpg"):null;
+const rmImg=tok=>{try{const f=imgFile(tok); if(f) fs.unlinkSync(f)}catch(e){}};
+const escAttr=x=>String(x).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const TTL=90*864e5;
 const SITE="LoLphabet", CONTACT=process.env.CONTACT_EMAIL||"";
 const contact=CONTACT?`<a href="mailto:${CONTACT}">${CONTACT}</a>`:"the person who runs this site";
@@ -17,7 +23,7 @@ const PRIVACY=page("Privacy Policy",`
 <h2>What we process, and why</h2>
 <p><b>If you don't log in:</b> your progress, custom lists and preferences stay in your own browser. We never receive them.</p>
 <p><b>If you log in with Google:</b> we receive your Google account ID, name and email address, and we store them along with your display name, your tracker progress, lists and notes, and a login session token. We use this only to run your account. Lawful basis: providing the service you asked for (contract).</p>
-<p><b>If you create a share link or a shared list link:</b> anyone with the link can see your display name and the progress or list you shared (read-only for progress). You can switch a progress link off, or delete your account, at any time. Lawful basis: your choice to share.</p>
+<p><b>If you create a share link or a shared list link:</b> anyone with the link can see your display name and the progress or list you shared (read-only for progress). A progress share link also has a preview image of your progress, stored on the server and shown when the link is pasted into a chat. You can switch a progress link off, or delete your account, at any time. Lawful basis: your choice to share.</p>
 <p><b>Visitor counter:</b> when a page loads, our server combines your IP address and browser details with a random key that changes every day, turns the result into a one-way hash, and uses it only to avoid counting the same device twice in a day. Nothing is stored on your device, your raw IP address is not kept, and the hashes are deleted when the daily key changes (within 24 hours). Only the running total is kept. Lawful basis: legitimate interests (a simple visitor count that can't be inflated by refreshing).</p>
 <p><b>Technical logs:</b> the hosting setup, and any network service in front of it (such as a reverse proxy or tunnel), may keep standard connection logs for security and troubleshooting.</p>
 <h2>Cookies and local storage</h2>
@@ -97,6 +103,37 @@ let db={users:{},sessions:{}};
 try{db=JSON.parse(fs.readFileSync(FILE,"utf8"))}catch(e){}
 db.shares=db.shares||{}; db.templates=db.templates||{}; db.visits=db.visits||{total:0,day:"",salt:"",seen:{},ip:{}};
 const persist=()=>fs.writeFileSync(FILE,JSON.stringify(db));
+// Reads the pixel size of a JPEG (so only our 1200x630 share image is accepted).
+function jpegSize(b){
+  if(b.length<4||b[0]!==0xff||b[1]!==0xd8) return null;
+  let i=2;
+  while(i+9<b.length){
+    if(b[i]!==0xff){i++;continue}
+    const m=b[i+1];
+    if(m===0xff){i++;continue}
+    if(m===0xd8||m===0x01||(m>=0xd0&&m<=0xd7)){i+=2;continue}
+    if(m>=0xc0&&m<=0xcf&&m!==0xc4&&m!==0xc8&&m!==0xcc) return {h:b.readUInt16BE(i+5),w:b.readUInt16BE(i+7)};
+    i+=2+b.readUInt16BE(i+2);
+  }
+  return null;
+}
+// Per-link <head> for /s/<token> pages, so pasted links preview with the owner's progress image.
+function shareInfo(tok,base){
+  const owner=/^[\w-]+$/.test(tok)&&db.users[db.shares[tok]]; if(!owner) return null;
+  let mt=0; try{mt=Math.floor(fs.statSync(imgFile(tok)).mtimeMs)}catch(e){}
+  const who=owner.given||owner.name||"A friend", title=who+"'s progress | LoLphabet";
+  const desc=owner.shareDesc?who+" · "+owner.shareDesc:"See how far "+who+" has got in the League of Legends A–Z Challenge.";
+  const link=base+"/s/"+tok, img=mt?link+"/og.jpg?v="+mt:"";
+  return {tok,ver:mt+"|"+who+"|"+desc,apply:page=>{
+    const set=(re,v)=>{page=page.replace(re,(m,a)=>a+escAttr(v)+'"')};
+    page=page.replace(/<title>[^<]*<\/title>/,()=>"<title>"+escAttr(title)+"</title>");
+    set(/(<meta name="description" content=")[^"]*"/,desc);
+    set(/(<meta property="og:title" content=")[^"]*"/,title); set(/(<meta property="og:description" content=")[^"]*"/,desc); set(/(<meta property="og:url" content=")[^"]*"/,link);
+    set(/(<meta name="twitter:title" content=")[^"]*"/,title); set(/(<meta name="twitter:description" content=")[^"]*"/,desc);
+    if(img){ set(/(<meta property="og:image" content=")[^"]*"/,img); set(/(<meta name="twitter:image" content=")[^"]*"/,img); set(/(<meta property="og:image:alt" content=")[^"]*"/,who+"'s LoLphabet progress"); }
+    return page;
+  }};
+}
 const send=(res,code,obj)=>{res.writeHead(code,{"Content-Type":"application/json","X-Robots-Tag":"noindex"});res.end(JSON.stringify(obj))};
 const body=req=>new Promise((ok,no)=>{let b="";req.on("data",c=>{b+=c;if(b.length>1e6){no(new Error("too big"));req.destroy()}});
   req.on("end",()=>{try{ok(JSON.parse(b||"{}"))}catch(e){no(e)}})});
@@ -235,10 +272,16 @@ http.createServer(async(req,res)=>{
     if(url==="/index.html"){res.writeHead(301,{Location:"/"});return res.end()}   // one URL for the landing page
     if(url==="/about/"||url==="/privacy/"||url==="/terms/"){res.writeHead(301,{Location:url.slice(0,-1)});return res.end()}
     if(url==="/favicon.ico"||url==="/favicon-96.png"){res.writeHead(200,{"Content-Type":"image/png","Cache-Control":"public, max-age=86400","Content-Length":FAVICON_BUF.length});return res.end(FAVICON_BUF)}
+    const im=url.match(/^\/s\/([\w-]+)\/og\.jpg$/);                                 // preview image of a progress share link
+    if(im){
+      let buf=null; try{ if(db.shares[im[1]]) buf=fs.readFileSync(imgFile(im[1])) }catch(e){}
+      if(!buf){res.writeHead(404,{"X-Robots-Tag":"noindex"});return res.end()}
+      res.writeHead(200,{"Content-Type":"image/jpeg","Cache-Control":"public, max-age=3600","X-Robots-Tag":"noindex","Content-Length":buf.length}); return res.end(buf);
+    }
     if(url==="/"||url==="/about"||url.startsWith("/s/")||url.startsWith("/t/")){
       const about=url==="/about", priv=url!=="/"&&!about, base=baseUrl(req);          // private share/template views are never indexed
-      const ver=String(fileMtime("index.html").getTime());
-      return servePage(req,res,(priv?"priv":about?"about":"home")+"|"+base,ver,()=>{
+      const ver0=String(fileMtime("index.html").getTime()), sh=url.startsWith("/s/")?shareInfo(url.slice(3).split("/")[0],base):null, ver=sh?ver0+"|"+sh.ver:ver0;
+      return servePage(req,res,(sh?"share-"+sh.tok:priv?"priv":about?"about":"home")+"|"+base,ver,()=>{
         let page=fs.readFileSync(path.join(__dirname,"index.html"),"utf8").replace(/%SITE_URL%/g,base)
           .replace("<!--ROBOTS-->",priv?'<meta name="robots" content="noindex, nofollow">':'<meta name="robots" content="index, follow, max-image-preview:large">')
           .replace("<!--CANONICAL-->",priv?"":`<link rel="canonical" href="${base}${about?"/about":"/"}">`)
@@ -255,6 +298,7 @@ http.createServer(async(req,res)=>{
             .replace('<h1 id="tl" class="tl">The League of Legends A–Z Challenge</h1>','<p id="tl" class="tl">The League of Legends A–Z Challenge</p>')
             .replace('<h2 id="about-h">About LoLphabet</h2>','<h1 id="about-h">About LoLphabet</h1>');
         }
+        if(sh) page=sh.apply(page);
         return page;
       },priv?{"X-Robots-Tag":"noindex, nofollow"}:{});
     }
@@ -348,11 +392,19 @@ http.createServer(async(req,res)=>{
       const u=db.users[sub];
       if(req.method==="GET") return send(res,200,{token:u.share||null});
       if(req.method==="POST"){
-        if(u.share) delete db.shares[u.share];
-        u.share=crypto.randomBytes(18).toString("base64url"); db.shares[u.share]=sub; persist();
+        if(u.share){ delete db.shares[u.share]; rmImg(u.share); }
+        u.share=crypto.randomBytes(18).toString("base64url"); db.shares[u.share]=sub; delete u.shareDesc; persist();
         return send(res,200,{token:u.share});
       }
-      if(req.method==="DELETE"){ if(u.share) delete db.shares[u.share]; u.share=null; persist(); return send(res,200,{ok:true}); }
+      if(req.method==="DELETE"){ if(u.share){ delete db.shares[u.share]; rmImg(u.share); } u.share=null; delete u.shareDesc; persist(); return send(res,200,{ok:true}); }
+    }
+    if(url==="/api/share/image"&&req.method==="PUT"){                                // the browser renders the progress image and stores it for the link preview
+      const u=db.users[sub]; if(!u.share) return send(res,409,{error:"no share link"});
+      const b=await body(req), buf=Buffer.from(String(b.img||""),"base64"), dim=jpegSize(buf);
+      if(buf.length<1000||buf.length>700000||!dim||dim.w!==1200||dim.h!==630) return send(res,400,{error:"bad image"});
+      fs.writeFileSync(imgFile(u.share),buf);
+      u.shareDesc=String(b.desc||"").replace(/[\u0000-\u001f]/g," ").trim().slice(0,160); persist();
+      return send(res,200,{ok:true});
     }
     if(url==="/api/profile"&&req.method==="PUT"){
       const n=String((await body(req)).name||"").trim().slice(0,40);
@@ -360,7 +412,7 @@ http.createServer(async(req,res)=>{
       const u=db.users[sub]; u.name=u.given=n; u.custom=true; persist(); return send(res,200,{name:n});
     }
     if(url==="/api/account"&&req.method==="DELETE"){
-      {const o=db.users[sub]; if(o&&o.share) delete db.shares[o.share]; for(const k in db.templates) if(db.templates[k].sub===sub) delete db.templates[k];} delete db.users[sub]; for(const k in db.sessions) if(db.sessions[k].sub===sub) delete db.sessions[k];
+      {const o=db.users[sub]; if(o&&o.share){ delete db.shares[o.share]; rmImg(o.share); } for(const k in db.templates) if(db.templates[k].sub===sub) delete db.templates[k];} delete db.users[sub]; for(const k in db.sessions) if(db.sessions[k].sub===sub) delete db.sessions[k];
       persist(); return send(res,200,{ok:true});
     }
     if(url==="/api/logout"&&req.method==="POST"){delete db.sessions[token(req)];persist();return send(res,200,{ok:true})}
