@@ -65,8 +65,8 @@ h1 span{color:var(--gold)}
 .nb .un-b:hover{color:var(--text);border-color:var(--muted)}
 .nb .un-c{border:none;background:none;padding:0 2px;font-size:inherit;color:var(--gold);text-decoration:underline;cursor:pointer}
 .nbg{display:grid;grid-template-columns:auto auto;gap:6px 8px;align-items:center}
-.nbg .nbl{justify-self:center}.nbg .nbr{justify-self:end}
-.nb .nb-loss{font-size:12px;font-weight:400;padding:4px 10px}
+.nbg .nbl{justify-self:center}.nbg .nbr{justify-self:end}.nbg .nb-loss+.pri+.un-b{grid-column:2}
+.nb .nb-loss{font-size:12px;font-weight:400;box-sizing:border-box;height:28px;min-width:68px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;line-height:1;border-radius:6px}
 .nb .nat{font-size:12px;white-space:nowrap}
 .nb-link{margin-left:8px;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:400;letter-spacing:0;padding:1px 8px;background:transparent;color:var(--muted)}
 .nb-link:hover{color:var(--text)}
@@ -206,7 +206,7 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
 .pcard .bar{height:12px;margin:12px 0 0}
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
 input[type=search]{flex:1;min-width:160px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit}
-button{padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+button{padding:9px 12px;border-radius:8px;border:2px solid var(--line);background:var(--card);color:var(--text);font:inherit;cursor:pointer}
 button:hover{border-color:var(--gold)}
 button.on{border-color:var(--gold);color:var(--gold)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
@@ -1177,8 +1177,8 @@ function nextBox(cur,hc,m,won,total){
     <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(total-won)+" left to go")})</span></div>
     ${st?`<div class="nxs"><span>Pick Rate: <b>${pct(st.pick_rate)}</b></span><span>Win Rate: <b>${pct(st.win_rate)}</b></span><span title="Games analysed for this champion in this position">Sample Size: <b>${nfmt(st.games)}</b></span></div>`:""}</div></div>
     <div class="nb">${nSk?`<span>${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button></span>`:""}${hc
-      ?`<button class="danger nb-loss" data-a="x">${LOSTLAB()}</button><div class="nbc"><button class="pri" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`
-      :`<div class="nbg"><button class="danger nb-loss nbl" data-a="l" title="Log a loss (adds an attempt, same as the + button on the champion's card)">Loss</button><button class="pri nbr" data-a="w">✓ Complete</button><span class="nat nbl">${att} attempt${att===1?"":"s"}</span>${canSkip?'<button class="un-b nbr" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`}</div></div>
+      ?`<div class="nbg"><button class="danger nb-loss nbl" data-a="x">${LOSTLAB()}</button><button class="pri nbr" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b nbr" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`
+      :`<div class="nbg"><button class="danger nb-loss nbl" data-a="l" title="Log a loss (adds an attempt, same as the + button on the champion's card)">✗ Loss</button><button class="pri nbr" data-a="w">✓ Complete</button><span class="nat nbl">${att} attempt${att===1?"":"s"}</span>${canSkip?'<button class="un-b nbr" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`}</div></div>
     ${warn}
     <div class="nxb">${panel}</div>`;
 }
