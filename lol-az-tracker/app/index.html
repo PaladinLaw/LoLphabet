@@ -68,6 +68,8 @@ h1 span{color:var(--gold)}
 .nbg .nbl{justify-self:center}.nbg .nbr{justify-self:end}
 .nb .nb-loss{font-size:12px;font-weight:400;padding:4px 10px}
 .nb .nat{font-size:12px;white-space:nowrap}
+.nxk .nb-share{margin-left:8px;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:400;letter-spacing:0;padding:1px 8px;background:transparent;color:var(--muted)}
+.nxk .nb-share:hover{color:var(--text)}
 body.ro .nb .nat{display:none}
 .nxw{margin-top:10px;padding:8px 10px;border:1px solid #e0a030;background:rgba(224,160,48,.12);border-radius:8px;font-size:13px;line-height:1.4;color:var(--text)}
 .nxw .un-c{border:none;background:none;padding:0 2px;font-size:inherit;color:var(--gold);text-decoration:underline;cursor:pointer}
@@ -269,7 +271,6 @@ footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center;line-
     <button id="rst">Reset</button>
     <button id="editlist" hidden>Edit list</button>
     <button id="sharelist" hidden>Share list</button>
-    <button id="shimg">Share</button>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -839,6 +840,7 @@ async function copyText(textPromise){
   try{await navigator.clipboard.writeText(await textPromise); return true}catch(e){return false}
 }
 const shareFail=x=>info("Couldn't create the link","Error "+(x.status||"network")+". A 404 means the server.js on your host is out of date: replace it and restart the container.");
+const SHARE_ICON='<svg aria-hidden="true" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="3.5" cy="8" r="1.8"/><circle cx="12" cy="3.5" r="1.8"/><circle cx="12" cy="12.5" r="1.8"/><path d="M5.2 7.1l5.1-2.7M5.2 8.9l5.1 2.7"/></svg>';
 async function shareProgress(){
   if(!session){
     if(!authOn){await info("Sharing isn't available","Share links need an account, and accounts aren't available on this site.");return}
@@ -863,10 +865,10 @@ async function shareProgress(){
       input:{value:link,readonly:true},buttons:[{label:"Close",value:null},{label:"Copy link",cls:"pri",input:true}]});
     if(v) await copyText(v);
   }else{
-    const b=$("shimg"), old=b.textContent; b.textContent="✓ Link copied"; setTimeout(()=>{b.textContent=old},2200);
+    const lab=()=>document.querySelector("#shimg .shl"); if(lab()){lab().textContent="✓ Link copied"; setTimeout(()=>{if(lab()) lab().textContent="Share"},2200);}
   }
 }
-$("shimg").onclick=shareProgress;$("sharelist").onclick=async()=>{
+$("sharelist").onclick=async()=>{
   if(!session){await info("Log in to share lists","Sharing a list creates a link on the server, so you need to be logged in.");return}
   const l=(all.__lists||[]).find(x=>"c:"+x.id===role); if(!l) return;
   try{
@@ -1151,7 +1153,7 @@ function nextBox(cur,hc,m,won,total){
     panel=`<div class="nxm full" style="font-size:13px">${msg}</div>${chips}${j.state==="error"||j.state==="no_data"?"":freshHtml(j.data)}`;
   }
   return `<div class="nxh"><div class="nxl"><div class="nxi${ic?"":" noimg"}"><span>${letter}</span>${ic?`<img src="${esc(ic)}" alt="" onerror="var p=this.parentNode;this.remove();p.classList.add('noimg')">`:""}<i>${letter}</i></div>
-    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(total-won)+" left to go")})</span></div>
+    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}<button id="shimg" class="nb-share" title="Copy a link to share your progress">${SHARE_ICON}<span class="shl">Share your progress</span></button></div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(total-won)+" left to go")})</span></div>
     ${st?`<div class="nxs"><span>Pick Rate: <b>${pct(st.pick_rate)}</b></span><span>Win Rate: <b>${pct(st.win_rate)}</b></span><span title="Games analysed for this champion in this position">Sample Size: <b>${nfmt(st.games)}</b></span></div>`:""}</div></div>
     <div class="nb">${nSk?`<span>${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button></span>`:""}${hc
       ?`<button class="danger nb-loss" data-a="x">${LOSTLAB()}</button><div class="nbc"><button class="pri" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`
@@ -1162,7 +1164,7 @@ function nextBox(cur,hc,m,won,total){
 function renderNext(){
   const L=ordered(), hc=isLock(), m=meta(), won=L.filter(c=>get(c.name).won).length, total=L.length, cur=availNext(L);
   $("next").innerHTML=cur?nextBox(cur,hc,m,won,total)
-    :`<div class="nxh"><div><b>${total?"A–Z complete 🎉":role.startsWith("class:")?"Loading class data…":"This list is empty"}</b></div></div>`;
+    :`<div class="nxh"><div><b>${total?"A–Z complete 🎉":role.startsWith("class:")?"Loading class data…":"This list is empty"}</b>${total?`<div class="nxk"><button id="shimg" class="nb-share" title="Copy a link to share your progress">${SHARE_ICON}<span class="shl">Share</span></button></div>`:""}</div></div>`;
 }
 function swapTag(id,tag){const e=document.getElementById(id); if(!e||e.tagName.toLowerCase()===tag)return; const n=document.createElement(tag); for(const a of e.attributes)n.setAttribute(a.name,a.value); n.innerHTML=e.innerHTML; e.replaceWith(n);}
 function render(){
@@ -1230,6 +1232,7 @@ $("next").addEventListener("click",e=>{
     else if(k==="pos"&&cur&&POSORDER.includes(t.dataset.p)) pospick[cur.name]=t.dataset.p;
     bsave(); renderNext(); return;}
   const b=e.target.closest("button"); if(!b||READONLY) return;
+  if(b.id==="shimg"){shareProgress();return}
   const cur=nextUp(); if(!cur) return;
   if(b.dataset.a==="x") loseRun(cur.name);
   else if(b.dataset.a==="u"){const m=meta(); m.skip=(m.skip||[]).concat(cur.name); if(m.focus===cur.name) delete m.focus; save(); render();}
