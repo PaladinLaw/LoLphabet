@@ -1153,7 +1153,7 @@ function nextBox(cur,hc,m,won,total){
     panel=`<div class="nxm full" style="font-size:13px">${msg}</div>${chips}${j.state==="error"||j.state==="no_data"?"":freshHtml(j.data)}`;
   }
   return `<div class="nxh"><div class="nxl"><div class="nxi${ic?"":" noimg"}"><span>${letter}</span>${ic?`<img src="${esc(ic)}" alt="" onerror="var p=this.parentNode;this.remove();p.classList.add('noimg')">`:""}<i>${letter}</i></div>
-    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}<button id="shimg" class="nb-share" title="Copy a link to share your progress">${SHARE_ICON}<span class="shl">Share your progress</span></button></div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(total-won)+" left to go")})</span></div>
+    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}<button id="shimg" class="nb-share" title="Copy a link to share your progress">${SHARE_ICON}<span class="shl">Share</span></button></div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(total-won)+" left to go")})</span></div>
     ${st?`<div class="nxs"><span>Pick Rate: <b>${pct(st.pick_rate)}</b></span><span>Win Rate: <b>${pct(st.win_rate)}</b></span><span title="Games analysed for this champion in this position">Sample Size: <b>${nfmt(st.games)}</b></span></div>`:""}</div></div>
     <div class="nb">${nSk?`<span>${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button></span>`:""}${hc
       ?`<button class="danger nb-loss" data-a="x">${LOSTLAB()}</button><div class="nbc"><button class="pri" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`
@@ -1164,7 +1164,7 @@ function nextBox(cur,hc,m,won,total){
 function renderNext(){
   const L=ordered(), hc=isLock(), m=meta(), won=L.filter(c=>get(c.name).won).length, total=L.length, cur=availNext(L);
   $("next").innerHTML=cur?nextBox(cur,hc,m,won,total)
-    :`<div class="nxh"><div><b>${total?"A–Z complete 🎉":role.startsWith("class:")?"Loading class data…":"This list is empty"}</b>${total?`<div class="nxk"><button id="shimg" class="nb-share" title="Copy a link to share your progress">${SHARE_ICON}<span class="shl">Share</span></button></div>`:""}</div></div>`;
+    :`<div class="nxh"><div><b>${total?"A–Z complete 🎉":role.startsWith("class:")?"Loading class data…":"This list is empty"}</b>${total?`<div class="nxk"><button id="shimg" class="nb-share" title="Copy a link to share your progress">${SHARE_ICON}<span class="shl">Share your progress</span></button></div>`:""}</div></div>`;
 }
 function swapTag(id,tag){const e=document.getElementById(id); if(!e||e.tagName.toLowerCase()===tag)return; const n=document.createElement(tag); for(const a of e.attributes)n.setAttribute(a.name,a.value); n.innerHTML=e.innerHTML; e.replaceWith(n);}
 function render(){
