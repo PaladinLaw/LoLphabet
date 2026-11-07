@@ -865,7 +865,7 @@ async function shareProgress(){
       input:{value:link,readonly:true},buttons:[{label:"Close",value:null},{label:"Copy link",cls:"pri",input:true}]});
     if(v) await copyText(v);
   }else{
-    const lab=()=>document.querySelector("#shimg .shl"); if(lab()){lab().textContent="✓ Link copied"; setTimeout(()=>{if(lab()) lab().textContent="Share"},2200);}
+    const lab=()=>document.querySelector("#shimg .shl"); if(lab()){const old=lab().textContent; lab().textContent="✓ Link copied"; setTimeout(()=>{if(lab()) lab().textContent=old},2200);}
   }
 }
 $("sharelist").onclick=async()=>{
@@ -1153,7 +1153,7 @@ function nextBox(cur,hc,m,won,total){
     panel=`<div class="nxm full" style="font-size:13px">${msg}</div>${chips}${j.state==="error"||j.state==="no_data"?"":freshHtml(j.data)}`;
   }
   return `<div class="nxh"><div class="nxl"><div class="nxi${ic?"":" noimg"}"><span>${letter}</span>${ic?`<img src="${esc(ic)}" alt="" onerror="var p=this.parentNode;this.remove();p.classList.add('noimg')">`:""}<i>${letter}</i></div>
-    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}<button id="shimg" class="nb-link" title="Copy a link to your progress">${SHARE_ICON}<span class="shl">Share</span></button></div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(total-won)+" left to go")})</span></div>
+    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}<button id="shimg" class="nb-link" title="Copy a link to your progress">${SHARE_ICON}<span class="shl">Share your progress</span></button></div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(total-won)+" left to go")})</span></div>
     ${st?`<div class="nxs"><span>Pick Rate: <b>${pct(st.pick_rate)}</b></span><span>Win Rate: <b>${pct(st.win_rate)}</b></span><span title="Games analysed for this champion in this position">Sample Size: <b>${nfmt(st.games)}</b></span></div>`:""}</div></div>
     <div class="nb">${nSk?`<span>${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button></span>`:""}${hc
       ?`<button class="danger nb-loss" data-a="x">${LOSTLAB()}</button><div class="nbc"><button class="pri" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`
