@@ -12,8 +12,5 @@
 .alink{background:none;border:none;padding:4px 0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;width:auto}
 .alink:hover{color:var(--text)}
 .err.ok{color:var(--win)!important}
-.mlab{flex:1;min-width:150px}
-.mlab small{display:block;color:var(--muted)}
-.pwf .fld{flex:1;min-width:150px}
 .adiv{display:flex;align-items:center;gap:12px;width:100%;max-width:320px;margin:2px 0 12px;color:var(--muted);font-size:13px}
 .adiv::before,.adiv::after{content:"";flex:1;height:1px;background:var(--line)}

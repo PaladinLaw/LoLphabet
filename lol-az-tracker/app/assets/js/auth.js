@@ -180,8 +180,8 @@ async function handleHash(){
   const k=m[1], v=m[2];
   if(k==="reset"){ resetTok=v; $("modal").hidden=false; authView("reset"); }
   else if(k==="merge") doMerge(v);
-  else if(k==="linked"){ acct=undefined; view="settings"; render(); info("Linked",(LABEL[v]||"Sign-in method")+" is now linked to your account."); }
-  else if(k==="autherr"){ if(session){view="settings";render()} info("Couldn't sign in",AUTHERR[v]||AUTHERR.failed); }
+  else if(k==="linked"){ acct=undefined; sTab="account"; view="settings"; render(); info("Linked",(LABEL[v]||"Sign-in method")+" is now linked to your account."); }
+  else if(k==="autherr"){ if(session){sTab="account";view="settings";render()} info("Couldn't sign in",AUTHERR[v]||AUTHERR.failed); }
   else{
     try{ await finishLogin(await api("POST","/api/auth/verify",{token:v})); }
     catch(x){ info("Couldn't sign in",x.status?x.message:netErr(x)); }

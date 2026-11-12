@@ -1,0 +1,22 @@
+/* Settings page: tab bar + one bordered card per section */
+.stabs{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:10px 0 4px}
+.stabs button{flex:1;border:none;border-radius:0;background:transparent;padding:11px 6px;font-weight:600}
+.stabs button+button{border-left:1px solid var(--line)}
+.stabs button.on{background:var(--gold);color:#111}
+.stabs button:hover{border-color:var(--line)}
+.scard{border:1px solid var(--line);border-radius:10px;padding:2px 14px 10px;margin:12px 0}
+.scard h3{margin:12px 0 6px}
+.scard .sm{margin:4px 0 8px;color:var(--muted);font-size:13px;line-height:1.5}
+.sr{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.scard h3+.sr,.scard .sm+.sr{border-top:none}
+.sr .sl{flex:1 1 160px;min-width:0;overflow-wrap:anywhere}
+.sr .sl small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.sr .sa{display:flex;gap:6px;flex:0 0 auto;align-items:center}
+.sr.sf{flex-wrap:wrap}
+.sr.sf .fld{flex:1 1 180px;min-width:0}
+.sr.sf small{flex-basis:100%;color:var(--muted)}
+.vok{color:var(--win);font-size:12px;white-space:nowrap}
+button.qbtn{border:none;background:none;color:var(--muted);text-decoration:underline;padding:9px 8px}
+button.qbtn:hover{color:var(--text)}
+.scard.dz{border-color:#d9534f55}
+.scard.dz h3{color:#d9534f}
