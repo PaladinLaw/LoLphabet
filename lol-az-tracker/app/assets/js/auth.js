@@ -49,10 +49,12 @@ function authView(v){
   if(v==="menu"){
     $("mt").textContent="Log in / Sign up";
     $("mp").textContent="Choose how to log in. Your account is created automatically the first time, and any progress already in this browser is saved to it.";
-    box.innerHTML=logins.map(t=>t==="google"?`<button class="gsi" id="gbt" data-a="google" disabled>${GSVG}<span>Sign in with Google</span></button>`
+    const btn=t=>t==="google"?`<button class="gsi" id="gbt" data-a="google" disabled>${GSVG}<span>Sign in with Google</span></button>`
       :t==="discord"?`<button class="abtn dc" data-a="discord">Continue with Discord</button>`
       :t==="password"?`<button class="abtn" data-a="password">Username &amp; password</button>`
-      :`<button class="abtn" data-a="magic">Email me a magic link</button>`).join("");
+      :`<button class="abtn" data-a="magic">Email me a magic link</button>`;
+    const social=logins.filter(t=>t==="google"||t==="discord"), email=logins.filter(t=>t==="magic"||t==="password");   // one-click options first, typing options after
+    box.innerHTML=social.map(btn).join("")+(social.length&&email.length?`<div class="adiv"><span>or use your email</span></div>`:"")+email.map(btn).join("");
     if(logins.includes("google")){
       const wire=()=>{const b=$("gbt"); if(b) b.disabled=false};
       if(gReady) wire(); else loadGIS(wire,()=>setMsg("Couldn't load Google sign-in. Check your connection and try again."));
