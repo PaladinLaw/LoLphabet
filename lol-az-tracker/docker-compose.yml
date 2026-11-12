@@ -6,7 +6,13 @@ services:
     working_dir: /app
     command: ["node", "server.js"]
     environment:
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
+      LOGIN_TYPES: ${LOGIN_TYPES:-Google}                                                                         # which logins to offer: Google, Discord, Password, Magic link (comma separated)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}                                                                     # needed when Google is enabled
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}                                                                   # needed when Discord is enabled
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}                                                           # needed when Discord is enabled
+      RESEND_API_KEY: ${RESEND_API_KEY:-}                                                                         # needed when Password or Magic link is enabled
+      MAIL_FROM: ${MAIL_FROM:-}                                                                                   # needed when Password or Magic link is enabled, e.g. LoLphabet <login@lolphabet.app>
+      MAIL_DAILY_LIMIT: ${MAIL_DAILY_LIMIT:-90}                                                                   # stay under Resend's free 100 emails a day
       DATA_FILE: /data/data.json
       PORT: ${APP_PORT:?APP_PORT is required}
       CONTACT_EMAIL: ${CONTACT_EMAIL:-}                                                                           # optional, shown on the privacy/terms pages

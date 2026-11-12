@@ -1,0 +1,17 @@
+/* Login window and Settings > Sign-in methods */
+#gbtn{display:flex;flex-direction:column;align-items:flex-start}
+#gbtn .gsi{margin:0 0 10px}
+.abtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:320px;height:44px;padding:0 18px;margin:0 0 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font:500 15px/1 system-ui,sans-serif;cursor:pointer}
+.abtn:hover{border-color:var(--gold)}
+.abtn.dc{background:#5865f2;border-color:#5865f2;color:#fff}
+.abtn.dc:hover{background:#4752c4;border-color:#4752c4}
+.af{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin:0 0 10px}
+.af .fld{width:100%;box-sizing:border-box}
+.af .pri{height:44px;border-radius:999px}
+.alinks{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.alink{background:none;border:none;padding:4px 0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;width:auto}
+.alink:hover{color:var(--text)}
+.err.ok{color:var(--win)!important}
+.mlab{flex:1;min-width:150px}
+.mlab small{display:block;color:var(--muted)}
+.pwf .fld{flex:1;min-width:150px}
