@@ -1,0 +1,122 @@
+// ---- Next up: build data from /api/builds (collected weekly by the separate lol-meta-collector; never fetched from OP.GG in the browser) ----
+const POSMAP={"Top":"TOP","Jungle":"JUNGLE","Mid":"MID","Bot / ADC":"ADC","Support":"SUPPORT"};   // role list -> collector position
+const POSNAME={TOP:"top",JUNGLE:"jungle",MID:"mid",ADC:"adc",SUPPORT:"support"}, POSORDER=["TOP","JUNGLE","MID","ADC","SUPPORT"];
+let bopen={runes:false}, pospick={}, BUILDS={}, BPEND={};
+if(!READONLY)try{const o=JSON.parse(localStorage.getItem("lol-az-bopen"));if(o&&typeof o==="object")bopen=Object.assign(bopen,o);const p=JSON.parse(localStorage.getItem("lol-az-pospick"));if(p&&typeof p==="object")pospick=p}catch(e){}
+const bsave=()=>{if(READONLY)return;try{localStorage.setItem("lol-az-bopen",JSON.stringify(bopen));localStorage.setItem("lol-az-pospick",JSON.stringify(pospick))}catch(e){}};
+const bkey=(n,p)=>n+"|"+(p||"*");
+const pct=v=>typeof v==="number"&&isFinite(v)?v.toFixed(1)+"%":"–", nfmt=v=>typeof v==="number"&&isFinite(v)?Math.round(v).toLocaleString():"–";
+function loadBuild(name,pos){
+  const k=bkey(name,pos), e=BUILDS[k];
+  if(BPEND[k]||(e&&Date.now()-e.t<6e5)) return;                       // cached for 10 min; refreshed quietly after that
+  BPEND[k]=1;
+  fetch("/api/builds?champion="+encodeURIComponent(name)+(pos?"&position="+pos:"")).then(r=>r.ok?r.json():Promise.reject(r.status))
+    .then(j=>{BUILDS[k]={t:Date.now(),j}})
+    .catch(()=>{if(!BUILDS[k])BUILDS[k]={t:Date.now()-5.5e5,j:{state:"error"}}})   // an error is retried after ~50 s
+    .finally(()=>{delete BPEND[k];renderNext()});
+}
+let BPOS={};   // champion -> positions the collector has (kept so the chips stay put while another position loads)
+const posChips=(list,sel)=>`<span class="k">Position</span><div class="nxr">${POSORDER.filter(p=>list.some(x=>x.position===p)).map(p=>`<button class="pc${p===sel?" on":""}" data-bt="pos" data-p="${p}" aria-pressed="${p===sel}">${POSNAME[p]}</button>`).join("")}</div>`;
+const btip=x=>[x.name,x.pick_rate!=null?pct(x.pick_rate)+" pick":"",x.win_rate!=null?pct(x.win_rate)+" win":"",x.sample_size?nfmt(x.sample_size)+" games":""].filter(Boolean).join(" · ");
+const bimg=(x,c)=>`<span class="bi ${c||""}" title="${esc(btip(x))}">${x.image?`<img src="${esc(x.image)}" alt="${esc(x.name||"")}" onerror="this.remove()">`:""}</span>`;
+function freshHtml(d){
+  if(!d) return "";
+  const dt=d.collected_at?new Date(d.collected_at):null, when=dt&&isFinite(dt)?dt.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}):"date unknown";
+  const dd=d.age_days==null?null:Math.floor(d.age_days), age=dd==null?"":dd<1?" (today)":" ("+dd+" day"+(dd===1?"":"s")+" ago)", w=[];
+  if(d.from==="archive") w.push("The latest collection was empty or failed, so this is the last good snapshot.");
+  if(d.stale) w.push(d.age_days==null?"The collection date is unknown.":"This data is more than "+d.stale_after_days+" days old, so the collector may have stopped.");
+  return `<div class="nxm full">Build data: <a href="https://op.gg" target="_blank" rel="noopener noreferrer">OP.GG</a> · ${esc(d.rank||"")} · Last Updated ${esc(when)}</div>`;
+}
+// ---- Rune page: the full rune trees come from Riot Data Dragon (same host as the champion icons); the collector's build only says which runes are picked ----
+let RD=null; try{RD=JSON.parse(localStorage.getItem("lol-az-runes"))}catch(e){}
+let RDPEND=false;
+function loadRunes(){
+  if(RDPEND||(RD&&RD.trees&&RD.t&&Date.now()-RD.t<864e5)) return; RDPEND=true;
+  (DD&&DD.ver?Promise.resolve(DD.ver):fetch("https://ddragon.leagueoflegends.com/api/versions.json").then(r=>r.json()).then(v=>v[0]))
+    .then(ver=>fetch("https://ddragon.leagueoflegends.com/cdn/"+ver+"/data/en_US/runesReforged.json"))
+    .then(r=>r.json()).then(d=>{
+      RD={t:Date.now(),trees:d.map(t=>({id:t.id,name:t.name,icon:t.icon,slots:t.slots.map(sl=>sl.runes.map(x=>({id:x.id,name:x.name,icon:x.icon})))}))};
+      try{localStorage.setItem("lol-az-runes",JSON.stringify(RD))}catch(e){}
+    }).catch(()=>{}).finally(()=>{RDPEND=false;renderNext()});
+}
+const RIMG="https://ddragon.leagueoflegends.com/cdn/img/", SHIMG="https://raw.communitydragon.org/latest/game/assets/perks/statmods/";
+const SHARDS=[[5008,5005,5007],[5008,5010,5001],[5011,5013,5001]];   // offense / flex / defense rows
+const SHN={5008:["Adaptive Force","statmodsadaptiveforceicon"],5005:["Attack Speed","statmodsattackspeedicon"],5007:["Ability Haste","statmodscdrscalingicon"],5010:["Move Speed","statmodsmovementspeedicon"],5001:["Scaling Health","statmodshealthscalingicon"],5011:["Health","statmodshealthplusicon"],5013:["Tenacity and Slow Resist","statmodstenacityicon"]};
+const sameR=(a,b)=>(a.id!=null&&b.id!=null&&String(a.id)===String(b.id))||(a.name&&b.name&&a.name.toLowerCase()===b.name.toLowerCase());
+const ri=(src,name,on,c)=>`<span class="ri ${c}${on?" on":""}" title="${esc(name)}"><img src="${esc(src)}" alt="${esc(name)}" onerror="this.remove()"></span>`;
+function runePage(r){
+  if(!RD||!RD.trees||!r.primary_style) return "";
+  const find=st=>st&&RD.trees.find(t=>sameR(t,st)), pt=find(r.primary_style), stt=r.secondary_style?find(r.secondary_style):null;
+  if(!pt||!r.primary.some(x=>pt.slots.some(sl=>sl.some(y=>sameR(x,y))))) return "";       // ids/names don't line up -> flat fallback
+  const head=t=>`<div class="rh"><img src="${RIMG+esc(t.icon)}" alt="" onerror="this.remove()"><b>${esc(t.name)}</b></div>`;
+  const rowsOf=(t,sel,from)=>t.slots.slice(from).map((sl,i)=>`<div class="rr${from===0&&i===0?" ks":""}">${sl.map(x=>ri(RIMG+x.icon,x.name,sel.some(y=>sameR(x,y)),from===0&&i===0?"ks":"")).join("")}</div>`).join("");
+  const sh=r.stat_shards||[], shRows=SHARDS.map((ids,i)=>{const p=sh[i], pid=p&&p.id!=null&&ids.includes(Number(p.id))?Number(p.id):(p&&ids.find(id=>SHN[id][0].toLowerCase()===String(p.name||"").toLowerCase()));
+    return `<div class="rr sr">${ids.map(id=>ri(SHIMG+SHN[id][1]+".png",SHN[id][0],id===pid,"sh")).join("")}</div>`}).join("");
+  return `<div class="rpg"><div class="rcol">${head(pt)}${rowsOf(pt,r.primary,0)}</div><div class="rcol">${stt?head(stt)+rowsOf(stt,r.secondary,1):""}<div class="rsh">${shRows}</div></div></div>`;
+}
+function buildRows(j,fixed){
+  const b=j.build, rows=[];
+  if(!fixed&&j.positions&&j.positions.length) rows.push(posChips(j.positions,j.position));
+  if(b.summoner_spells.length){
+    const ss=b.summoner_spells.slice(), fi=ss.findIndex(x=>/^flash$/i.test(x.name||""));
+    if(fi>=0&&fi!==ss.length-1) ss.push(ss.splice(fi,1)[0]);          // Flash goes last (right) by default
+    if(bopen.swap) ss.reverse();                                        // user's swap toggle
+    rows.push(`<span class="k">Summoners</span><div class="nxr">${ss.map(s=>bimg(s)).join("")}${ss.length>1?`<button class="sw" data-bt="swap" title="Swap summoner spell order" aria-label="Swap summoner spell order">⇄</button>`:""}</div>`);
+  }
+  if(b.skill_order.length){
+    const maxOrder=(Array.isArray(b.skill_max_order)?b.skill_max_order:[]).join(" → ");
+    const levels=b.skill_order.map((k,i)=>`<span class="skill-step" title="Level ${i+1}: ${esc(k)}"><small>${i+1}</small><i${k==="R"?' class="r"':""}>${esc(k)}</i></span>`).join("");
+    rows.push(`<span class="k">Level-up order</span><div class="skill-sequence" aria-label="Skill levels 1 to ${b.skill_order.length}">${levels}</div>`);
+    if(maxOrder) rows.push(`<span class="k">Max priority</span><div class="skill-max" aria-label="Max abilities in this order">${esc(maxOrder)}</div>`);
+  }
+  const seen=new Set(), sitAll=["fourth","fifth","sixth","last"].flatMap(k=>b.situational_items[k]||[]).filter(x=>{const id=x.id!=null?x.id:x.name; if(seen.has(id))return false; seen.add(id); return true});
+  const groups=[["Starting items",b.starting_items],["Boots",b.core_items.boots],["Core items",b.core_items.items],["Situational items",sitAll]].filter(g=>g[1].length);
+  if(groups.length) rows.push(`<span class="k">Items</span><div class="nxr">${groups.map(g=>`<span class="grp" title="${g[0]}">${g[1].map(x=>bimg(x)).join("")}</span>`).join('<span class="sep">›</span>')}</div>`);
+  const r=b.runes; loadRunes();
+  if(r&&r.primary_style&&r.primary.length){
+    rows.push(`<div class="full rsp" aria-hidden="true"></div>`);          // keeps the row height the old "Runes" link used to take
+    const page=runePage(r), tip=r.sample_size?`Rune page: ${pct(r.pick_rate)} pick · ${pct(r.win_rate)} win · ${nfmt(r.sample_size)} games`:"";
+    if(page) rows.push(`<div class="rp side" title="${esc(tip)}">${page}</div>`);
+    else if(!(RD&&RD.trees)&&RDPEND){}                                       // rune trees still loading: show nothing rather than flashing the flat list
+    else{
+      const tree=(s,a)=>`<span class="rs">${bimg(s,"st")}${esc(s.name)}</span>${a.map(x=>bimg(x,"rn")).join("")}`;
+      rows.push(`<div class="rp full"><div class="nxr">${tree(r.primary_style,r.primary)}${r.secondary_style?`<span class="sep">+</span>${tree(r.secondary_style,r.secondary)}`:""}</div>`
+        +(r.stat_shards.length?`<div class="nxr"><span>Shards</span>${r.stat_shards.map(x=>`<span class="rs">${bimg(x,"sh")}<span style="font-weight:400">${esc(x.name)}</span></span>`).join("")}</div>`:"")
+        +(tip?`<div class="nxm" style="margin-top:8px">${tip}</div>`:"")+`</div>`);
+    }
+  }
+  return rows.join("");
+}
+function nextBox(cur,hc,m,won,total){
+  const fixed=!!POSMAP[role], want=POSMAP[role]||pospick[cur.name]||"";     // role lists fix the position; other lists use the user's chip (or the most-played position, shown openly)
+  loadBuild(cur.name,want);
+  const e=BUILDS[bkey(cur.name,want)], j=e&&e.j, ok=j&&j.state==="ok", pos=(j&&j.position)||want, letter=esc(cur.name[0]);
+  const ic=iconUrl(cur.name)||(ok&&j.champion_icon)||"", st=ok?j.statistics:null;
+  const att=get(cur.name).games, real=listNext(ordered()), warn=(!READONLY&&!isLock()&&real&&real.name!==cur.name)?`<div class="nxw" role="status">⚠ <strong>This isn’t the next champion in your list.</strong> The next one is <strong>${esc(real.name)}</strong>. <button class="un-c" data-a="bf">Switch back to ${esc(real.name)}</button></div>`:"";
+  const sk=m.skip||[], left=ordered().filter(c=>!get(c.name).won), nSk=left.filter(c=>sk.includes(c.name)).length, canSkip=left.filter(c=>!sk.includes(c.name)).length>1;
+  let panel;
+  if(j&&j.positions&&j.positions.length) BPOS[cur.name]=j.positions;
+  if(!j) panel=`<div class="nxm full">Loading build…</div>`+(!fixed&&BPOS[cur.name]?posChips(BPOS[cur.name],want):"");
+  else if(ok) panel=buildRows(j,fixed)+freshHtml(j.data);
+  else{
+    const chips=!fixed&&j.positions&&j.positions.length?posChips(j.positions,""):"";
+    const avail=fixed&&j.positions&&j.positions.length?" Collected for: "+POSORDER.filter(p=>j.positions.some(x=>x.position===p)).map(p=>POSNAME[p]).join(", ")+".":"";
+    const msg=j.state==="no_position"?`No build data for ${esc(cur.name)} in ${esc(POSNAME[pos]||"that position")}.${avail}`
+      :j.state==="no_champion"?`No build data for ${esc(cur.name)} yet.`
+      :j.state==="no_data"?"No build data has been collected yet.":"Build data isn’t available right now.";
+    panel=`<div class="nxm full" style="font-size:13px">${msg}</div>${chips}${j.state==="error"||j.state==="no_data"?"":freshHtml(j.data)}`;
+  }
+  return `<div class="nxh"><div class="nxl"><div class="nxi${ic?"":" noimg"}"><span>${letter}</span>${ic?`<img src="${esc(ic)}" alt="" onerror="var p=this.parentNode;this.remove();p.classList.add('noimg')">`:""}<i>${letter}</i></div>
+    <div><div class="nxk">NEXT UP${isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(total-won)+" left to go")})</span></div>
+    ${st?`<div class="nxs"><span>Pick Rate: <b>${pct(st.pick_rate)}</b></span><span>Win Rate: <b>${pct(st.win_rate)}</b></span><span title="Games analysed for this champion in this position">Sample Size: <b>${nfmt(st.games)}</b></span></div>`:""}</div></div>
+    <div class="nb">${nSk?`<span>${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button></span>`:""}${hc
+      ?`<div class="nbg"><button class="danger nb-loss nbl" data-a="x">${LOSTLAB()}</button><button class="pri nbr" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b nbr" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`
+      :`<div class="nbg"><button class="danger nb-loss nbl" data-a="l" title="Log a loss (adds an attempt, same as the + button on the champion's card)">✗ Loss</button><button class="pri nbr" data-a="w">✓ Complete</button><span class="nat nbl">${att} attempt${att===1?"":"s"}</span>${canSkip?'<button class="un-b nbr" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`}</div></div>
+    ${warn}
+    <div class="nxb">${panel}</div>`;
+}
+function renderNext(){
+  const L=ordered(), hc=isLock(), m=meta(), won=L.filter(c=>get(c.name).won).length, total=L.length, cur=availNext(L);
+  $("next").innerHTML=cur?nextBox(cur,hc,m,won,total)
+    :`<div class="nxh"><div><b>${total?"A–Z complete 🎉":role.startsWith("class:")?"Loading class data…":"This list is empty"}</b></div></div>`;
+}

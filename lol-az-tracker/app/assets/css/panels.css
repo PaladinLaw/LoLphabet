@@ -1,0 +1,28 @@
+.sp{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 16px 16px;margin-bottom:16px}
+.sp h3{margin:14px 0 8px;font-size:14px;color:var(--gold);text-transform:uppercase;letter-spacing:.6px}
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.t{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.t small{display:block;color:var(--muted);font-size:12px}
+.t b{font-size:15px}
+.sp table{width:100%;border-collapse:collapse;font-size:14px}
+.sp th,.sp td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)}
+.fld{padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.danger{color:#d9534f;border-color:#d9534f}
+.chips{display:flex;flex-wrap:wrap;gap:6px;max-height:420px;overflow:auto;padding:6px 0}
+.chip{padding:5px 10px;font-size:13px;border-radius:999px}
+.chip.on{background:var(--gold);color:#111;border-color:var(--gold)}
+.empty{color:var(--muted);padding:20px;text-align:center}
+#intro{margin:26px 0 0;color:var(--muted);font-size:14px;line-height:1.65}#intro h2{font-size:18px;color:var(--text);margin:0 0 8px}#intro p{margin:0 0 10px}
+.howto a{color:var(--gold)}footer a{color:inherit}.dimg{width:100%;border-radius:8px;margin-bottom:12px}
+footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center;line-height:1.7}
+/* Stats page: filters, by-list table, searchable per-list picker */
+.sp .smode{margin:10px 0 0}
+.sfc{max-height:none;overflow:visible;margin:0 0 8px}
+.sfc .chip small{opacity:.7;margin-left:2px}
+.tw{overflow-x:auto}
+.sp td.nw{white-space:nowrap}
+.sp .ct{display:block;color:var(--muted);font-size:11px;line-height:1.2}
+.mb{display:block;height:4px;margin-top:4px;border-radius:3px;background:var(--line);overflow:hidden;min-width:56px}
+.mb i{display:block;height:100%;background:var(--win)}
+.sp .sel{margin:0 0 12px}

@@ -71,6 +71,11 @@ const ABOUT_TITLE="About LoLphabet | League of Legends A–Z Challenge Tracker";
 const ABOUT_DESC="What LoLphabet is, what you can track (roles, races, classes, regions, custom lists), how the four challenge modes work and how your progress is saved.";
 const HOME_DESC="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.";
 const fileMtime=f=>{try{return fs.statSync(path.join(__dirname,f)).mtime}catch(e){return new Date()}};
+// Front-end files live in assets/css and assets/js. Their newest mtime becomes the ?v= cache-buster in index.html and part of the page-cache key,
+// so editing any of them is picked up without restarting the container.
+const ASSET_DIRS=["assets/css","assets/js"];
+const assetVer=()=>{let t=fileMtime("index.html").getTime();for(const d of ASSET_DIRS){try{for(const f of fs.readdirSync(path.join(__dirname,d)))t=Math.max(t,fileMtime(d+"/"+f).getTime())}catch(e){}}return String(t)};
+const STATIC_TYPES={".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8"};
 const jsonLd=base=>'<script type="application/ld+json">'+JSON.stringify({"@context":"https://schema.org","@graph":[
   {"@type":"WebSite","@id":base+"/#website","url":base+"/","name":"LoLphabet","alternateName":"LoLphabet: The League of Legends A–Z Challenge","description":HOME_DESC,"inLanguage":"en","publisher":{"@id":base+"/#author"}},
   {"@type":"WebApplication","@id":base+"/#app","url":base+"/","name":"LoLphabet","alternateName":"The League of Legends A–Z Challenge","description":HOME_DESC,"applicationCategory":"GameApplication","operatingSystem":"Any (web browser)","isAccessibleForFree":true,"inLanguage":"en","image":base+"/assets/og-image.png?v=2","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@id":base+"/#author"},"isPartOf":{"@id":base+"/#website"},
@@ -88,7 +93,7 @@ function servePage(req,res,key,version,build,extra){
     e={buf,gz:zlib.gzipSync(buf,{level:9}),br:zlib.brotliCompressSync(buf,{params:{[zlib.constants.BROTLI_PARAM_QUALITY]:9}}),etag:'"'+crypto.createHash("sha1").update(buf).digest("base64url").slice(0,20)+'"'};
     PAGE_CACHE.set(ck,e);
   }
-  const h={"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-cache","ETag":e.etag,"Vary":"Accept-Encoding",...(extra||{})};
+  const h={"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-cache, no-transform","ETag":e.etag,"Vary":"Accept-Encoding",...(extra||{})};
   if(req.headers["if-none-match"]===e.etag){res.writeHead(304,h);return res.end()}
   const ae=String(req.headers["accept-encoding"]||"");
   let body=e.buf;
@@ -280,9 +285,9 @@ http.createServer(async(req,res)=>{
     }
     if(url==="/"||url==="/about"||url.startsWith("/s/")||url.startsWith("/t/")){
       const about=url==="/about", priv=url!=="/"&&!about, base=baseUrl(req);          // private share/template views are never indexed
-      const ver0=String(fileMtime("index.html").getTime()), sh=url.startsWith("/s/")?shareInfo(url.slice(3).split("/")[0],base):null, ver=sh?ver0+"|"+sh.ver:ver0;
+      const ver0=assetVer(), sh=url.startsWith("/s/")?shareInfo(url.slice(3).split("/")[0],base):null, ver=sh?ver0+"|"+sh.ver:ver0;
       return servePage(req,res,(sh?"share-"+sh.tok:priv?"priv":about?"about":"home")+"|"+base,ver,()=>{
-        let page=fs.readFileSync(path.join(__dirname,"index.html"),"utf8").replace(/%SITE_URL%/g,base)
+        let page=fs.readFileSync(path.join(__dirname,"index.html"),"utf8").replace(/%SITE_URL%/g,base).replace(/%ASSET_V%/g,ver0)
           .replace("<!--ROBOTS-->",priv?'<meta name="robots" content="noindex, nofollow">':'<meta name="robots" content="index, follow, max-image-preview:large">')
           .replace("<!--CANONICAL-->",priv?"":`<link rel="canonical" href="${base}${about?"/about":"/"}">`)
           .replace("<!--JSONLD-->",priv?"":jsonLd(base));
@@ -314,6 +319,19 @@ http.createServer(async(req,res)=>{
       res.writeHead(200,{"Content-Type":"application/manifest+json; charset=utf-8"});
       return res.end(JSON.stringify({id:"/",name:"LoLphabet",short_name:"LoLphabet",description:"LoLphabet is a League of Legends completion tracker and A–Z challenge.",start_url:"/",scope:"/",display:"standalone",background_color:"#0f1318",theme_color:"#0f1318",
         icons:[{src:"/assets/icon-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:"/assets/icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]}));
+    }
+    const fm=url.match(/^\/assets\/(css|js)\/([\w-]+\.(?:css|js))$/);                    // front-end files (cache-busted with ?v=, so they can be cached for a long time)
+    if(fm){
+      const f=path.join(__dirname,"assets",fm[1],fm[2]), ext=path.extname(f);
+      if(STATIC_TYPES[ext]&&fs.existsSync(f)){
+        const buf=fs.readFileSync(f), etag='"'+crypto.createHash("sha1").update(buf).digest("base64url").slice(0,20)+'"';
+        const h={"Content-Type":STATIC_TYPES[ext],"Cache-Control":"public, max-age=31536000, immutable","ETag":etag,"Vary":"Accept-Encoding"};
+        if(req.headers["if-none-match"]===etag){res.writeHead(304,h);return res.end()}
+        const ae=String(req.headers["accept-encoding"]||""); let body=buf;
+        if(/\bbr\b/.test(ae)){h["Content-Encoding"]="br";body=zlib.brotliCompressSync(buf)}
+        else if(/\bgzip\b/.test(ae)){h["Content-Encoding"]="gzip";body=zlib.gzipSync(buf)}
+        h["Content-Length"]=body.length; res.writeHead(200,h); return res.end(body);
+      }
     }
     const am=url.match(/^\/assets\/([\w-]+\.png)$/);
     if(am){const f=path.join(__dirname,"assets",am[1]); if(fs.existsSync(f)){res.writeHead(200,{"Content-Type":"image/png","Cache-Control":"public, max-age=86400"});return res.end(fs.readFileSync(f))}}

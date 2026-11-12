@@ -1,0 +1,84 @@
+/* Mobile / narrow-screen layout. Loaded last so it can override the base styles. */
+html{-webkit-text-size-adjust:100%}
+button,.chip,.sopt{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+
+@media(max-width:640px){
+  main{padding:12px max(12px,env(safe-area-inset-right)) 80px max(12px,env(safe-area-inset-left))}
+  body:has(#cbar:not([hidden])) main{padding-bottom:150px}
+
+  /* header: brand on top, visitor count + account on one compact line below */
+  .hd{gap:6px}
+  .brand .bn{font-size:28px}
+  .brand .tl{font-size:14px}
+  .hr{width:100%;justify-content:space-between;gap:8px;font-size:12px}
+  .auth{font-size:12px;min-height:0;gap:6px}
+  .auth button{padding:5px 10px;font-size:12px;border-width:1px}
+  .note{padding:10px 12px}
+
+  /* navigation: list type + Stats/Settings icons on the first line, then the list and challenge dropdowns full width */
+  .nav{gap:8px;margin-bottom:12px}
+  #cats{order:1;flex:1 1 0}
+  #navbtns{order:2}
+  #tabs{order:3;flex:1 1 100%}
+  #modes{order:4;flex:1 1 100%}
+  #navbtns button{width:48px;padding:0}
+  #navbtns .lb{display:none}
+  #cats .back{width:100%;justify-content:flex-start}
+
+  /* Next up */
+  .next{padding:12px}
+  .next b{font-size:20px}
+  .nxh{flex-direction:column;align-items:stretch;gap:10px}
+  .nxh .nb{min-height:0;width:100%;flex-direction:column;align-items:stretch}
+  .nbg{width:100%;grid-template-columns:1fr 1fr;gap:8px}
+  .nbg .nbl,.nbg .nbr{justify-self:stretch}
+  .nbg .nat{justify-self:start;align-self:center}
+  .nb .nb-loss{height:42px;font-size:14px}
+  .nbg .pri{min-height:42px;font-size:15px}
+  .nb .un-b{padding:8px 10px;font-size:13px;white-space:nowrap}
+  .nbg .nb-loss+.pri+.un-b{grid-column:auto}
+  .nxb{grid-template-columns:minmax(0,1fr);row-gap:4px}
+  .nxb .k{margin-top:8px;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+  .rp.side{justify-self:stretch}
+  .skill-sequence{padding-bottom:6px}
+
+  /* progress card + tools */
+  .pcard{padding:12px}
+  .phead{gap:4px 10px}
+  .tools{gap:6px;margin:12px 0}
+  input[type=search]{flex:1 1 100%;min-width:0;font-size:16px}   /* 16px stops iOS zooming into the field */
+  .tools button{flex:1 1 auto;padding:9px 8px;font-size:14px}
+  #exp,#imp,#rst,#editlist,#sharelist{font-size:13px;padding:7px 8px}
+
+  /* champion cards: one per row with comfortable tap targets */
+  .grid{grid-template-columns:minmax(0,1fr);gap:6px}
+  .c{padding:10px}
+  .g button{padding:7px 12px;font-size:14px;min-height:36px}
+  .g .wb{flex:1;margin-left:auto}
+
+  /* stats / settings */
+  .sp{padding:4px 12px 12px}
+  .tg{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .t{padding:7px 9px}
+  .sp table{font-size:13px}
+  .sp th,.sp td{padding:5px 4px}
+  /* dropdowns open as a bottom sheet over a dimmed backdrop */
+  .sdrop{position:fixed;inset:0;z-index:30;width:auto;min-width:0;background:rgba(0,0,0,.45);border:none;border-radius:0;box-shadow:none;display:flex;align-items:flex-end}
+  .sdrop[hidden]{display:none}
+  .sdbox{width:100%;margin:0 12px max(12px,env(safe-area-inset-bottom));padding:10px;background:var(--card);border:1px solid var(--gold);border-radius:12px;box-shadow:0 -8px 30px rgba(0,0,0,.5)}
+  .sopts{max-height:55vh}
+  .sdbox input[type=search]{font-size:16px}
+  .sopt{padding:12px 10px;font-size:15px}
+
+  /* dialogs + cookie bar */
+  .modal{padding:12px;align-items:end}
+  .mc{padding:18px;max-width:none}
+  #cbar{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));padding:8px 10px;font-size:12px}
+  #cbar .cb{width:100%;justify-content:flex-end}
+  #intro,#about{font-size:13px}
+  footer{font-size:11px}
+}
+@media(max-width:360px){
+  .brand .bn{font-size:25px}
+  .tg{grid-template-columns:minmax(0,1fr)}
+}

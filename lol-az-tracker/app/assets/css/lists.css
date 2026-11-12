@@ -1,0 +1,39 @@
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0 4px}
+.bar i{display:block;height:100%;background:var(--win);width:0;transition:width .3s}
+.stats{color:var(--muted);font-size:13px;display:flex;justify-content:space-between}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.phead{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;flex-wrap:wrap}
+.phead b{font-size:16px}
+.pr{display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.pcard .bar{height:12px;margin:12px 0 0}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+input[type=search]{flex:1;min-width:160px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit}
+button{padding:9px 12px;border-radius:8px;border:2px solid var(--line);background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+button:hover{border-color:var(--gold)}
+button.on{border-color:var(--gold);color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.c:hover{border-color:var(--gold)}
+.c.win{background:var(--winbg);border-color:var(--win)}
+.c.cur{outline:2px solid var(--gold)}
+.l{position:relative;width:40px;height:40px;border-radius:8px;background:var(--line);display:grid;place-items:center;font-weight:700;color:var(--muted);flex:none;overflow:hidden}
+.l img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.win .l{box-shadow:0 0 0 2px var(--win)}
+.ed{padding:0 4px;border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer}
+.ed:hover{color:var(--gold);border:none}
+#di[type=date]{color-scheme:light}
+@media(prefers-color-scheme:dark){#di[type=date]{color-scheme:dark}}
+:root[data-theme=dark] #di[type=date]{color-scheme:dark}
+:root[data-theme=light] #di[type=date]{color-scheme:light}
+.ck{color:var(--win);font-size:20px;font-weight:700;line-height:1}
+.n{flex:1;min-width:0}
+.n div{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.n small{color:var(--muted)}
+.g{display:flex;align-items:center;gap:4px}
+.g button{padding:2px 8px;font-size:13px}
+[hidden]{display:none!important}
+.c{flex-wrap:wrap}
+.g{flex-basis:100%;display:flex;gap:6px;align-items:center}
+.g .wb{margin-left:auto;font-weight:600}
+.c.win .wb{color:var(--win);border-color:var(--win)}
+.g button{padding:3px 10px;font-size:13px}
