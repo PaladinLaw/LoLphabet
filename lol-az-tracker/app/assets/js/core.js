@@ -25,7 +25,7 @@ if(!READONLY)try{const r=localStorage.getItem("lol-az-role");if(LISTS[r])role=r}
 CHAMPS=LISTS[role];
 const save=()=>{if(READONLY)return;try{localStorage.setItem(KEY,JSON.stringify(all));localStorage.setItem("lol-az-role",role)}catch(e){}
   push();};
-const MODES=[["classic","Classic","A–Z, alphabetical order"],["hard","Hard","lose a game and you go back one champion"],["hardcore","Insanity","lose a game and the whole run restarts"],["nuzlocke","Nuzlocke","play any champion; lose with one and it's gone for good"]];   // id "hardcore" is kept so existing Insanity (ex-Hardcore) progress is not lost
+const MODES=[["classic","Classic","A-Z, alphabetical order"],["hard","Hard","lose a game and you go back one champion"],["hardcore","Insanity","lose a game and the whole run restarts"],["nuzlocke","Nuzlocke","play any champion; lose with one and it's gone for good"]];   // id "hardcore" is kept so existing Insanity (ex-Hardcore) progress is not lost
 const pkey=r=>mode==="classic"?r:r+"|"+mode, isHC=()=>mode==="hardcore", isHard=()=>mode==="hard", isNuz=()=>mode==="nuzlocke", isLock=()=>isHC()||isHard();
 const st=()=>all[pkey(role)]||(all[pkey(role)]={});
 const meta=()=>st().__meta||(st().__meta={});

@@ -5,7 +5,7 @@ let bopen={runes:false}, pospick={}, BUILDS={}, BPEND={};
 if(!READONLY)try{const o=JSON.parse(localStorage.getItem("lol-az-bopen"));if(o&&typeof o==="object")bopen=Object.assign(bopen,o);const p=JSON.parse(localStorage.getItem("lol-az-pospick"));if(p&&typeof p==="object")pospick=p}catch(e){}
 const bsave=()=>{if(READONLY)return;try{localStorage.setItem("lol-az-bopen",JSON.stringify(bopen));localStorage.setItem("lol-az-pospick",JSON.stringify(pospick))}catch(e){}};
 const bkey=(n,p)=>n+"|"+(p||"*");
-const pct=v=>typeof v==="number"&&isFinite(v)?v.toFixed(1)+"%":"–", nfmt=v=>typeof v==="number"&&isFinite(v)?Math.round(v).toLocaleString():"–";
+const pct=v=>typeof v==="number"&&isFinite(v)?v.toFixed(1)+"%":"-", nfmt=v=>typeof v==="number"&&isFinite(v)?Math.round(v).toLocaleString():"-";
 function loadBuild(name,pos){
   const k=bkey(name,pos), e=BUILDS[k];
   if(BPEND[k]||(e&&Date.now()-e.t<6e5)) return;                       // cached for 10 min; refreshed quietly after that
@@ -136,8 +136,9 @@ const rollButtons=()=>`<div class="nbg"><button class="pri nbr" data-a="rr">Roll
 // The side rune panel is absolutely positioned, so make sure the build area is always at least as tall as it is (the banner grows instead of the runes spilling out).
 function fitRunes(){
   const b=document.querySelector("#next .nxb"), r=b&&b.querySelector(".rp.side"), g=r&&r.querySelector(".rpg"); if(!b) return;
-  b.style.minHeight="";
+  b.style.minHeight=""; b.style.paddingRight="";
   if(r&&g&&getComputedStyle(r).position==="absolute"){const cs=getComputedStyle(r);
+    b.style.paddingRight=Math.ceil(r.offsetWidth+16)+"px";                  // the panel is as wide as its widest rune tree (Precision has 4 keystones), so reserve exactly that
     b.style.minHeight=Math.ceil(r.offsetTop+g.offsetHeight+parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom)+parseFloat(cs.borderTopWidth)+parseFloat(cs.borderBottomWidth))+"px";}
 }
 function renderNext(){ renderNext0(); fitRunes(); }
@@ -146,5 +147,5 @@ function renderNext0(){
   const L=ordered(), hc=isLock(), m=meta(), won=L.filter(c=>get(c.name).won).length, total=L.length, cur=availNext(L);
   if(isNuz()){ $("next").innerHTML=cur?nextBox(cur,hc,m,won,total):nzBox(); return; }
   $("next").innerHTML=cur?nextBox(cur,hc,m,won,total)
-    :`<div class="nxh"><div><b>${total?"A–Z complete 🎉":role.startsWith("class:")?"Loading class data…":"This list is empty"}</b></div></div>`;
+    :`<div class="nxh"><div><b>${total?"A-Z complete 🎉":role.startsWith("class:")?"Loading class data…":"This list is empty"}</b></div></div>`;
 }

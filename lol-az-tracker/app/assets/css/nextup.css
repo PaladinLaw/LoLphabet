@@ -72,7 +72,7 @@
 @media(min-width:760px){
   .nxb:has(.rp.side){padding-right:270px;align-content:start}
   /* Rune panel: starts level with the first row and runs down to the bottom of the "Build data" line; icons scaled up to fill it */
-  .rp.side{bottom:0;width:254px;box-sizing:border-box;padding:8px 12px;display:flex;align-items:center;justify-content:center}
+  .rp.side{bottom:0;min-width:254px;width:max-content;box-sizing:border-box;padding:8px 12px;display:flex;align-items:center;justify-content:center}
   .rp.side .rpg{width:100%;justify-content:space-evenly;gap:8px 12px}
   .rp.side .rcol{gap:6px}
   .rp.side .rh{font-size:13px;gap:5px}.rp.side .rh b{font-size:13px}

@@ -37,7 +37,7 @@ async function shareCanvas(sn){
   const line=(who?who+" is on ":"")+sn.listName+(sn.mode!=="classic"?" · "+sn.modeName:""); let fs=54; g.fillStyle="#e8e4d8";
   do{g.font="bold "+fs+"px system-ui,sans-serif";fs-=2}while(g.measureText(line).width>1060&&fs>24); g.fillText(line,70,432);
   g.fillStyle="#2a323d"; g.fillRect(70,470,1060,26); g.fillStyle="#5fcf8b"; g.fillRect(70,470,sn.total?1060*sn.won/sn.total:0,26);
-  g.fillStyle="#8d9199"; g.font="32px system-ui,sans-serif"; g.fillText(sn.nz?(sn.nz.alive?sn.nz.wins+" win"+(sn.nz.wins===1?"":"s")+" · "+sn.nz.alive+" alive":"Nuzlocke complete · "+sn.nz.wins+" win"+(sn.nz.wins===1?"":"s")):sn.next?"Next up: "+sn.next:sn.total?"A–Z complete!":"",70,566);
+  g.fillStyle="#8d9199"; g.font="32px system-ui,sans-serif"; g.fillText(sn.nz?(sn.nz.alive?sn.nz.wins+" win"+(sn.nz.wins===1?"":"s")+" · "+sn.nz.alive+" alive":"Nuzlocke complete · "+sn.nz.wins+" win"+(sn.nz.wins===1?"":"s")):sn.next?"Next up: "+sn.next:sn.total?"A-Z complete!":"",70,566);
   return cv;
 }
 // Renders the progress image and stores it on the server so the share link previews with it. Best effort: the link still works without it.

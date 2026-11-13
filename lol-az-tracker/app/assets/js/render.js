@@ -20,8 +20,8 @@ function render(){
   renderStats(); renderSettings(); drawChips(); renderNav();
   $("about").hidden=view!=="about";
   if(!READONLY){
-    const T={stats:"Stats | LoLphabet",settings:"Settings | LoLphabet",build:"List builder | LoLphabet",about:"About LoLphabet | League of Legends A–Z Challenge Tracker",roll:"Roll a champion | LoLphabet"};
-    document.title=T[view]||"LoLphabet | Free League of Legends A–Z Challenge Tracker";
+    const T={stats:"Stats | LoLphabet",settings:"Settings | LoLphabet",build:"List builder | LoLphabet",about:"About LoLphabet | League of Legends A-Z Challenge Tracker",roll:"Roll a champion | LoLphabet"};
+    document.title=T[view]||"LoLphabet | Free League of Legends A-Z Challenge Tracker";
     // one H1 per view: the tagline on the home view, "About LoLphabet" on /about
     const ab=view==="about"; swapTag("tl",ab?"p":"h1"); swapTag("about-h",ab?"h1":"h2");
   }

@@ -44,7 +44,7 @@ const PRIVACY=page("Privacy Policy",`
 <h2>Children</h2>
 <p>The site isn't aimed at children under 13, and we don't knowingly collect their information.</p>
 <h2>Security and changes</h2>
-<p>We keep data on a server we control and use reasonable measures to protect it, but no system is perfectly secure. We may update this policy; the date at the top shows when it last changed.</p>`,"How LoLphabet, the League of Legends A–Z Challenge by PaladinLaw, collects, uses and protects your personal information, and the rights you have over it.");
+<p>We keep data on a server we control and use reasonable measures to protect it, but no system is perfectly secure. We may update this policy; the date at the top shows when it last changed.</p>`,"How LoLphabet, the League of Legends A-Z Challenge by PaladinLaw, collects, uses and protects your personal information, and the rights you have over it.");
 const TERMS=page("Terms of Service",`
 <p>By using ${SITE} you agree to these terms. If you don't agree, please don't use the site.</p>
 <h2>The service</h2>
@@ -64,14 +64,14 @@ const TERMS=page("Terms of Service",`
 <h2>Changes and governing law</h2>
 <p>We may update these terms; continued use means you accept the updated version. These terms are governed by the laws of South Africa, without affecting any mandatory consumer rights you have where you live.</p>
 <h2>Contact</h2>
-<p>${contact}.</p>`,"The terms of service for using LoLphabet, the free League of Legends A–Z Challenge tracker by PaladinLaw, including accounts, acceptable use, liability and governing law.");
+<p>${contact}.</p>`,"The terms of service for using LoLphabet, the free League of Legends A-Z Challenge tracker by PaladinLaw, including accounts, acceptable use, liability and governing law.");
 
 // ---- SEO / performance helpers ----
 const FAVICON_BUF=Buffer.from(FAVICON.replace(/^data:image\/png;base64,/,""),"base64");
-const HOME_TITLE="LoLphabet | Free League of Legends A–Z Challenge Tracker";
-const ABOUT_TITLE="About LoLphabet | League of Legends A–Z Challenge Tracker";
+const HOME_TITLE="LoLphabet | Free League of Legends A-Z Challenge Tracker";
+const ABOUT_TITLE="About LoLphabet | League of Legends A-Z Challenge Tracker";
 const ABOUT_DESC="What LoLphabet is, what you can track (roles, races, classes, regions, all champions, custom lists), how the Classic, Hard, Insanity and Nuzlocke modes work, the Roll button, accounts and sharing.";
-const HOME_DESC="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.";
+const HOME_DESC="Free League of Legends A-Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.";
 const fileMtime=f=>{try{return fs.statSync(path.join(__dirname,f)).mtime}catch(e){return new Date()}};
 // Front-end files live in assets/css and assets/js. Their newest mtime becomes the ?v= cache-buster in index.html and part of the page-cache key,
 // so editing any of them is picked up without restarting the container.
@@ -79,9 +79,9 @@ const ASSET_DIRS=["assets/css","assets/js"];
 const assetVer=()=>{let t=fileMtime("index.html").getTime();for(const d of ASSET_DIRS){try{for(const f of fs.readdirSync(path.join(__dirname,d)))t=Math.max(t,fileMtime(d+"/"+f).getTime())}catch(e){}}return String(t)};
 const STATIC_TYPES={".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8"};
 const jsonLd=base=>'<script type="application/ld+json">'+JSON.stringify({"@context":"https://schema.org","@graph":[
-  {"@type":"WebSite","@id":base+"/#website","url":base+"/","name":"LoLphabet","alternateName":"LoLphabet: The League of Legends A–Z Challenge","description":HOME_DESC,"inLanguage":"en","publisher":{"@id":base+"/#author"}},
-  {"@type":"WebApplication","@id":base+"/#app","url":base+"/","name":"LoLphabet","alternateName":"The League of Legends A–Z Challenge","description":HOME_DESC,"applicationCategory":"GameApplication","operatingSystem":"Any (web browser)","isAccessibleForFree":true,"inLanguage":"en","image":base+"/assets/og-image.png?v=2","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@id":base+"/#author"},"isPartOf":{"@id":base+"/#website"},
-   "featureList":["League of Legends A–Z Challenge champion tracker","Role, race, class and region champion lists","Custom champion lists you can share","Classic, Hard, Insanity and Nuzlocke challenge modes","Random role and champion roller","Log in with Google, Discord, email and password or a magic link","Progress statistics and shareable progress links","Popular champion builds, pick rates and win rates"]},
+  {"@type":"WebSite","@id":base+"/#website","url":base+"/","name":"LoLphabet","alternateName":"LoLphabet: The League of Legends A-Z Challenge","description":HOME_DESC,"inLanguage":"en","publisher":{"@id":base+"/#author"}},
+  {"@type":"WebApplication","@id":base+"/#app","url":base+"/","name":"LoLphabet","alternateName":"The League of Legends A-Z Challenge","description":HOME_DESC,"applicationCategory":"GameApplication","operatingSystem":"Any (web browser)","isAccessibleForFree":true,"inLanguage":"en","image":base+"/assets/og-image.png?v=2","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@id":base+"/#author"},"isPartOf":{"@id":base+"/#website"},
+   "featureList":["League of Legends A-Z Challenge champion tracker","Role, race, class and region champion lists","Custom champion lists you can share","Classic, Hard, Insanity and Nuzlocke challenge modes","Random role and champion roller","Log in with Google, Discord, email and password or a magic link","Progress statistics and shareable progress links","Popular champion builds, pick rates and win rates"]},
   {"@type":"Person","@id":base+"/#author","name":"PaladinLaw"}
 ]}).replace(/</g,"\\u003c")+'</script>';
 // Pre-rendered page cache: each page is built once per (host, source-file version) and stored with its gzip/brotli forms and ETag.
@@ -129,7 +129,7 @@ function shareInfo(tok,base){
   const owner=/^[\w-]+$/.test(tok)&&db.users[db.shares[tok]]; if(!owner) return null;
   let mt=0; try{mt=Math.floor(fs.statSync(imgFile(tok)).mtimeMs)}catch(e){}
   const who=owner.given||owner.name||"A friend", title=who+"'s progress | LoLphabet";
-  const desc=owner.shareDesc?who+" · "+owner.shareDesc:"See how far "+who+" has got in the League of Legends A–Z Challenge.";
+  const desc=owner.shareDesc?who+" · "+owner.shareDesc:"See how far "+who+" has got in the League of Legends A-Z Challenge.";
   const link=base+"/s/"+tok, img=mt?link+"/og.jpg?v="+mt:"";
   return {tok,ver:mt+"|"+who+"|"+desc,apply:page=>{
     const set=(re,v)=>{page=page.replace(re,(m,a)=>a+escAttr(v)+'"')};
@@ -303,7 +303,7 @@ http.createServer(async(req,res)=>{
             .replace(/(<meta name="twitter:title" content=")[^"]*"/,'$1'+ABOUT_TITLE+'"')
             .replace(/(<meta name="twitter:description" content=")[^"]*"/,'$1'+ABOUT_DESC+'"')
             // /about has its own H1 ("About LoLphabet"); the header tagline becomes a plain paragraph there
-            .replace('<h1 id="tl" class="tl">The League of Legends A–Z Challenge</h1>','<p id="tl" class="tl">The League of Legends A–Z Challenge</p>')
+            .replace('<h1 id="tl" class="tl">The League of Legends A-Z Challenge</h1>','<p id="tl" class="tl">The League of Legends A-Z Challenge</p>')
             .replace('<h2 id="about-h">About LoLphabet</h2>','<h1 id="about-h">About LoLphabet</h1>');
         }
         if(sh) page=sh.apply(page);
@@ -320,7 +320,7 @@ http.createServer(async(req,res)=>{
     }
     if(url==="/manifest.webmanifest"){
       res.writeHead(200,{"Content-Type":"application/manifest+json; charset=utf-8"});
-      return res.end(JSON.stringify({id:"/",name:"LoLphabet",short_name:"LoLphabet",description:"LoLphabet is a League of Legends completion tracker and A–Z challenge.",start_url:"/",scope:"/",display:"standalone",background_color:"#0f1318",theme_color:"#0f1318",
+      return res.end(JSON.stringify({id:"/",name:"LoLphabet",short_name:"LoLphabet",description:"LoLphabet is a League of Legends completion tracker and A-Z challenge.",start_url:"/",scope:"/",display:"standalone",background_color:"#0f1318",theme_color:"#0f1318",
         icons:[{src:"/assets/icon-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:"/assets/icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]}));
     }
     const fm=url.match(/^\/assets\/(css|js)\/([\w-]+\.(?:css|js))$/);                    // front-end files (cache-busted with ?v=, so they can be cached for a long time)
@@ -368,7 +368,7 @@ http.createServer(async(req,res)=>{
     }
     if(!url.startsWith("/api/")){
       res.writeHead(404,{"Content-Type":"text/html; charset=utf-8","X-Robots-Tag":"noindex"});
-      return res.end(page("Page not found",'<p>That page does not exist. <a href="/">Go to the LoLphabet A–Z Challenge tracker</a>.</p>',"Page not found.").replace('content="index, follow"','content="noindex"').replace("<!--CANON-->",""));
+      return res.end(page("Page not found",'<p>That page does not exist. <a href="/">Go to the LoLphabet A-Z Challenge tracker</a>.</p>',"Page not found.").replace('content="index, follow"','content="noindex"').replace("<!--CANON-->",""));
     }
     const sub=userOf(req);
     if(!sub) return send(res,401,{error:"not signed in"});
