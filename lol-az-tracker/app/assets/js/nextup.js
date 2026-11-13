@@ -135,9 +135,10 @@ function nzBox(){
 const rollButtons=()=>`<div class="nbg"><button class="pri nbr" data-a="rr">Roll again</button><button class="un-b nbr" data-a="rb">Back to my lists</button></div>`;
 // The side rune panel is absolutely positioned, so make sure the build area is always at least as tall as it is (the banner grows instead of the runes spilling out).
 function fitRunes(){
-  const b=document.querySelector("#next .nxb"), r=b&&b.querySelector(".rp.side"); if(!b) return;
+  const b=document.querySelector("#next .nxb"), r=b&&b.querySelector(".rp.side"), g=r&&r.querySelector(".rpg"); if(!b) return;
   b.style.minHeight="";
-  if(r&&getComputedStyle(r).position==="absolute") b.style.minHeight=Math.ceil(r.offsetTop+r.offsetHeight+10)+"px";
+  if(r&&g&&getComputedStyle(r).position==="absolute"){const cs=getComputedStyle(r);
+    b.style.minHeight=Math.ceil(r.offsetTop+g.offsetHeight+parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom)+parseFloat(cs.borderTopWidth)+parseFloat(cs.borderBottomWidth))+"px";}
 }
 function renderNext(){ renderNext0(); fitRunes(); }
 function renderNext0(){
