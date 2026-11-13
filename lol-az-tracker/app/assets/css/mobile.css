@@ -37,6 +37,10 @@ button,.chip,.sopt{touch-action:manipulation;-webkit-tap-highlight-color:transpa
   .nbg .pri{min-height:42px;font-size:15px}
   .nb .un-b{padding:8px 10px;font-size:13px;white-space:nowrap}
   .nbg .nb-loss+.pri+.un-b{grid-column:auto}
+  .nzr{max-width:none;width:100%;align-items:stretch}
+  .nzr .pri{justify-content:center;min-height:42px;font-size:15px}
+  .nzr p{text-align:left}
+  .stabs button{padding:10px 2px;font-size:12px;min-width:0}
   .nxb{grid-template-columns:minmax(0,1fr);row-gap:4px}
   .nxb .k{margin-top:8px;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
   .rp.side{justify-self:stretch}

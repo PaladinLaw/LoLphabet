@@ -19,14 +19,14 @@ let all={};              // role -> name -> {won:bool, date:string|null, games:n
 if(!READONLY)try{all=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
 if(!READONLY&&!all.Jungle){try{const old=JSON.parse(localStorage.getItem("lol-az-tracker-v1"));if(old)all.Jungle=old}catch(e){}}
 let role="Top", CHAMPS, mode="classic";
-if(!READONLY)try{const m=localStorage.getItem("lol-az-mode");if(["classic","hard","hardcore","nuzlocke"].includes(m))mode=m}catch(e){}
+if(!READONLY)try{const m=localStorage.getItem("lol-az-mode");if(["classic","hard","hardcore","nuzlocke","randnuz"].includes(m))mode=m}catch(e){}
 rebuildLists();
 if(!READONLY)try{const r=localStorage.getItem("lol-az-role");if(LISTS[r])role=r}catch(e){}
 CHAMPS=LISTS[role];
 const save=()=>{if(READONLY)return;try{localStorage.setItem(KEY,JSON.stringify(all));localStorage.setItem("lol-az-role",role)}catch(e){}
   push();};
-const MODES=[["classic","Classic","A-Z, alphabetical order"],["hard","Hard","lose a game and you go back one champion"],["hardcore","Insanity","lose a game and the whole run restarts"],["nuzlocke","Nuzlocke","play any champion; lose with one and it's gone for good"]];   // id "hardcore" is kept so existing Insanity (ex-Hardcore) progress is not lost
-const pkey=r=>mode==="classic"?r:r+"|"+mode, isHC=()=>mode==="hardcore", isHard=()=>mode==="hard", isNuz=()=>mode==="nuzlocke", isLock=()=>isHC()||isHard();
+const MODES=[["classic","Classic","A-Z, alphabetical order"],["hard","Hard","lose a game and you go back one champion"],["hardcore","Insanity","lose a game and the whole run restarts"],["nuzlocke","Nuzlocke","play any champion; lose with one and it's gone for good"],["randnuz","Random Nuzlocke","the app picks a random living champion every game; lose with one and it's gone for good"]];   // id "hardcore" is kept so existing Insanity (ex-Hardcore) progress is not lost
+const pkey=r=>mode==="classic"?r:r+"|"+mode, isHC=()=>mode==="hardcore", isHard=()=>mode==="hard", isNuz=()=>mode==="nuzlocke"||mode==="randnuz", isRandNuz=()=>mode==="randnuz", isLock=()=>isHC()||isHard();
 const st=()=>all[pkey(role)]||(all[pkey(role)]={});
 const meta=()=>st().__meta||(st().__meta={});
 const get=n=>st()[n]||(st()[n]={won:false,date:null,games:0});

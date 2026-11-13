@@ -112,7 +112,7 @@ function nextBox(cur,hc,m,won,total,R){
     panel=`<div class="nxm full" style="font-size:13px">${msg}</div>${chips}${j.state==="error"||j.state==="no_data"?"":freshHtml(j.data)}`;
   }
   return `<div class="nxh"><div class="nxl"><div class="nxi${ic?"":" noimg"}"><span>${letter}</span>${ic?`<img src="${esc(ic)}" alt="" onerror="var p=this.parentNode;this.remove();p.classList.add('noimg')">`:""}<i>${letter}</i></div>
-    <div><div class="nxk">${R?"ROLLED":nz?"NOW PLAYING":"NEXT UP"}${!R&&isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc(R?R.role.toLowerCase():(pos?(POSNAME[pos]||pos)+" - ":"")+(nz?nzWins(cur.name)+" win"+(nzWins(cur.name)===1?"":"s")+" · "+nzCount().alive+" alive":(total-won)+" left to go"))})</span></div>
+    <div><div class="nxk">${R?"ROLLED":nz?(nzRolled()?"ROLLED · NOW PLAYING":"NOW PLAYING"):"NEXT UP"}${!R&&isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc(R?R.role.toLowerCase():(pos?(POSNAME[pos]||pos)+" - ":"")+(nz?nzWins(cur.name)+" win"+(nzWins(cur.name)===1?"":"s")+" · "+nzCount().alive+" alive":(total-won)+" left to go"))})</span></div>
     ${st?`<div class="nxs"><span>Pick Rate: <b>${pct(st.pick_rate)}</b></span><span>Win Rate: <b>${pct(st.win_rate)}</b></span><span title="Games analysed for this champion in this position">Sample Size: <b>${nfmt(st.games)}</b></span></div>`:""}</div></div>
     <div class="nb">${nSk?`<span>${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button></span>`:""}${R?rollButtons():nz?nzButtons(cur):hc
       ?`<div class="nbg"><button class="danger nb-loss nbl" data-a="x">${LOSTLAB()}</button><button class="pri nbr" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b nbr" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`
@@ -122,7 +122,7 @@ function nextBox(cur,hc,m,won,total,R){
 }
 // Nuzlocke: Now playing shows a Victory / Fallen pair instead of Complete / Loss (Victory is sized to match Complete via a hidden "✓ Complete" label), and a summary box when no champion is open.
 function nzButtons(cur){const w=nzWins(cur.name);
-  return `<div class="nbg"><button class="danger nb-loss nzf nbl" data-a="x" title="Lost with ${esc(cur.name)}: this champion falls for good">${SKULL}Fallen</button><button class="pri nbr nzv" data-a="w"><span class="gh" aria-hidden="true">✓ Complete</span><span class="lb">✓ Victory</span></button><span class="nat nbl">${w} win${w===1?"":"s"}</span><button class="un-b nbr" data-a="bf" title="Close this and pick another champion">Choose another</button></div>`;}
+  return `<div class="nbg"><button class="danger nb-loss nzf nbl" data-a="x" title="Lost with ${esc(cur.name)}: this champion falls for good">${SKULL}Fallen</button><button class="pri nbr nzv" data-a="w"><span class="gh" aria-hidden="true">✓ Complete</span><span class="lb">✓ Victory</span></button><span class="nat nbl">${w} win${w===1?"":"s"}</span>${isRandNuz()?`<button class="un-b nbr" data-a="rpb" title="Banned or picked? Roll a different random champion (no penalty)">Picked / Banned</button>`:`${nzRolled()?"":`<button class="un-b nbr" data-a="bf" title="Close this and pick another champion">Choose another</button>`}`}</div>`;}
 function nzBox(){
   const c=nzCount(), plural=n=>n+" win"+(n===1?"":"s");
   if(!c.total) return `<div class="nxh"><div><b>${role.startsWith("class:")?"Loading class data…":"This list is empty"}</b></div></div>`;
@@ -130,7 +130,7 @@ function nzBox(){
     let best=null; for(const x of CHAMPS){const w=nzWins(x.name); if(w&&(!best||w>best.w)) best={n:x.name,w}}
     return `<div class="nxh"><div><div class="nxk">NUZLOCKE</div><div class="nxn"><b>Run complete ${SKULL}</b></div><div class="nxm">Every champion has fallen: ${plural(c.wins)} in total${best?", best was "+esc(best.n)+" with "+plural(best.w):""}. Use Reset to start a new run on this list.</div></div></div>`;
   }
-  return `<div class="nxh"><div><div class="nxk">NUZLOCKE</div><div class="nxn"><b>${READONLY?"Run in progress":"Pick your champion"}</b></div><div class="nxm">${READONLY?"":"Click any living champion below to play it. "}${c.alive} alive · ${c.dead} fallen · ${plural(c.wins)}</div></div></div>`;
+  return `<div class="nxh"><div><div class="nxk">NUZLOCKE</div><div class="nxn"><b>${READONLY?"Run in progress":"Pick your champion"}</b></div><div class="nxm">${READONLY?"":"Click any living champion below to play it. "}${c.alive} alive · ${c.dead} fallen · ${plural(c.wins)}</div></div>${READONLY?"":`<div class="nzr"><button class="pri" data-a="nzr" title="Roll a random living champion from this list">${ROLL_ICON}Roll the dice</button><p>Not sure what to play? Roll the dice and commit to whatever lands. No rerolls, and if your champion is picked or banned, it counts as a loss.</p></div>`}</div>`;
 }
 const rollButtons=()=>`<div class="nbg"><button class="pri nbr" data-a="rr">Roll again</button><button class="un-b nbr" data-a="rb">Back to my lists</button></div>`;
 // The side rune panel is absolutely positioned, so make sure the build area is always at least as tall as it is (the banner grows instead of the runes spilling out).

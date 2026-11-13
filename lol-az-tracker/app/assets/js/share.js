@@ -15,7 +15,7 @@ function latestRun(d){
 // Side-effect free summary of one run, used for the share image.
 function runSnapshot(r,md){
   const names=(LISTS[r]||[]).map(c=>c.name), run=all[md==="classic"?r:r+"|"+md]||{}, m=run.__meta||{}, isW=n=>!!(run[n]&&run[n].won);
-  if(md==="nuzlocke"){     // Nuzlocke has no "next": the big number is how many champions have fallen
+  if(md==="nuzlocke"||md==="randnuz"){     // Nuzlocke has no "next": the big number is how many champions have fallen
     const dead=names.filter(n=>run[n]&&run[n].dead).length, wins=names.reduce((a,n)=>a+((run[n]&&run[n].wins)||0),0);
     return {role:r,mode:md,won:dead,total:names.length,next:null,nz:{wins,alive:names.length-dead},listName:label(r),modeName:MODES.find(x=>x[0]===md)[1]};
   }
