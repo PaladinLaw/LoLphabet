@@ -10,7 +10,7 @@ Live site: **[https://lolphabet.app](https://lolphabet.app)**
 
 - **Lists.** In this order: **All champs**, **Roles** (Top, Jungle, Mid, Bot / ADC, Support), **Classes**, **Regions**, **Races**, and your own **Custom lists**, which can be shared. Pick a list type, then a list within it.
 - **Four challenge modes.** Every list can be played in any mode, and each mode keeps its own progress.
-  - **Classic:** alphabetical order. Skip a banned or taken champion for now, or open any other champion and play that instead.
+  - **Classic:** alphabetical order. Skip a banned or taken champion with the picked / banned button
   - **Hard:** only the next champion can be played, and a loss sends you back **one** champion.
   - **Insanity:** only the next champion can be played, and a loss sends you back to the **start of the run**.
   - **Nuzlocke:** play any champion on the list, any number of times. Each **Victory** is counted but never completes a champion. A loss (**Fallen**, with a confirmation) kills that champion permanently: it is greyed out and can't be selected or edited. The list is complete when the last champion has fallen. Progress shows champions fallen, filters are All / Alive / Fallen, and it has its own stats and share image.
