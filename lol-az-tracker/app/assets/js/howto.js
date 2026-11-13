@@ -25,11 +25,37 @@ const HOWTO={
     "The run is over when you lose with your last champion. Progress shows how many have fallen, and Stats show your wins, fallen champions and best champion."
   ]
 };
+// ---- Opens by itself the first time you see each mode; after that it stays the way you left it, per mode. ----
+// HW.modes[mode] is "open" / "closed" once you've seen that mode; HW.auto is the "Show How it works for new modes" setting (Settings > Preferences).
+const HW_KEY="lol-az-howto-v2";
+let HW={auto:true,modes:{}}, hwMode=null, hwProg=false;
+try{const o=JSON.parse(localStorage.getItem(HW_KEY));
+  if(o&&typeof o==="object"){HW.auto=o.auto!==false; if(o.modes&&typeof o.modes==="object")HW.modes=o.modes}
+  else{const old=localStorage.getItem("lol-az-howto"); if(old==="1"||old==="0")HW.modes.classic=old==="1"?"open":"closed"}}catch(e){}   // old single open/closed flag counts as Classic already seen
+const hwSave=()=>{if(READONLY)return; try{localStorage.setItem(HW_KEY,JSON.stringify(HW))}catch(e){}};
+function hwSync(){
+  const hw=$("howto"); if(!hw||hwMode===mode||(view!=="role"&&view!=="roll")) return;       // only count a mode as "seen" when the panel is actually on screen
+  hwMode=mode; let want=HW.modes[mode];
+  if(want===undefined){ if(HW.auto&&!READONLY){want="open"; HW.modes[mode]="open"; hwSave()} else want="closed" }
+  const o=want==="open"; if(hw.open!==o){hwProg=true; hw.open=o}                           // hwProg: ignore the toggle event this change fires, it isn't the user's choice
+}
+$("howto").addEventListener("toggle",()=>{
+  if(hwProg){hwProg=false; return}
+  if(READONLY) return; HW.modes[mode]=$("howto").open?"open":"closed"; hwSave();
+});
+function hwLink(){const a=$("hwauto"); if(a) a.textContent=HW.auto?"Don't show me this again":"Show this automatically for new modes"}
+function hwToggleAuto(){
+  HW.auto=!HW.auto; hwSave(); hwLink();
+  if(!HW.auto) $("howto").open=false;                                                         // turning it off also closes it (the toggle event records "closed" for this mode)
+}
 function renderHowto(){
   const b=document.querySelector("#howto .body"), mm=MODES.find(m=>m[0]===mode)||MODES[0];
   if(!b) return;
-  const html=`<b>${esc(mm[1])}</b> · ${esc(mm[2])}<br>`+(HOWTO[mode]||HOWTO.classic).join("<br>")+`<br>Not sure what to play? Press <b>Roll</b> for a random role and champion, shown with its build and kept separate from your lists.<br>See our <a href="/about" id="aboutlink">about section</a> for more details`;
-  if(b.dataset.m===mode&&b.dataset.ok) return;       // only touch the DOM when the mode changed
+  hwSync();
+  const html=`<b>${esc(mm[1])}</b> · ${esc(mm[2])}<br>`+(HOWTO[mode]||HOWTO.classic).join("<br>")+`<br>Not sure what to play? Press <b>Roll</b> for a random role and champion, shown with its build and kept separate from your lists.<br>See our <a href="/about" id="aboutlink">about section</a> for more details · <a href="#" id="hwauto"></a>`;
+  if(b.dataset.m===mode&&b.dataset.ok){hwLink(); return}       // only touch the DOM when the mode changed
   b.dataset.m=mode; b.dataset.ok="1"; b.innerHTML=html;
   const l=$("aboutlink"); if(l) l.onclick=e=>{e.preventDefault();view="about";render();window.scrollTo&&window.scrollTo(0,0)};
+  const h=$("hwauto"); if(h) h.onclick=e=>{e.preventDefault(); hwToggleAuto()};
+  hwLink();
 }

@@ -54,6 +54,7 @@ function accountTab(){
 function prefsTab(){
   const lists=all.__lists||[]; let theme="auto"; try{theme=localStorage.getItem(THEME_KEY)||"auto"}catch(e){}
   return card("Appearance",`<div class="sr"><div class="sl"><label for="stheme">Theme</label></div><div class="sa"><select class="fld" id="stheme">${["auto","light","dark"].map(t=>`<option value="${t}"${t===theme?" selected":""}>${t[0].toUpperCase()+t.slice(1)}</option>`).join("")}</select></div></div>`)
+    +card("Help",sr(`<label for="showhow">Show "How it works" for new modes</label><small>Opens it by itself the first time you try each mode. You can still open or close it any time.</small>`,`<input type="checkbox" id="showhow"${HW.auto?" checked":""}>`))
     +card("Your lists",(lists.map(l=>sr(`<b>${esc(l.name)}</b><small>${l.champs.length} champions</small>`,`<button data-s="editlist" data-id="${l.id}">Edit</button><button class="qbtn" data-s="dellist" data-id="${l.id}">Delete</button>`)).join("")||`<p class="sm">No custom lists yet.</p>`)
       +`<div class="row"><button data-s="newlist">＋ New list</button></div>`);
 }
@@ -133,5 +134,5 @@ $("settings").addEventListener("click",async e=>{
     if(!await confirmDlg("Reset all progress?","Every list will be cleared"+(session?", including your saved account progress":"")+". Your custom lists are kept.","Reset everything",true)) return;
     for(const k in all) if(k!=="__lists") delete all[k]; save(); render();}
 });
-$("settings").addEventListener("change",e=>{if(e.target.id==="stheme"){try{localStorage.setItem(THEME_KEY,e.target.value)}catch(x){} applyTheme()}});
+$("settings").addEventListener("change",e=>{if(e.target.id==="showhow"){HW.auto=e.target.checked; hwSave(); hwLink()} if(e.target.id==="stheme"){try{localStorage.setItem(THEME_KEY,e.target.value)}catch(x){} applyTheme()}});
 $("editlist").onclick=()=>openBuilder(role);
