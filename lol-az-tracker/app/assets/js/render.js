@@ -114,7 +114,7 @@ function navClick(e){                                   // Back / Stats / Settin
   if(d.home){ view="role"; render(); return; }
   if(d.r==="__roll"){ openRoll(); return; }
   if(d.r==="__stats"){ view="stats"; sMode=null; }
-  else if(d.r==="__settings"){ view="settings"; nameEdit=false; }
+  else if(d.r==="__settings"){ if(view!=="settings") sTab=null; view="settings"; nameEdit=false; }   // opening Settings always starts on the first tab (Account, or Preferences when accounts are off)
   else return;
   render();
 }
