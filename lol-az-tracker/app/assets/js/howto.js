@@ -22,7 +22,14 @@ const HOWTO={
     "Play any champion on the list, in any order, as many times as you like. Click a champion to open it under <b>Now playing</b>.",
     "Press <b>✓ Victory</b> (or <b>＋ Victory</b> on its card) each time you win. Victories are counted, but they never complete a champion. Use <b>−</b> if you logged one by mistake.",
     "Lose a game and press <b>"+SKULL+" Fallen</b>: that champion is gone for good. It is greyed out and can't be picked or edited again.",
-    "The run is over when you lose with your last champion. Progress shows how many have fallen, and Stats show your wins, fallen champions and best champion."
+    "The run is over when you lose with your last champion. Progress shows how many have fallen, and Stats show your wins, fallen champions and best champion.",
+    "Can't decide? Press <b>Roll the dice</b> in the Pick your champion box to open a random living champion from this list. No rerolls: if it's picked or banned, it counts as a loss."
+  ],
+  randnuz:[
+    "Nuzlocke, but you don't choose. A random living champion from the list is picked for you and shown under <b>Now playing</b>.",
+    "Press <b>✓ Victory</b> when you win, or <b>"+SKULL+" Fallen</b> if you lose: that champion is gone for good. Either way, the next champion is rolled for you.",
+    "Banned, or taken in champ select? Press <b>Picked / Banned</b> for a new random champion. It doesn't count as a loss.",
+    "Fallen champions are never picked again. The run is over when the last one falls."
   ]
 };
 // ---- Opens by itself the first time you see each mode; after that it stays the way you left it, per mode. ----
@@ -52,7 +59,7 @@ function renderHowto(){
   const b=document.querySelector("#howto .body"), mm=MODES.find(m=>m[0]===mode)||MODES[0];
   if(!b) return;
   hwSync();
-  const html=`<b>${esc(mm[1])}</b> · ${esc(mm[2])}<br>`+(HOWTO[mode]||HOWTO.classic).join("<br>")+`<br>Not sure what to play? Press <b>Roll</b> for a random role and champion, shown with its build and kept separate from your lists.<br>See our <a href="/about" id="aboutlink">about section</a> for more details · <a href="#" id="hwauto"></a>`;
+  const html=`<b>${esc(mm[1])}</b> · ${esc(mm[2])}<br>`+(HOWTO[mode]||HOWTO.classic).join("<br>")+(isNuz()?"":`<br>Not sure what to play? Press <b>Roll</b> for a random role and champion, shown with its build and kept separate from your lists.`)+`<br>See our <a href="/about" id="aboutlink">about section</a> for more details · <a href="#" id="hwauto"></a>`;
   if(b.dataset.m===mode&&b.dataset.ok){hwLink(); return}       // only touch the DOM when the mode changed
   b.dataset.m=mode; b.dataset.ok="1"; b.innerHTML=html;
   const l=$("aboutlink"); if(l) l.onclick=e=>{e.preventDefault();view="about";render();window.scrollTo&&window.scrollTo(0,0)};

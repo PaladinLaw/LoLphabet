@@ -78,3 +78,10 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
 /* Roll page: only the Next up banner is shown, no list, progress bar or tools */
 #roleView.rollmode>:not(#next){display:none}
 .sp .smode{margin:10px 0 0}
+
+/* Nuzlocke dice roll (Pick your champion box) */
+.nzr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:260px}
+.nzr .pri{display:inline-flex;align-items:center;gap:6px}
+.nzr .pri svg{flex:none}
+.nzr p{margin:0;font-size:12px;line-height:1.4;color:var(--muted);text-align:right}
+#grid.rnd .c{cursor:default}

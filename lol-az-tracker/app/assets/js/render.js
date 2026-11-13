@@ -3,7 +3,7 @@ function swapTag(id,tag){const e=document.getElementById(id); if(!e||e.tagName.t
 function nzCard(c,s,isCur){
   const w=s.wins||0, wl=w+" win"+(w===1?"":"s"), dead=!!s.dead;
   const sub=dead?`${SKULL}Fallen ${s.diedOn||""} • ${wl}`:(w?wl:"&nbsp;");
-  const acts=dead?"":`<button data-a="m" title="Remove a victory"${w?"":" disabled"}>−</button><button data-a="w" class="wb" title="Log a victory">＋ Victory</button><button data-a="x" class="danger" title="Lost with ${esc(c.name)}: this champion falls">${SKULL}Fallen</button>`;
+  const acts=dead||(isRandNuz()&&!isCur)?"":`<button data-a="m" title="Remove a victory"${w?"":" disabled"}>−</button><button data-a="w" class="wb" title="Log a victory">＋ Victory</button><button data-a="x" class="danger" title="Lost with ${esc(c.name)}: this champion falls">${SKULL}Fallen</button>`;
   return `<div class="c ${dead?"dead":""} ${isCur?"cur":""}"${dead?" inert":""} data-n="${esc(c.name)}">
       <div class="l"><span>${esc(c.name[0])}</span>${iconUrl(c.name)?`<img src="${iconUrl(c.name)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div>
       <div class="n"><div>${esc(c.name)}</div><small>${sub}</small>${s.note?`<small class="nt">${linkify(s.note)}</small>`:""}</div>
@@ -17,7 +17,7 @@ function render(){
   if(!READONLY){const p=location.pathname;
     if(view==="about"&&p!=="/about")history.pushState(null,"","/about");
     else if(view!=="about"&&p==="/about")history.pushState(null,"","/");}
-  renderStats(); renderSettings(); drawChips(); renderNav();
+  ensureRandPick(); renderStats(); renderSettings(); drawChips(); renderNav();
   $("about").hidden=view!=="about";
   if(!READONLY){
     const T={stats:"Stats | LoLphabet",settings:"Settings | LoLphabet",build:"List builder | LoLphabet",about:"About LoLphabet | League of Legends A-Z Challenge Tracker",roll:"Roll a champion | LoLphabet"};
@@ -31,6 +31,7 @@ function render(){
   const fb=k=>document.querySelector('[data-f="'+k+'"]'); fb("todo").textContent=nz?"Alive":"To do"; fb("win").textContent=nz?"Fallen":"Won";
   $("fill").style.width=(total?won/total*100:0)+"%";
   $("count").textContent=won+" / "+total+(nz?" fallen":" won"); $("pct").textContent=(total?Math.round(won/total*100):0)+"%";
+  $("grid").classList.toggle("rnd",isRandNuz());
   renderNext();
   const q=query.toLowerCase(), skl=m.skip||[];
   const list=L.filter(c=>{const w=done(c.name);return (filter==="all"||(filter==="win"?w:!w)) && c.name.toLowerCase().includes(q)});
@@ -56,8 +57,9 @@ $("grid").addEventListener("click",e=>{
   const card=e.target.closest(".c"); if(!card||READONLY||card.classList.contains("bn")||e.target.closest("a")) return;
   if(isNuz()){                                    // Nuzlocke: any living champion; wins never complete it; a loss kills it
     const nm=card.dataset.n, a=e.target.closest("button")?.dataset.a; if(nzDead(nm)) return;
+    if(isRandNuz()&&a!=="n"&&nm!==(nextUp()||{}).name) return;      // Random Nuzlocke: only the champion the app picked can be played
     if(a==="n") editNote(nm); else if(a==="w") nzWin(nm); else if(a==="m") nzUndoWin(nm); else if(a==="x") nzDie(nm);
-    else if(!a){ meta().focus=nm; save(); render(); $("next").scrollIntoView({behavior:"smooth",block:"start"}); }
+    else if(!a){ if(isRandNuz()) return; meta().focus=nm; save(); render(); $("next").scrollIntoView({behavior:"smooth",block:"start"}); }
     return;
   }
   const name=card.dataset.n, s=get(name), a=e.target.closest("button")?.dataset.a, cur=nextUp(), real=listNext(ordered());
@@ -85,10 +87,12 @@ $("next").addEventListener("click",e=>{
     else if(k==="pos"&&cur&&POSORDER.includes(t.dataset.p)) pospick[cur.name]=t.dataset.p;
     bsave(); renderNext(); return;}
   const b=e.target.closest("button");
+  if(b&&b.dataset.a==="nzr"){nzRoll();return}                     // Nuzlocke dice roll (shown while no champion is open)
   if(b&&view==="roll"){ if(b.dataset.a==="rr") openRoll(); else if(b.dataset.a==="rb"){view="role";render();window.scrollTo&&window.scrollTo(0,0)} return; }   // Roll page buttons
   if(!b||READONLY) return;
   const cur=nextUp(); if(!cur) return;
   if(isNuz()&&b.dataset.a==="w"){nzWin(cur.name);return}
+  if(isRandNuz()&&b.dataset.a==="rpb"){nzRandFocus(cur.name); save(); render(); return}   // picked / banned: no penalty, just roll the next one
   if(b.dataset.a==="x") loseRun(cur.name);
   else if(b.dataset.a==="u"){const m=meta(); m.skip=(m.skip||[]).concat(cur.name); if(m.focus===cur.name) delete m.focus; save(); render();}
   else if(b.dataset.a==="l"){const s=get(cur.name); s.games++; clearSkip(cur.name,true); touch(); save(); render();}   // same as the + (add an attempt) button on the champion's card

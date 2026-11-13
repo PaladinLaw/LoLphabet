@@ -36,7 +36,7 @@ const LOSTLAB=()=>isHard()?"✗ Lost - Back one":"✗ Lost - Restart";
 const nzDead=n=>!!(st()[n]&&st()[n].dead), nzWins=n=>(st()[n]&&st()[n].wins)||0;
 const nzCount=()=>{const L=CHAMPS; let dead=0,wins=0; for(const c of L){const s=st()[c.name]; if(s){wins+=s.wins||0; if(s.dead)dead++}} return {total:L.length,dead,alive:L.length-dead,wins}};
 function nzSync(s){s.games=(s.wins||0)+(s.dead?1:0)}
-function nzWin(name){const s=get(name); if(s.dead) return; s.wins=(s.wins||0)+1; nzSync(s); touch(); save(); render();}
+function nzWin(name){const s=get(name); if(s.dead) return; s.wins=(s.wins||0)+1; nzSync(s); if(isRandNuz()) nzRandFocus(name); touch(); save(); render();}
 function nzUndoWin(name){const s=get(name); if(s.dead||!s.wins) return; s.wins--; nzSync(s); touch(); save(); render();}
 async function nzDie(name){
   const s=get(name); if(s.dead) return; const n0=nzCount(), w=s.wins||0, last=n0.alive===1;
@@ -44,6 +44,18 @@ async function nzDie(name){
   s.dead=true; s.diedOn=today(); nzSync(s); const m=meta(); if(m.focus===name) delete m.focus; m.last={champ:name,wins:w,date:today()};
   touch(); save(); render();
   if(last){const c=nzCount(); await info("Nuzlocke complete","Your last champion has fallen. "+c.wins+" win"+(c.wins===1?"":"s")+" across "+c.total+" champions on "+label(role)+".");}
+}
+// ---- Nuzlocke dice roll: same as clicking a champion in the list, but you close your eyes first. Only living champions on the list you are on. ----
+const nzAlive=()=>CHAMPS.filter(c=>!nzDead(c.name));
+function nzRollName(exclude){ let p=nzAlive(); const o=exclude?p.filter(c=>c.name!==exclude):p; if(o.length) p=o; return p.length?p[Math.floor(Math.random()*p.length)].name:null; }
+function nzRandFocus(exclude){ const n=nzRollName(exclude); if(n) meta().focus=n; return n; }   // Random Nuzlocke: pick the next champion (never a fallen one, and not the one just played unless it's the only one left)
+function nzRoll(){ if(READONLY||!isNuz()||isRandNuz()) return; const n=nzRollName(); if(!n) return; meta().focus=n; save(); render(); }
+// Random Nuzlocke always has a champion open: the first time the mode is shown (or after the list changes) one is rolled.
+function ensureRandPick(){
+  if(READONLY||!isRandNuz()||view!=="role") return;
+  const f=((all[pkey(role)]||{}).__meta||{}).focus;
+  if(f&&!nzDead(f)&&CHAMPS.some(c=>c.name===f)) return;
+  if(nzAlive().length&&nzRandFocus(null)) save();
 }
 const loseRun=name=>isNuz()?nzDie(name):isHard()?hardLose(name):hcLose(name);
 async function editNote(name){
@@ -64,7 +76,7 @@ function renderNav(){
   $("cats").innerHTML=away?`<button type="button" class="back" data-home="1">← Back</button>`
     :ddHTML("cat",{label:crow[1],sub:"List type",ph:"Search list types…",pick:pickCat,
       items:CATS.map(([id,lab])=>{const n=keysIn(id).length; return {v:id,label:lab,on:id===cat,desc:id==="all"?"Every champion, A-Z":id==="custom"&&!n?"Make your own list":n+(n===1?" list":" lists")}})});
-  const rollBtn=view==="role"||view==="roll"?`<button type="button" data-r="__roll" class="${view==="roll"?"on":""}" title="Roll a random role and champion" aria-label="Roll a random role and champion">${ROLL_ICON}<span class="lb">Dice Roll</span></button>`:"";   // Roll lives on the main views, not on Stats / Settings
+  const rollBtn=(view==="role"||view==="roll")&&!isNuz()?`<button type="button" data-r="__roll" class="${view==="roll"?"on":""}" title="Roll a random role and champion" aria-label="Roll a random role and champion">${ROLL_ICON}<span class="lb">Dice Roll</span></button>`:"";   // Roll lives on the main views, not on Stats / Settings
   $("navbtns").innerHTML=rollBtn+`<button type="button" data-r="__stats" class="${view==="stats"?"on":""}" title="Stats" aria-label="Stats">${STATS_ICON}<span class="lb">Stats</span></button>`
     +`<button type="button" data-r="__settings" class="${view==="settings"?"on":""}" title="Settings" aria-label="Settings"><span class="ic" aria-hidden="true">⚙</span><span class="lb">Settings</span></button>`;
   $("tabs").hidden=away||build||cat==="all"; $("modes").hidden=away||build;
