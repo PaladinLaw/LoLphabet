@@ -9,9 +9,9 @@ function nzTiles(es){
   const wk=Date.now()-7*864e5, week=dead.filter(e=>e.s.date&&new Date(e.s.date).getTime()>=wk).length;
   const T=[["Total wins",wins],["Games played",games],["Win rate",games?Math.round(wins/games*100)+"%":"–"],
     ["Champions fallen",dead.length+" / "+es.length],["Still alive",alive.length],
-    ["Avg wins before dying",dead.length?(dead.reduce((a,e)=>a+e.s.wins,0)/dead.length).toFixed(2):"–"],
+    ["Avg wins before falling",dead.length?(dead.reduce((a,e)=>a+e.s.wins,0)/dead.length).toFixed(2):"–"],
     ["Most wins",best&&best.s.wins?best.name+" ("+best.s.wins+")":"–"],["Most wins (alive)",bestAlive&&bestAlive.s.wins?bestAlive.name+" ("+bestAlive.s.wins+")":"–"],
-    ["Died without a win",dead.filter(e=>!e.s.wins).length],["Fell this week",week]];
+    ["Fell without a win",dead.filter(e=>!e.s.wins).length],["Fell this week",week]];
   return T.map(([l,v])=>`<div class="t"><small>${l}</small><b>${esc(String(v))}</b></div>`).join("");
 }
 function tiles(es){

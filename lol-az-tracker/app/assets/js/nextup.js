@@ -120,15 +120,15 @@ function nextBox(cur,hc,m,won,total,R){
     ${warn}
     <div class="nxb">${panel}${R?'<div class="nxm full">Random pick. It isn’t part of any challenge, so your lists and progress are untouched.</div>':""}</div>`;
 }
-// Nuzlocke: Now playing shows a win / died pair instead of Complete / Loss, and a summary box when no champion is open.
+// Nuzlocke: Now playing shows a Victory / Fallen pair instead of Complete / Loss (Victory is sized to match Complete via a hidden "✓ Complete" label), and a summary box when no champion is open.
 function nzButtons(cur){const w=nzWins(cur.name);
-  return `<div class="nbg"><button class="danger nb-loss nbl" data-a="x" title="Lost with ${esc(cur.name)}: this champion dies for good">☠ Died</button><button class="pri nbr" data-a="w">✓ Win</button><span class="nat nbl">${w} win${w===1?"":"s"}</span><button class="un-b nbr" data-a="bf" title="Close this and pick another champion">Choose another</button></div>`;}
+  return `<div class="nbg"><button class="danger nb-loss nzf nbl" data-a="x" title="Lost with ${esc(cur.name)}: this champion falls for good">${SKULL}Fallen</button><button class="pri nbr nzv" data-a="w"><span class="gh" aria-hidden="true">✓ Complete</span><span class="lb">✓ Victory</span></button><span class="nat nbl">${w} win${w===1?"":"s"}</span><button class="un-b nbr" data-a="bf" title="Close this and pick another champion">Choose another</button></div>`;}
 function nzBox(){
   const c=nzCount(), plural=n=>n+" win"+(n===1?"":"s");
   if(!c.total) return `<div class="nxh"><div><b>${role.startsWith("class:")?"Loading class data…":"This list is empty"}</b></div></div>`;
   if(!c.alive){
     let best=null; for(const x of CHAMPS){const w=nzWins(x.name); if(w&&(!best||w>best.w)) best={n:x.name,w}}
-    return `<div class="nxh"><div><div class="nxk">NUZLOCKE</div><div class="nxn"><b>Run complete ☠</b></div><div class="nxm">Every champion has fallen: ${plural(c.wins)} in total${best?", best was "+esc(best.n)+" with "+plural(best.w):""}. Use Reset to start a new run on this list.</div></div></div>`;
+    return `<div class="nxh"><div><div class="nxk">NUZLOCKE</div><div class="nxn"><b>Run complete ${SKULL}</b></div><div class="nxm">Every champion has fallen: ${plural(c.wins)} in total${best?", best was "+esc(best.n)+" with "+plural(best.w):""}. Use Reset to start a new run on this list.</div></div></div>`;
   }
   return `<div class="nxh"><div><div class="nxk">NUZLOCKE</div><div class="nxn"><b>${READONLY?"Run in progress":"Pick your champion"}</b></div><div class="nxm">${READONLY?"":"Click any living champion below to play it. "}${c.alive} alive · ${c.dead} fallen · ${plural(c.wins)}</div></div></div>`;
 }

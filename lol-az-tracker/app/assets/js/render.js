@@ -2,12 +2,12 @@ function swapTag(id,tag){const e=document.getElementById(id); if(!e||e.tagName.t
 // Nuzlocke card: any living champion can be played. A fallen champion is greyed out and inert (can't be selected or edited).
 function nzCard(c,s,isCur){
   const w=s.wins||0, wl=w+" win"+(w===1?"":"s"), dead=!!s.dead;
-  const sub=dead?`☠ Died ${s.diedOn||""} • ${wl}`:(w?wl:"&nbsp;");
-  const acts=dead?"":`<button data-a="m" title="Remove a win"${w?"":" disabled"}>−</button><button data-a="w" class="wb" title="Log a win">＋ Win</button><button data-a="x" class="danger" title="Lost with ${esc(c.name)}: this champion dies">☠ Died</button>`;
+  const sub=dead?`${SKULL}Fallen ${s.diedOn||""} • ${wl}`:(w?wl:"&nbsp;");
+  const acts=dead?"":`<button data-a="m" title="Remove a victory"${w?"":" disabled"}>−</button><button data-a="w" class="wb" title="Log a victory">＋ Victory</button><button data-a="x" class="danger" title="Lost with ${esc(c.name)}: this champion falls">${SKULL}Fallen</button>`;
   return `<div class="c ${dead?"dead":""} ${isCur?"cur":""}"${dead?" inert":""} data-n="${esc(c.name)}">
       <div class="l"><span>${esc(c.name[0])}</span>${iconUrl(c.name)?`<img src="${iconUrl(c.name)}" alt="" loading="lazy" onerror="this.remove()">`:""}</div>
       <div class="n"><div>${esc(c.name)}</div><small>${sub}</small>${s.note?`<small class="nt">${linkify(s.note)}</small>`:""}</div>
-      ${dead?'<div class="ck" title="Fallen">☠</div>':""}
+      ${dead?'<div class="ck" title="Fallen">'+SKULL+'</div>':""}
       <div class="g">${dead?"":`<button data-a="n" title="${s.note?"Edit note":"Add a note"}">✎</button>`}${acts}</div>
     </div>`;
 }

@@ -20,9 +20,9 @@ const HOWTO={
   ],
   nuzlocke:[
     "Play any champion on the list, in any order, as many times as you like. Click a champion to open it under <b>Now playing</b>.",
-    "Press <b>✓ Win</b> (or <b>＋ Win</b> on its card) each time you win. Wins are counted, but they never complete a champion. Use <b>−</b> if you logged one by mistake.",
-    "Lose a game and press <b>☠ Died</b>: that champion is gone for good. It is greyed out and can't be picked or edited again.",
-    "The run is over when you lose with your last champion. Progress shows how many have fallen, and Stats show your wins, deaths and best champion."
+    "Press <b>✓ Victory</b> (or <b>＋ Victory</b> on its card) each time you win. Victories are counted, but they never complete a champion. Use <b>−</b> if you logged one by mistake.",
+    "Lose a game and press <b>"+SKULL+" Fallen</b>: that champion is gone for good. It is greyed out and can't be picked or edited again.",
+    "The run is over when you lose with your last champion. Progress shows how many have fallen, and Stats show your wins, fallen champions and best champion."
   ]
 };
 function renderHowto(){

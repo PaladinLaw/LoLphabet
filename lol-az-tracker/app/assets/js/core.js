@@ -1,6 +1,8 @@
 var DD=null;
 try{localStorage.removeItem("lol-az-rolesrc")}catch(e){}   // retired setting (Curated Lists was removed)
 var ROLEDATA=null; try{ROLEDATA=JSON.parse(localStorage.getItem("lol-az-roles"))}catch(e){}
+// Solid skull (no crossbones) used for "Fallen" in Nuzlocke; currentColor, sized by .sk in components.css
+const SKULL='<svg class="sk" aria-hidden="true" viewBox="0 0 16 16" focusable="false"><path fill-rule="evenodd" d="M8 1C4.7 1 2.5 3.3 2.5 6.4c0 1.6.7 2.9 2 3.8V13c0 .6.4 1 1 1H6v-1.4h1V14h2v-1.4h1V14h.5c.6 0 1-.4 1-1v-2.8c1.3-.9 2-2.2 2-3.8C13.5 3.3 11.3 1 8 1zM5.6 5.2a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm4.8 0a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zM8 8.6l-.9 1.8h1.8z"/></svg>';
 const ALL_KEY="all:All champs";   // progress is stored under this key like any other list
 const CLASS_KEYS=["Fighter","Mage","Assassin","Tank","Marksman","Support"].map(c=>"class:"+c);
 const CATS=[["all","All champs",[ALL_KEY]],["roles","Roles",ROLE_KEYS],["classes","Classes",CLASS_KEYS],["regions","Regions",Object.keys(SETS).filter(k=>k.startsWith("region:"))],["races","Races",Object.keys(SETS).filter(k=>k.startsWith("race:"))],["custom","Custom",null]];

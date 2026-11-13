@@ -59,6 +59,13 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
 .c.dead{opacity:.45;filter:grayscale(1);cursor:default}
 .c.dead:hover{border-color:var(--line)}
 .c.dead .ck{color:var(--muted)}
+/* Solid skull icon (SKULL in core.js) and the Nuzlocke Victory / Fallen buttons */
+.sk{width:1em;height:1em;vertical-align:-.14em;margin-right:.3em;fill:currentColor;flex:none}
+.ck .sk{margin:0}
+.nb .nzf{padding:0 6px}
+.nbg .nzv{position:relative}
+.nbg .nzv .gh{visibility:hidden}
+.nbg .nzv .lb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 /* Roll dialog */
 .rollc{text-align:center}
 .rollres{display:flex;align-items:center;justify-content:center;gap:14px;min-height:96px;margin:6px 0 18px;text-align:left}

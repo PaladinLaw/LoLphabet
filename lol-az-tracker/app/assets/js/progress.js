@@ -31,7 +31,7 @@ async function hardLose(name){
   clearSkip(name,true); save(); render();
 }
 const LOSTLAB=()=>isHard()?"✗ Lost - Back one":"✗ Lost - Restart";
-// ---- Nuzlocke: play any champion as often as you like. Wins are counted but never complete a champion. Lose and it "dies" for good; the list is done when the last one dies. ----
+// ---- Nuzlocke: play any champion as often as you like. Wins are counted but never complete a champion. Lose and it "falls" for good; the list is done when the last one falls. ----
 // Per champion (in the list's Nuzlocke run): wins = number of wins, dead = true once it has lost, diedOn = date. games = wins + 1 for a dead champion.
 const nzDead=n=>!!(st()[n]&&st()[n].dead), nzWins=n=>(st()[n]&&st()[n].wins)||0;
 const nzCount=()=>{const L=CHAMPS; let dead=0,wins=0; for(const c of L){const s=st()[c.name]; if(s){wins+=s.wins||0; if(s.dead)dead++}} return {total:L.length,dead,alive:L.length-dead,wins}};
@@ -40,10 +40,10 @@ function nzWin(name){const s=get(name); if(s.dead) return; s.wins=(s.wins||0)+1;
 function nzUndoWin(name){const s=get(name); if(s.dead||!s.wins) return; s.wins--; nzSync(s); touch(); save(); render();}
 async function nzDie(name){
   const s=get(name); if(s.dead) return; const n0=nzCount(), w=s.wins||0, last=n0.alive===1;
-  if(!await confirmDlg("Lost with "+name+"?",name+" dies and is greyed out for good: it can't be picked or edited again. Its "+w+" win"+(w===1?" stays":"s stay")+" in your stats."+(last?"\n\nThis is your last champion, so the run (and this list) will be complete.":""),"☠ "+name+" dies",true)) return;
+  if(!await confirmDlg("Lost with "+name+"?",name+" falls and is greyed out for good: it can't be picked or edited again. Its "+w+" win"+(w===1?" stays":"s stay")+" in your stats."+(last?"\n\nThis is your last champion, so the run (and this list) will be complete.":""),"Fallen",true)) return;
   s.dead=true; s.diedOn=today(); nzSync(s); const m=meta(); if(m.focus===name) delete m.focus; m.last={champ:name,wins:w,date:today()};
   touch(); save(); render();
-  if(last){const c=nzCount(); await info("Nuzlocke complete ☠","Your last champion has fallen. "+c.wins+" win"+(c.wins===1?"":"s")+" across "+c.total+" champions on "+label(role)+".");}
+  if(last){const c=nzCount(); await info("Nuzlocke complete","Your last champion has fallen. "+c.wins+" win"+(c.wins===1?"":"s")+" across "+c.total+" champions on "+label(role)+".");}
 }
 const loseRun=name=>isNuz()?nzDie(name):isHard()?hardLose(name):hcLose(name);
 async function editNote(name){
