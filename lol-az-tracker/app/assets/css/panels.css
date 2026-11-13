@@ -26,3 +26,4 @@ footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center;line-
 .mb{display:block;height:4px;margin-top:4px;border-radius:3px;background:var(--line);overflow:hidden;min-width:56px}
 .mb i{display:block;height:100%;background:var(--win)}
 .sp .sel{margin:0 0 12px}
+.sdd{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 12px}.sdd>div{flex:1 1 150px;min-width:0}.sp .sdd .sel{margin:0}

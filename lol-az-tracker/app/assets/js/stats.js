@@ -49,6 +49,10 @@ function listInfo(r){
 const sfSave=()=>{try{localStorage.setItem(SF_KEY,JSON.stringify(sf))}catch(e){}};
 const mbar=(w,t)=>`<i class="mb"><i style="width:${t?Math.round(w/t*100):0}%"></i></i>`;
 function pickedList(){return LISTS[sPick]?sPick:(LISTS[role]?role:Object.keys(LISTS)[0])}
+// Same order as the main page's pickers: list types in CATS order, lists in each type's own order.
+const sKeysIn=c=>(keysIn(c)||[]).filter(k=>LISTS[k]), sLast={};
+const sOrdered=()=>CATS.flatMap(c=>sKeysIn(c[0]));
+function sPickCat(c){const ks=sKeysIn(c); if(!ks.length) return; sPick=ks.includes(sLast[c])?sLast[c]:ks[0]; renderStats()}
 let sMode=null;                       // which mode's stats the Stats page shows (null = the mode you're playing); picking one here never changes your challenge mode
 function renderStats(){
   const real=mode; if(view==="stats"&&sMode&&MODES.some(m=>m[0]===sMode)) mode=sMode;
@@ -57,7 +61,7 @@ function renderStats(){
 function renderStatsBody(){
   $("stats").hidden=view!=="stats"; $("roleView").hidden=view!=="role"&&view!=="roll"; $("roleView").classList.toggle("rollmode",view==="roll"); $("settings").hidden=view!=="settings"; $("builder").hidden=view!=="build";
   if(view!=="stats") return;
-  const nzs=isNuz(), tl=nzs?nzTiles:tiles, keys=Object.keys(LISTS), infos=keys.map(listInfo), shown=infos.filter(i=>sf[i.state]);
+  const nzs=isNuz(), tl=nzs?nzTiles:tiles, keys=sOrdered(), infos=keys.map(listInfo), shown=infos.filter(i=>sf[i.state]);
   const cnt=st=>infos.filter(i=>i.state===st).length;
   const chip=(k,lab)=>`<button type="button" class="chip${sf[k]?" on":""}" data-sf="${k}" aria-pressed="${sf[k]}">${lab} <small>${cnt(k)}</small></button>`;
   const byList=shown.length?`<div class="tw"><table><tr><th>List</th>${nzs?"<th>Fallen</th><th>Wins</th><th>Games</th>":"<th>Won</th><th>Games</th><th>Avg</th>"}</tr>${shown.map(i=>{
@@ -65,7 +69,11 @@ function renderStatsBody(){
       return `<tr><td>${esc(label(i.r))}<small class="ct">${esc(catLab(i.r))}</small></td><td class="nw">${i.won}/${i.total}${mbar(i.won,i.total)}</td>${nzs?`<td>${i.es.reduce((a,e)=>a+e.s.wins,0)}</td><td>${i.games}</td>`:`<td>${i.games}</td><td>${w.length?(w.reduce((a,e)=>a+e.s.games,0)/w.length).toFixed(2):"–"}</td>`}</tr>`}).join("")}</table></div>`
     :`<div class="empty">${infos.some(i=>i.state!=="zero")?"No lists match these filters.":"Nothing tracked yet. Win a game and it shows up here."}</div>`;
   const runs=(title,head,cell)=>shown.length?`<h3>${title}</h3><div class="tw"><table><tr><th>List</th>${head.map(h=>`<th>${h}</th>`).join("")}</tr>${shown.map(i=>{const mm=(all[pkey(i.r)]||{}).__meta||{};return `<tr><td>${esc(label(i.r))}</td>${cell(mm,i.won).map(c=>`<td>${c}</td>`).join("")}</tr>`}).join("")}</table></div>`:"";
-  const cur=pickedList(), ci=listInfo(cur);
+  const cur=pickedList(), ci=listInfo(cur), cat=catOf(cur), crow=CATS.find(c=>c[0]===cat)||CATS[0]; sLast[cat]=cur;
+  const catDD=ddHTML("stcat",{label:crow[1],sub:"List type",ph:"Search list types…",pick:sPickCat,
+    items:CATS.filter(c=>sKeysIn(c[0]).length).map(([id,lab])=>{const n=sKeysIn(id).length; return {v:id,label:lab,on:id===cat,desc:id==="all"?"Every champion, A–Z":n+(n===1?" list":" lists")}})});
+  const listDD=cat==="all"?"":ddHTML("stlist",{label:label(cur),sub:`${CAT_ONE[cat]} · ${ci.won}/${ci.total} ${nzs?"fallen":"won"}`,ph:"Search lists…",aria:"Search "+CAT_ONE[cat].toLowerCase()+" lists",pick:v=>{sPick=v; renderStats()},
+    items:sKeysIn(cat).map(r=>{const i=listInfo(r); return {v:r,label:label(r),meta:`${i.won}/${i.total}`,on:r===cur}})});
   $("stats").innerHTML=`<div class="stabs" role="tablist" aria-label="Challenge mode">${MODES.map(([id,lab])=>`<button type="button" role="tab" aria-selected="${id===mode}" class="${id===mode?"on":""}" data-sm="${id}">${esc(lab)}</button>`).join("")}</div>
     <p class="smode"><small>Each mode keeps its own progress, so these stats are for ${esc(MODES.find(m=>m[0]===mode)[1])} only.</small></p>
     <h3>All lists</h3><div class="tg">${tl(keys.flatMap(entriesFor))}</div>
@@ -75,8 +83,7 @@ function renderStatsBody(){
     ${isHC()?runs("Insanity runs",["Current run","Best run","Restarts"],(mm,w)=>[w,Math.max(mm.best||0,w),mm.resets||0]):""}
     ${isHard()?runs("Hard runs",["Won","Setbacks"],(mm,w)=>[w,mm.setbacks||0]):""}
     <h3>Per list</h3>
-    ${ddHTML("stats",{label:label(cur),sub:`${catLab(cur)} · ${ci.won}/${ci.total} ${nzs?"fallen":"won"}`,ph:"Search lists…",aria:"Search lists",pick:v=>{sPick=v; renderStats()},
-      items:keys.map(r=>{const i=listInfo(r); return {v:r,label:label(r),group:catLab(r),meta:`${i.won}/${i.total}`,on:r===cur}})})}
+    <div class="sdd"><div>${catDD}</div>${listDD?`<div>${listDD}</div>`:""}</div>
     <div class="tg">${tl(ci.es)}</div>`;
 }
 $("stats").addEventListener("click",e=>{
