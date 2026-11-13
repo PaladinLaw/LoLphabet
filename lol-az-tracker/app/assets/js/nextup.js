@@ -51,7 +51,7 @@ function runePage(r){
   const head=t=>`<div class="rh"><img src="${RIMG+esc(t.icon)}" alt="" onerror="this.remove()"><b>${esc(t.name)}</b></div>`;
   const rowsOf=(t,sel,from)=>t.slots.slice(from).map((sl,i)=>`<div class="rr${from===0&&i===0?" ks":""}">${sl.map(x=>ri(RIMG+x.icon,x.name,sel.some(y=>sameR(x,y)),from===0&&i===0?"ks":"")).join("")}</div>`).join("");
   const sh=r.stat_shards||[], shRows=SHARDS.map((ids,i)=>{const p=sh[i], pid=p&&p.id!=null&&ids.includes(Number(p.id))?Number(p.id):(p&&ids.find(id=>SHN[id][0].toLowerCase()===String(p.name||"").toLowerCase()));
-    return `<div class="rr sr">${ids.map(id=>ri(SHIMG+SHN[id][1]+".png",SHN[id][0],id===pid,"sh")).join("")}</div>`}).join("");
+    return `<div class="rr shr">${ids.map(id=>ri(SHIMG+SHN[id][1]+".png",SHN[id][0],id===pid,"sh")).join("")}</div>`}).join("");
   return `<div class="rpg"><div class="rcol">${head(pt)}${rowsOf(pt,r.primary,0)}</div><div class="rcol">${stt?head(stt)+rowsOf(stt,r.secondary,1):""}<div class="rsh">${shRows}</div></div></div>`;
 }
 function buildRows(j,fixed){
