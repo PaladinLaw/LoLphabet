@@ -70,7 +70,7 @@ const TERMS=page("Terms of Service",`
 const FAVICON_BUF=Buffer.from(FAVICON.replace(/^data:image\/png;base64,/,""),"base64");
 const HOME_TITLE="LoLphabet | Free League of Legends A–Z Challenge Tracker";
 const ABOUT_TITLE="About LoLphabet | League of Legends A–Z Challenge Tracker";
-const ABOUT_DESC="What LoLphabet is, what you can track (roles, races, classes, regions, custom lists), how the four challenge modes work and how your progress is saved.";
+const ABOUT_DESC="What LoLphabet is, what you can track (roles, races, classes, regions, all champions, custom lists), how the Classic, Hard, Insanity and Nuzlocke modes work, the Roll button, accounts and sharing.";
 const HOME_DESC="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.";
 const fileMtime=f=>{try{return fs.statSync(path.join(__dirname,f)).mtime}catch(e){return new Date()}};
 // Front-end files live in assets/css and assets/js. Their newest mtime becomes the ?v= cache-buster in index.html and part of the page-cache key,
@@ -81,7 +81,7 @@ const STATIC_TYPES={".css":"text/css; charset=utf-8",".js":"text/javascript; cha
 const jsonLd=base=>'<script type="application/ld+json">'+JSON.stringify({"@context":"https://schema.org","@graph":[
   {"@type":"WebSite","@id":base+"/#website","url":base+"/","name":"LoLphabet","alternateName":"LoLphabet: The League of Legends A–Z Challenge","description":HOME_DESC,"inLanguage":"en","publisher":{"@id":base+"/#author"}},
   {"@type":"WebApplication","@id":base+"/#app","url":base+"/","name":"LoLphabet","alternateName":"The League of Legends A–Z Challenge","description":HOME_DESC,"applicationCategory":"GameApplication","operatingSystem":"Any (web browser)","isAccessibleForFree":true,"inLanguage":"en","image":base+"/assets/og-image.png?v=2","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@id":base+"/#author"},"isPartOf":{"@id":base+"/#website"},
-   "featureList":["League of Legends A–Z Challenge champion tracker","Role, race, class and region champion lists","Custom champion lists you can share","Classic, Random, Hard and Insanity challenge modes","Progress statistics and shareable progress links","Popular champion builds, pick rates and win rates"]},
+   "featureList":["League of Legends A–Z Challenge champion tracker","Role, race, class and region champion lists","Custom champion lists you can share","Classic, Hard, Insanity and Nuzlocke challenge modes","Random role and champion roller","Log in with Google, Discord, email and password or a magic link","Progress statistics and shareable progress links","Popular champion builds, pick rates and win rates"]},
   {"@type":"Person","@id":base+"/#author","name":"PaladinLaw"}
 ]}).replace(/</g,"\\u003c")+'</script>';
 // Pre-rendered page cache: each page is built once per (host, source-file version) and stored with its gzip/brotli forms and ETag.

@@ -54,3 +54,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .auth{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-height:36px}
 details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
+
+/* Nuzlocke: fallen champions are greyed out and can't be touched */
+.c.dead{opacity:.45;filter:grayscale(1);cursor:default}
+.c.dead:hover{border-color:var(--line)}
+.c.dead .ck{color:var(--muted)}
+/* Roll dialog */
+.rollc{text-align:center}
+.rollres{display:flex;align-items:center;justify-content:center;gap:14px;min-height:96px;margin:6px 0 18px;text-align:left}
+.rolli{position:relative;width:88px;height:88px;border-radius:14px;overflow:hidden;background:var(--line);border:2px solid var(--gold);flex:none;display:grid;place-items:center;font-size:36px;font-weight:700;color:var(--gold)}
+.rolli img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.rolli:not(.fin){opacity:.75}
+.rollt b{display:block;font-size:26px;color:var(--text);line-height:1.15}
+.rollr{display:inline-block;margin-top:6px;padding:2px 12px;border:1px solid var(--gold);color:var(--gold);border-radius:999px;font-size:13px;font-weight:600}

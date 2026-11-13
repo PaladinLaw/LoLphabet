@@ -1,5 +1,5 @@
 // ---- Sharing: the Share button copies your share link, which previews with a progress image (Open Graph) ----
-const RAND_MODES=["random","randhc","randhard"], LOCK_MODES=["hardcore","randhc","hard","randhard"];
+const LOCK_MODES=["hardcore","hard"];
 // The list + mode played most recently. Uses the per-run timestamp (__meta.t); older data without timestamps falls back to the run with the most wins.
 function latestRun(d){
   let best=null;
@@ -15,8 +15,11 @@ function latestRun(d){
 // Side-effect free summary of one run, used for the share image.
 function runSnapshot(r,md){
   const names=(LISTS[r]||[]).map(c=>c.name), run=all[md==="classic"?r:r+"|"+md]||{}, m=run.__meta||{}, isW=n=>!!(run[n]&&run[n].won);
-  let order=names; if(RAND_MODES.includes(md)&&m.order){const o=m.order.filter(n=>names.includes(n)); order=o.concat(names.filter(n=>!o.includes(n)))}
-  const sk=m.skip||[], left=order.filter(n=>!isW(n));
+  if(md==="nuzlocke"){     // Nuzlocke has no "next": the big number is how many champions have fallen
+    const dead=names.filter(n=>run[n]&&run[n].dead).length, wins=names.reduce((a,n)=>a+((run[n]&&run[n].wins)||0),0);
+    return {role:r,mode:md,won:dead,total:names.length,next:null,nz:{wins,alive:names.length-dead},listName:label(r),modeName:MODES.find(x=>x[0]===md)[1]};
+  }
+  const order=names, sk=m.skip||[], left=order.filter(n=>!isW(n));
   let nxt=left.find(n=>!sk.includes(n))||left[0]||null;
   if(!LOCK_MODES.includes(md)&&m.focus&&names.includes(m.focus)&&!isW(m.focus)) nxt=m.focus;
   return {role:r,mode:md,won:names.filter(isW).length,total:names.length,next:nxt,listName:label(r),modeName:MODES.find(x=>x[0]===md)[1]};
@@ -34,7 +37,7 @@ async function shareCanvas(sn){
   const line=(who?who+" is on ":"")+sn.listName+(sn.mode!=="classic"?" · "+sn.modeName:""); let fs=54; g.fillStyle="#e8e4d8";
   do{g.font="bold "+fs+"px system-ui,sans-serif";fs-=2}while(g.measureText(line).width>1060&&fs>24); g.fillText(line,70,432);
   g.fillStyle="#2a323d"; g.fillRect(70,470,1060,26); g.fillStyle="#5fcf8b"; g.fillRect(70,470,sn.total?1060*sn.won/sn.total:0,26);
-  g.fillStyle="#8d9199"; g.font="32px system-ui,sans-serif"; g.fillText(sn.next?"Next up: "+sn.next:sn.total?"A–Z complete!":"",70,566);
+  g.fillStyle="#8d9199"; g.font="32px system-ui,sans-serif"; g.fillText(sn.nz?(sn.nz.alive?sn.nz.wins+" win"+(sn.nz.wins===1?"":"s")+" · "+sn.nz.alive+" alive":"Nuzlocke complete · "+sn.nz.wins+" win"+(sn.nz.wins===1?"":"s")):sn.next?"Next up: "+sn.next:sn.total?"A–Z complete!":"",70,566);
   return cv;
 }
 // Renders the progress image and stores it on the server so the share link previews with it. Best effort: the link still works without it.
@@ -42,7 +45,7 @@ async function uploadShareImage(){
   try{
     const sn=shareTarget(), cv=await shareCanvas(sn);
     const img=cv.toDataURL("image/jpeg",0.9).split(",")[1];     // JPEG keeps the gradient image small (~100 KB); chat apps skip big preview images
-    await api("PUT","/api/share/image",{img,desc:sn.listName+(sn.mode!=="classic"?" · "+sn.modeName:"")+": "+sn.won+" / "+sn.total+" won"});
+    await api("PUT","/api/share/image",{img,desc:sn.listName+(sn.mode!=="classic"?" · "+sn.modeName:"")+": "+sn.won+" / "+sn.total+(sn.nz?" fallen":" won")});
     return true;
   }catch(e){return false}
 }

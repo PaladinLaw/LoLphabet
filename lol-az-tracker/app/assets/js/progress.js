@@ -1,20 +1,11 @@
-function ordered(){
-  if(!isRand()) return CHAMPS;
-  const names=CHAMPS.map(c=>c.name), m=meta();
-  if(READONLY&&!m.order) return CHAMPS;
-  const o=(m.order||[]).filter(n=>names.includes(n)), miss=names.filter(n=>!o.includes(n));
-  if(!m.order||miss.length||o.length!==m.order.length){
-    for(let i=miss.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[miss[i],miss[j]]=[miss[j],miss[i]]}
-    m.order=o.concat(miss); save();
-  }
-  return m.order.map(n=>({name:n}));
-}
+const ordered=()=>CHAMPS;
 // Champions temporarily marked "unavailable" (banned / picked in champ select) are skipped by Next up.
 // Stored per list + mode in that run's __meta.skip. Cleared when the Next up champion is won or lost.
 function listNext(L){const sk=meta().skip||[]; return L.find(c=>!get(c.name).won&&!sk.includes(c.name))||L.find(c=>!get(c.name).won);}
 // A champion clicked in the list is "focused": Next up shows it (with a warning) instead of the real next champion.
 // Stored per list + mode in that run's __meta.focus. Ignored in Hard/Insanity (only the next champion may be played) and in read-only share views.
 function availNext(L){
+  if(isNuz()){const f=!READONLY&&meta().focus; return f&&!nzDead(f)?L.find(x=>x.name===f)||null:null}   // Nuzlocke: Now playing is whichever living champion you opened
   if(!READONLY&&!isLock()){const f=meta().focus; if(f){const c=L.find(x=>x.name===f); if(c&&!get(f).won) return c;}}
   return listNext(L);
 }
@@ -28,7 +19,6 @@ async function hcLose(name){
   if(!await confirmDlg("Lost with "+name+"?","Your run ends at "+w+" win"+(w===1?"":"s")+" and you start again from the beginning.","Restart run",true)) return;
   delete m.skip; m.t=Date.now(); queueShareImage(); m.resets=(m.resets||0)+1; m.best=Math.max(m.best||0,w); m.last={champ:name,date:today(),wins:w};
   for(const c of CHAMPS){const n=run[c.name]&&run[c.name].note; delete run[c.name]; if(n) run[c.name]={won:false,date:null,games:0,note:n}}
-  if(isRand()) delete m.order;
   save(); render();
 }
 async function hardLose(name){
@@ -41,7 +31,21 @@ async function hardLose(name){
   clearSkip(name,true); save(); render();
 }
 const LOSTLAB=()=>isHard()?"✗ Lost - Back one":"✗ Lost - Restart";
-const loseRun=name=>isHard()?hardLose(name):hcLose(name);
+// ---- Nuzlocke: play any champion as often as you like. Wins are counted but never complete a champion. Lose and it "dies" for good; the list is done when the last one dies. ----
+// Per champion (in the list's Nuzlocke run): wins = number of wins, dead = true once it has lost, diedOn = date. games = wins + 1 for a dead champion.
+const nzDead=n=>!!(st()[n]&&st()[n].dead), nzWins=n=>(st()[n]&&st()[n].wins)||0;
+const nzCount=()=>{const L=CHAMPS; let dead=0,wins=0; for(const c of L){const s=st()[c.name]; if(s){wins+=s.wins||0; if(s.dead)dead++}} return {total:L.length,dead,alive:L.length-dead,wins}};
+function nzSync(s){s.games=(s.wins||0)+(s.dead?1:0)}
+function nzWin(name){const s=get(name); if(s.dead) return; s.wins=(s.wins||0)+1; nzSync(s); touch(); save(); render();}
+function nzUndoWin(name){const s=get(name); if(s.dead||!s.wins) return; s.wins--; nzSync(s); touch(); save(); render();}
+async function nzDie(name){
+  const s=get(name); if(s.dead) return; const n0=nzCount(), w=s.wins||0, last=n0.alive===1;
+  if(!await confirmDlg("Lost with "+name+"?",name+" dies and is greyed out for good: it can't be picked or edited again. Its "+w+" win"+(w===1?" stays":"s stay")+" in your stats."+(last?"\n\nThis is your last champion, so the run (and this list) will be complete.":""),"☠ "+name+" dies",true)) return;
+  s.dead=true; s.diedOn=today(); nzSync(s); const m=meta(); if(m.focus===name) delete m.focus; m.last={champ:name,wins:w,date:today()};
+  touch(); save(); render();
+  if(last){const c=nzCount(); await info("Nuzlocke complete ☠","Your last champion has fallen. "+c.wins+" win"+(c.wins===1?"":"s")+" across "+c.total+" champions on "+label(role)+".");}
+}
+const loseRun=name=>isNuz()?nzDie(name):isHard()?hardLose(name):hcLose(name);
 async function editNote(name){
   const s=get(name);
   const v=await ask({title:"Note for "+name,body:"A short note, e.g. “ranked win, 12 kills” or a clip link.",cancel:null,
@@ -51,6 +55,7 @@ async function editNote(name){
   save(); render();
 }
 const CAT_ONE={roles:"Role",races:"Race",classes:"Class",regions:"Region",all:"All champs",custom:"Custom list"};
+const ROLL_ICON='<svg aria-hidden="true" viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2.5"/><circle cx="5.5" cy="5.5" r=".6" fill="currentColor"/><circle cx="10.5" cy="5.5" r=".6" fill="currentColor"/><circle cx="8" cy="8" r=".6" fill="currentColor"/><circle cx="5.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="10.5" cy="10.5" r=".6" fill="currentColor"/></svg>';
 const STATS_ICON='<svg aria-hidden="true" viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.5h12"/><path d="M3.5 12V8.5h2V12M7 12V4.5h2V12M10.5 12V2.5h2V12"/></svg>';
 // Three searchable dropdowns (list type -> list -> challenge) plus Stats / Settings, which stay visible on every screen size.
 function renderNav(){
@@ -59,10 +64,11 @@ function renderNav(){
   $("cats").innerHTML=away?`<button type="button" class="back" data-home="1">← Back</button>`
     :ddHTML("cat",{label:crow[1],sub:"List type",ph:"Search list types…",pick:pickCat,
       items:CATS.map(([id,lab])=>{const n=keysIn(id).length; return {v:id,label:lab,on:id===cat,desc:id==="all"?"Every champion, A–Z":id==="custom"&&!n?"Make your own list":n+(n===1?" list":" lists")}})});
-  $("navbtns").innerHTML=`<button type="button" data-r="__stats" class="${view==="stats"?"on":""}" title="Stats" aria-label="Stats">${STATS_ICON}<span class="lb">Stats</span></button>`
+  $("navbtns").innerHTML=`<button type="button" data-r="__roll" title="Roll a random champion" aria-label="Roll a random champion">${ROLL_ICON}<span class="lb">Roll</span></button>`
+    +`<button type="button" data-r="__stats" class="${view==="stats"?"on":""}" title="Stats" aria-label="Stats">${STATS_ICON}<span class="lb">Stats</span></button>`
     +`<button type="button" data-r="__settings" class="${view==="settings"?"on":""}" title="Settings" aria-label="Settings"><span class="ic" aria-hidden="true">⚙</span><span class="lb">Settings</span></button>`;
   $("tabs").hidden=away||build||cat==="all"; $("modes").hidden=away||build;
-  $("tabs").innerHTML=ddHTML("list",{label:label(role),sub:LISTS[role]?`${CAT_ONE[cat]} · ${won(role)}/${LISTS[role].length} won`:CAT_ONE[cat],ph:"Search lists…",aria:"Search "+CAT_ONE[cat].toLowerCase()+" lists",pick:pickList,
+  $("tabs").innerHTML=ddHTML("list",{label:label(role),sub:LISTS[role]?`${CAT_ONE[cat]} · ${won(role)}/${LISTS[role].length} ${isNuz()?"fallen":"won"}`:CAT_ONE[cat],ph:"Search lists…",aria:"Search "+CAT_ONE[cat].toLowerCase()+" lists",pick:pickList,
     items:keysIn(cat).map(r=>({v:r,label:label(r),on:r===role,meta:`${won(r)}/${LISTS[r].length}`})).concat(cat==="custom"?[{v:"__new",label:"＋ New list",cls:"new"}]:[])});
   const mm=MODES.find(m=>m[0]===mode)||MODES[0];
   $("modes").innerHTML=ddHTML("mode",{label:mm[1],sub:"Challenge mode",ph:"Search challenges…",pick:pickMode,
