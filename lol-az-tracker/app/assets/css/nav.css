@@ -1,8 +1,10 @@
 /* Main navigation: list type -> list -> challenge dropdowns, then Stats / Settings. Same layout on every device; the phone tweaks are in mobile.css. */
 .nav{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px;margin:0 0 14px}
 .nav>div{min-width:0}
-#cats,#tabs,#modes{flex:1 1 210px}
+#cats,#tabs,#modes{flex:1 1 150px}
 #navbtns{flex:none;display:flex;gap:8px}
 #navbtns button,#cats .back{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:0 14px;font-weight:600}
 #navbtns button.on{border-color:var(--gold);color:var(--gold)}
 #navbtns .ic{font-size:16px;line-height:1}
+/* mid-size screens: icon-only buttons so the three dropdowns and the buttons stay on one line */
+@media(max-width:900px){#navbtns button{width:48px;padding:0}#navbtns .lb{display:none}}

@@ -1,7 +1,7 @@
-// Zero-dependency server (Node 18+). Serves index.html and saves progress per Google account.
-//   GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com node server.js
+// Zero-dependency server (Node 18+). Serves the site and saves progress per account.
+// Login methods (Google, Discord, username + password, magic link) live in auth-server.js and are chosen with LOGIN_TYPES.
 const http=require("http"),fs=require("fs"),path=require("path"),crypto=require("crypto"),zlib=require("zlib");
-const PORT=process.env.PORT||3081, CID=process.env.GOOGLE_CLIENT_ID||"";
+const PORT=process.env.PORT||3081;
 const FILE=process.env.DATA_FILE||path.join(__dirname,"data.json");
 // Share-link preview images (Open Graph), one JPEG per share token, stored next to the data file so they persist with it.
 const IMG_DIR=path.join(path.dirname(FILE),"share-images");
@@ -23,16 +23,18 @@ const PRIVACY=page("Privacy Policy",`
 <h2>What we process, and why</h2>
 <p><b>If you don't log in:</b> your progress, custom lists and preferences stay in your own browser. We never receive them.</p>
 <p><b>If you log in with Google:</b> we receive your Google account ID, name and email address, and we store them along with your display name, your tracker progress, lists and notes, and a login session token. We use this only to run your account. Lawful basis: providing the service you asked for (contract).</p>
+<p><b>If you log in with Discord:</b> we receive your Discord user ID, username or display name and, if Discord has verified it, your email address. We store them in the same way.</p>
+<p><b>If you log in with a username and password or a magic link:</b> we store your email address, your username and, for a password, only a salted hash of it (we cannot read your password). Passwords are never emailed. To send the confirmation, magic-link and password-reset emails we pass your email address and the message to our email provider, Resend. If you link several sign-in methods to one account, we store each of them against that account.</p>
 <p><b>If you create a share link or a shared list link:</b> anyone with the link can see your display name and the progress or list you shared (read-only for progress). A progress share link also has a preview image of your progress, stored on the server and shown when the link is pasted into a chat. You can switch a progress link off, or delete your account, at any time. Lawful basis: your choice to share.</p>
 <p><b>Visitor counter:</b> when a page loads, our server combines your IP address and browser details with a random key that changes every day, turns the result into a one-way hash, and uses it only to avoid counting the same device twice in a day. Nothing is stored on your device, your raw IP address is not kept, and the hashes are deleted when the daily key changes (within 24 hours). Only the running total is kept. Lawful basis: legitimate interests (a simple visitor count that can't be inflated by refreshing).</p>
 <p><b>Technical logs:</b> the hosting setup, and any network service in front of it (such as a reverse proxy or tunnel), may keep standard connection logs for security and troubleshooting.</p>
 <h2>Cookies and local storage</h2>
 <p>The site sets <b>no cookies</b>. It stores a few items in your browser's local storage, all strictly necessary for features you use: your progress and lists, your preferences (theme, challenge mode, role-list source, build panel position and open/closed state, collapsed hints), your login session if you sign in (up to 90 days), short-lived cached champion data from Riot (about 24 hours), and a note that you've seen the cookie notice. There is no analytics, advertising or social-media tracking. You can clear all of it from “Cookie preferences” in the footer.</p>
 <h2>Other companies involved</h2>
-<p><b>Google:</b> the Google sign-in script is loaded only after you click Log in / Sign up. Google's own privacy policy applies to that sign-in.</p>
+<p><b>Google and Discord:</b> the Google sign-in script is loaded only after you click Log in / Sign up, and Discord sign-in sends you to discord.com only after you choose it. Their own privacy policies apply to those sign-ins. <b>Resend</b> processes login emails for us under its own privacy policy.</p>
 <p><b>Riot Games and CommunityDragon:</b> champion, item, summoner spell and rune icons, and champion data, are loaded directly from Riot's public Data Dragon service (and a few stat-shard icons from the community-run CommunityDragon service), so those servers receive your IP address and browser details when a page loads. Lawful basis: legitimate interests (showing the champion images the site is built around).</p>
 <p><b>OP.GG:</b> the suggested builds and statistics shown under Next up are collected by our own server from OP.GG about once a week and stored on that server. Your browser never contacts OP.GG, and no information about you is sent to OP.GG.</p>
-<p>Google and Riot are based in the United States, so this may involve transfers outside the UK, EEA and South Africa, which those companies cover with their own safeguards.</p>
+<p>Google, Discord, Resend and Riot are based in the United States, so this may involve transfers outside the UK, EEA and South Africa, which those companies cover with their own safeguards.</p>
 <h2>We don't sell or share your data</h2>
 <p>We do not sell or share personal information, show ads, or use it for profiling. Because there is nothing to opt out of, browser signals such as Global Privacy Control have no effect on what happens, and nothing is processed differently if you send one.</p>
 <h2>How long we keep it</h2>
@@ -42,13 +44,13 @@ const PRIVACY=page("Privacy Policy",`
 <h2>Children</h2>
 <p>The site isn't aimed at children under 13, and we don't knowingly collect their information.</p>
 <h2>Security and changes</h2>
-<p>We keep data on a server we control and use reasonable measures to protect it, but no system is perfectly secure. We may update this policy; the date at the top shows when it last changed.</p>`,"How LoLphabet, the League of Legends A–Z Challenge by PaladinLaw, collects, uses and protects your personal information, and the rights you have over it.");
+<p>We keep data on a server we control and use reasonable measures to protect it, but no system is perfectly secure. We may update this policy; the date at the top shows when it last changed.</p>`,"How LoLphabet, the League of Legends A-Z Challenge by PaladinLaw, collects, uses and protects your personal information, and the rights you have over it.");
 const TERMS=page("Terms of Service",`
 <p>By using ${SITE} you agree to these terms. If you don't agree, please don't use the site.</p>
 <h2>The service</h2>
 <p>This is a free, personal hobby project provided for friends and fellow players, “as is” and “as available”. We don't guarantee it will always be online, error-free, or that your data will never be lost. Use Export in Settings to keep a backup.</p>
 <h2>Who can use it</h2>
-<p>You must be at least 13 years old. If you create an account, keep your Google account secure; you're responsible for activity under it.</p>
+<p>You must be at least 13 years old. If you create an account, keep your login details, and the Google, Discord or email account you use to sign in, secure; you're responsible for activity under your account.</p>
 <h2>Acceptable use</h2>
 <p>Don't try to disrupt the site, scrape it at volume, access other people's data, or post notes, list names or links that are unlawful, abusive or infringe others' rights. We may remove content or accounts, or shut the site down, at any time.</p>
 <h2>Your content</h2>
@@ -62,14 +64,14 @@ const TERMS=page("Terms of Service",`
 <h2>Changes and governing law</h2>
 <p>We may update these terms; continued use means you accept the updated version. These terms are governed by the laws of South Africa, without affecting any mandatory consumer rights you have where you live.</p>
 <h2>Contact</h2>
-<p>${contact}.</p>`,"The terms of service for using LoLphabet, the free League of Legends A–Z Challenge tracker by PaladinLaw, including accounts, acceptable use, liability and governing law.");
+<p>${contact}.</p>`,"The terms of service for using LoLphabet, the free League of Legends A-Z Challenge tracker by PaladinLaw, including accounts, acceptable use, liability and governing law.");
 
 // ---- SEO / performance helpers ----
 const FAVICON_BUF=Buffer.from(FAVICON.replace(/^data:image\/png;base64,/,""),"base64");
-const HOME_TITLE="LoLphabet | Free League of Legends A–Z Challenge Tracker";
-const ABOUT_TITLE="About LoLphabet | League of Legends A–Z Challenge Tracker";
-const ABOUT_DESC="What LoLphabet is, what you can track (roles, races, classes, regions, custom lists), how the four challenge modes work and how your progress is saved.";
-const HOME_DESC="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.";
+const HOME_TITLE="LoLphabet | Free League of Legends A-Z Challenge Tracker";
+const ABOUT_TITLE="About LoLphabet | League of Legends A-Z Challenge Tracker";
+const ABOUT_DESC="What LoLphabet is, what you can track (roles, races, classes, regions, all champions, custom lists), how the Classic, Hard, Insanity and Nuzlocke modes work, the Roll button, accounts and sharing.";
+const HOME_DESC="Free League of Legends A-Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.";
 const fileMtime=f=>{try{return fs.statSync(path.join(__dirname,f)).mtime}catch(e){return new Date()}};
 // Front-end files live in assets/css and assets/js. Their newest mtime becomes the ?v= cache-buster in index.html and part of the page-cache key,
 // so editing any of them is picked up without restarting the container.
@@ -77,9 +79,9 @@ const ASSET_DIRS=["assets/css","assets/js"];
 const assetVer=()=>{let t=fileMtime("index.html").getTime();for(const d of ASSET_DIRS){try{for(const f of fs.readdirSync(path.join(__dirname,d)))t=Math.max(t,fileMtime(d+"/"+f).getTime())}catch(e){}}return String(t)};
 const STATIC_TYPES={".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8"};
 const jsonLd=base=>'<script type="application/ld+json">'+JSON.stringify({"@context":"https://schema.org","@graph":[
-  {"@type":"WebSite","@id":base+"/#website","url":base+"/","name":"LoLphabet","alternateName":"LoLphabet: The League of Legends A–Z Challenge","description":HOME_DESC,"inLanguage":"en","publisher":{"@id":base+"/#author"}},
-  {"@type":"WebApplication","@id":base+"/#app","url":base+"/","name":"LoLphabet","alternateName":"The League of Legends A–Z Challenge","description":HOME_DESC,"applicationCategory":"GameApplication","operatingSystem":"Any (web browser)","isAccessibleForFree":true,"inLanguage":"en","image":base+"/assets/og-image.png?v=2","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@id":base+"/#author"},"isPartOf":{"@id":base+"/#website"},
-   "featureList":["League of Legends A–Z Challenge champion tracker","Role, race, class and region champion lists","Custom champion lists you can share","Classic, Random, Hard and Insanity challenge modes","Progress statistics and shareable progress links","Popular champion builds, pick rates and win rates"]},
+  {"@type":"WebSite","@id":base+"/#website","url":base+"/","name":"LoLphabet","alternateName":"LoLphabet: The League of Legends A-Z Challenge","description":HOME_DESC,"inLanguage":"en","publisher":{"@id":base+"/#author"}},
+  {"@type":"WebApplication","@id":base+"/#app","url":base+"/","name":"LoLphabet","alternateName":"The League of Legends A-Z Challenge","description":HOME_DESC,"applicationCategory":"GameApplication","operatingSystem":"Any (web browser)","isAccessibleForFree":true,"inLanguage":"en","image":base+"/assets/og-image.png?v=2","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@id":base+"/#author"},"isPartOf":{"@id":base+"/#website"},
+   "featureList":["League of Legends A-Z Challenge champion tracker","Role, race, class and region champion lists","Custom champion lists you can share","Classic, Hard, Insanity and Nuzlocke challenge modes","Random role and champion roller","Log in with Google, Discord, email and password or a magic link","Progress statistics and shareable progress links","Popular champion builds, pick rates and win rates"]},
   {"@type":"Person","@id":base+"/#author","name":"PaladinLaw"}
 ]}).replace(/</g,"\\u003c")+'</script>';
 // Pre-rendered page cache: each page is built once per (host, source-file version) and stored with its gzip/brotli forms and ETag.
@@ -127,7 +129,7 @@ function shareInfo(tok,base){
   const owner=/^[\w-]+$/.test(tok)&&db.users[db.shares[tok]]; if(!owner) return null;
   let mt=0; try{mt=Math.floor(fs.statSync(imgFile(tok)).mtimeMs)}catch(e){}
   const who=owner.given||owner.name||"A friend", title=who+"'s progress | LoLphabet";
-  const desc=owner.shareDesc?who+" · "+owner.shareDesc:"See how far "+who+" has got in the League of Legends A–Z Challenge.";
+  const desc=owner.shareDesc?who+" · "+owner.shareDesc:"See how far "+who+" has got in the League of Legends A-Z Challenge.";
   const link=base+"/s/"+tok, img=mt?link+"/og.jpg?v="+mt:"";
   return {tok,ver:mt+"|"+who+"|"+desc,apply:page=>{
     const set=(re,v)=>{page=page.replace(re,(m,a)=>a+escAttr(v)+'"')};
@@ -149,6 +151,7 @@ const SITE_URL=(process.env.SITE_URL||"").replace(/\/+$/,"");   // set SITE_URL=
 const baseUrl=req=>SITE_URL||(String(req.headers["x-forwarded-proto"]||"http").split(",")[0].trim()+"://"+(req.headers["x-forwarded-host"]||req.headers.host||"localhost"));
 // ---- Visitor counter: cookieless. A visitor = one hash of (daily random salt + IP + browser) per day. ----
 const clientIp=req=>String(req.headers["cf-connecting-ip"]||String(req.headers["x-forwarded-for"]||"").split(",")[0]||req.socket.remoteAddress||"").trim();
+const AUTH=require("./auth-server.js")({db,persist,send,body,baseUrl,clientIp,TTL,rmImg});   // exits with a clear message if LOGIN_TYPES is set up wrongly
 function countVisit(req){
   const V=db.visits, day=new Date().toISOString().slice(0,10);
   if(V.day!==day){V.day=day;V.salt=crypto.randomBytes(16).toString("hex");V.seen={};V.ip={};}
@@ -300,14 +303,14 @@ http.createServer(async(req,res)=>{
             .replace(/(<meta name="twitter:title" content=")[^"]*"/,'$1'+ABOUT_TITLE+'"')
             .replace(/(<meta name="twitter:description" content=")[^"]*"/,'$1'+ABOUT_DESC+'"')
             // /about has its own H1 ("About LoLphabet"); the header tagline becomes a plain paragraph there
-            .replace('<h1 id="tl" class="tl">The League of Legends A–Z Challenge</h1>','<p id="tl" class="tl">The League of Legends A–Z Challenge</p>')
+            .replace('<h1 id="tl" class="tl">The League of Legends A-Z Challenge</h1>','<p id="tl" class="tl">The League of Legends A-Z Challenge</p>')
             .replace('<h2 id="about-h">About LoLphabet</h2>','<h1 id="about-h">About LoLphabet</h1>');
         }
         if(sh) page=sh.apply(page);
         return page;
       },priv?{"X-Robots-Tag":"noindex, nofollow"}:{});
     }
-    if(url==="/robots.txt"){res.writeHead(200,{"Content-Type":"text/plain; charset=utf-8"});return res.end("User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: "+baseUrl(req)+"/sitemap.xml\n")}
+    if(url==="/robots.txt"){res.writeHead(200,{"Content-Type":"text/plain; charset=utf-8"});return res.end("User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /auth/\n\nSitemap: "+baseUrl(req)+"/sitemap.xml\n")}
     if(url==="/sitemap.xml"){
       const base=baseUrl(req), d=f=>fileMtime(f).toISOString().slice(0,10);
       // lastmod = date of the source file that page is built from (index.html for the app pages, server.js for the legal pages)
@@ -317,7 +320,7 @@ http.createServer(async(req,res)=>{
     }
     if(url==="/manifest.webmanifest"){
       res.writeHead(200,{"Content-Type":"application/manifest+json; charset=utf-8"});
-      return res.end(JSON.stringify({id:"/",name:"LoLphabet",short_name:"LoLphabet",description:"LoLphabet is a League of Legends completion tracker and A–Z challenge.",start_url:"/",scope:"/",display:"standalone",background_color:"#0f1318",theme_color:"#0f1318",
+      return res.end(JSON.stringify({id:"/",name:"LoLphabet",short_name:"LoLphabet",description:"LoLphabet is a League of Legends completion tracker and A-Z challenge.",start_url:"/",scope:"/",display:"standalone",background_color:"#0f1318",theme_color:"#0f1318",
         icons:[{src:"/assets/icon-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:"/assets/icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]}));
     }
     const fm=url.match(/^\/assets\/(css|js)\/([\w-]+\.(?:css|js))$/);                    // front-end files (cache-busted with ?v=, so they can be cached for a long time)
@@ -351,29 +354,7 @@ http.createServer(async(req,res)=>{
       loadBuilds(); res.setHeader("Cache-Control","no-cache");
       return send(res,200,{state:BUILDS.index.size?"ok":"no_data",collector_dir:COLLECTOR_DIR,loaded_from:BUILDS.dir||null,records:BUILDS.total,skipped_records:BUILDS.skipped,champions:BUILDS.index.size?new Set([...BUILDS.index.values()]).size:0,data:buildFresh()});
     }
-    if(url==="/api/config") return send(res,200,{googleClientId:CID});
-    if(url==="/api/login"&&req.method==="POST"){
-      if(!CID) return send(res,500,{error:"GOOGLE_CLIENT_ID not set"});
-      const {access_token}=await body(req);
-      if(!access_token) return send(res,400,{error:"missing token"});
-      // Check the token was issued to OUR client, then fetch the profile.
-      const ti=await fetch("https://oauth2.googleapis.com/tokeninfo?access_token="+encodeURIComponent(access_token));
-      const info=await ti.json();
-      if(!ti.ok||(info.aud!==CID&&info.azp!==CID)) return send(res,401,{error:"invalid token"});
-      const ui=await fetch("https://www.googleapis.com/oauth2/v3/userinfo",{headers:{Authorization:"Bearer "+access_token}});
-      const p=await ui.json();
-      if(!ui.ok||!p.sub||(info.sub&&info.sub!==p.sub)||p.email_verified===false) return send(res,401,{error:"invalid token"});
-      const t={sub:p.sub,name:p.name,given_name:p.given_name,email:p.email};
-      const isNew=!db.users[t.sub];
-      const u=db.users[t.sub]=db.users[t.sub]||{progress:{}};
-      if(!u.custom){u.name=t.name||t.email; u.given=t.given_name||u.name;}
-      u.email=t.email;
-      for(const k in db.sessions) if(db.sessions[k].exp<Date.now()) delete db.sessions[k];
-      const tok=crypto.randomBytes(32).toString("hex");
-      db.sessions[tok]={sub:t.sub,exp:Date.now()+TTL};
-      persist();
-      return send(res,200,{token:tok,name:u.name,given:u.given,email:u.email,isNew});
-    }
+    if(await AUTH.pub(req,res,url)) return;                                       // /api/config, /api/login, /api/auth/*, /auth/discord/callback
     const sm=url.match(/^\/api\/shared\/([\w-]+)$/);
     if(sm&&req.method==="GET"){
       const owner=db.users[db.shares[sm[1]]];
@@ -387,10 +368,11 @@ http.createServer(async(req,res)=>{
     }
     if(!url.startsWith("/api/")){
       res.writeHead(404,{"Content-Type":"text/html; charset=utf-8","X-Robots-Tag":"noindex"});
-      return res.end(page("Page not found",'<p>That page does not exist. <a href="/">Go to the LoLphabet A–Z Challenge tracker</a>.</p>',"Page not found.").replace('content="index, follow"','content="noindex"').replace("<!--CANON-->",""));
+      return res.end(page("Page not found",'<p>That page does not exist. <a href="/">Go to the LoLphabet A-Z Challenge tracker</a>.</p>',"Page not found.").replace('content="index, follow"','content="noindex"').replace("<!--CANON-->",""));
     }
     const sub=userOf(req);
     if(!sub) return send(res,401,{error:"not signed in"});
+    if(await AUTH.authed(req,res,url,sub)) return;                                // account info, linking, password, email
     if(url==="/api/progress"&&req.method==="GET") return send(res,200,{data:db.users[sub].progress,name:db.users[sub].given||db.users[sub].name});
     if(url==="/api/progress"&&req.method==="PUT"){
       const data=await body(req);
@@ -436,4 +418,4 @@ http.createServer(async(req,res)=>{
     if(url==="/api/logout"&&req.method==="POST"){delete db.sessions[token(req)];persist();return send(res,200,{ok:true})}
     send(res,404,{error:"not found"});
   }catch(e){send(res,500,{error:String(e.message||e)})}
-}).listen(PORT,()=>{refreshRoles(); setInterval(refreshRoles,864e5).unref(); console.log("LoL A-Z tracker on http://localhost:"+PORT+(CID?"":"  (no GOOGLE_CLIENT_ID: sign-in disabled)"));});
+}).listen(PORT,()=>{refreshRoles(); setInterval(refreshRoles,864e5).unref(); console.log("LoL A-Z tracker on http://localhost:"+PORT+"  (login: "+(AUTH.types.length?AUTH.types.join(", "):"none, sign-in disabled")+")");});

@@ -17,6 +17,7 @@
 .nxb .full{grid-column:1/-1}
 .nxr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .nxr .sep{color:var(--muted)}
+.nxr .lbl{color:var(--muted);margin-left:10px}
 .nxr .grp{display:inline-flex;gap:4px;align-items:center}
 .bi{position:relative;width:26px;height:26px;border-radius:5px;background:var(--line);flex:none;overflow:hidden;display:inline-block}
 .bi img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -47,14 +48,14 @@
 .rh img{width:18px;height:18px}
 .rr{display:flex;gap:8px;justify-content:center;flex-wrap:nowrap}
 .rr.ks{gap:10px}
-.rr.sr{gap:10px}
+.rr.shr{gap:10px}
 .rsh{display:flex;flex-direction:column;gap:6px;margin-top:2px;padding-top:8px;border-top:1px solid var(--line);align-items:center}
 .ri{width:26px;height:26px;border-radius:50%;background:#1d242e;flex:none;display:inline-block;position:relative;overflow:hidden;filter:grayscale(1);opacity:.38}
 .ri img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .ri.ks{width:32px;height:32px}
 .ri.sh{width:22px;height:22px;background:#2b3340}
 .ri.on{filter:none;opacity:1;box-shadow:0 0 0 2px var(--gold)}
-@media(max-width:420px){.rpg{gap:8px 14px}.rr,.rr.ks,.rr.sr{gap:6px}}
+@media(max-width:420px){.rpg{gap:8px 14px}.rr,.rr.ks,.rr.shr{gap:6px}}
 .nxb{position:relative}
 .rsp{height:16px}
 .rp.side{position:absolute;top:10px;right:0;margin:0;padding:6px 8px;background:transparent;border-color:var(--line)}
@@ -62,13 +63,27 @@
 .rp.side .rcol{gap:4px}
 .rp.side .rh{font-size:11px;gap:4px}.rp.side .rh b{font-size:11px}
 .rp.side .rh img{width:14px;height:14px}
-.rp.side .rr{gap:5px}.rp.side .rr.ks,.rp.side .rr.sr{gap:6px}
+.rp.side .rr{gap:5px}.rp.side .rr.ks,.rp.side .rr.shr{gap:6px}
 .rp.side .ri{width:20px;height:20px}
 .rp.side .ri.ks{width:26px;height:26px}
 .rp.side .ri.sh{width:16px;height:16px}
 .rp.side .ri.on{box-shadow:0 0 0 1.5px var(--gold)}
 .rp.side .rsh{gap:4px;padding-top:5px;margin-top:0}
-@media(min-width:760px){.nxb:has(.rp.side){padding-right:250px}}
+@media(min-width:760px){
+  .nxb:has(.rp.side){padding-right:270px;align-content:start}
+  /* Rune panel: starts level with the first row and runs down to the bottom of the "Build data" line; icons scaled up to fill it */
+  .rp.side{bottom:0;min-width:254px;width:max-content;box-sizing:border-box;padding:8px 12px;display:flex;align-items:center;justify-content:center}
+  .rp.side .rpg{width:100%;justify-content:space-evenly;gap:8px 12px}
+  .rp.side .rcol{gap:6px}
+  .rp.side .rh{font-size:13px;gap:5px}.rp.side .rh b{font-size:13px}
+  .rp.side .rh img{width:17px;height:17px}
+  .rp.side .rr{gap:8px}.rp.side .rr.ks,.rp.side .rr.shr{gap:9px}
+  .rp.side .ri{width:24px;height:24px}
+  .rp.side .ri.ks{width:32px;height:32px}
+  .rp.side .ri.sh{width:19px;height:19px}
+  .rp.side .ri.on{box-shadow:0 0 0 2px var(--gold)}
+  .rp.side .rsh{gap:5px;padding-top:7px}
+}
 @media(max-width:759px){.rp.side{position:static;grid-column:1/-1;justify-self:end;margin-top:2px}.rsp{display:none}}
 .nxm{font-size:11px;color:var(--muted);line-height:1.5}
 .nxm a{color:var(--gold)}

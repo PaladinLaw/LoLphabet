@@ -1,6 +1,6 @@
 # LoLphabet
 
-**The League of Legends A–Z Challenge tracker.** Work through the champion roster alphabetically, win a game with every champion, and keep track of it all in one place.
+**The League of Legends A-Z Challenge tracker.** Win a game with every champion on a list, by role, class, region, race or your own custom list, and keep track of it all in one place.
 
 Live site: **[https://lolphabet.app](https://lolphabet.app)**
 
@@ -8,22 +8,26 @@ Live site: **[https://lolphabet.app](https://lolphabet.app)**
 
 ## What it does
 
-- **Role lists and custom lists.** Top, Jungle, Mid, Bot and Support lists, plus your own custom champion lists.
-- **Six challenge modes.**
-  - **Classic:** alphabetical, any order.
-  - **Random:** a fixed shuffled order.
+- **Lists.** In this order: **All champs**, **Roles** (Top, Jungle, Mid, Bot / ADC, Support), **Classes**, **Regions**, **Races**, and your own **Custom lists**, which can be shared. Pick a list type, then a list within it.
+- **Four challenge modes.** Every list can be played in any mode, and each mode keeps its own progress.
+  - **Classic:** alphabetical order. Skip a banned or taken champion with the picked / banned button
   - **Hard:** only the next champion can be played, and a loss sends you back **one** champion.
-  - **Random + Hard:** the same rule on a shuffled order.
-  - **Insanity:** a loss sends you back to the start of the run.
-  - **Random + Insanity:** shuffled order, restart on loss.
+  - **Insanity:** only the next champion can be played, and a loss sends you back to the **start of the run**.
+  - **Nuzlocke:** play any champion on the list, any number of times. Each **Victory** is counted but never completes a champion. A loss (**Fallen**, with a confirmation) kills that champion permanently: it is greyed out and can't be selected or edited. The list is complete when the last champion has fallen. Progress shows champions fallen, filters are All / Alive / Fallen, and it has its own stats and share image.
+  - The old Random, Random + Hard and Random + Insanity modes have been removed.
+- **Dice Roll.** Sits between the mode menu and Stats. It picks a random role, then a random champion from that role, with a short shuffle animation. Closing the popup opens a **Roll page** showing only that champion and position in the Next Up banner with its pick rate, win rate, summoners, level-up order, items and runes. It never touches any list or progress.
 - **Next Up banner** with pick rate, win rate and sample size, plus a suggested build:
   - summoner spells (Flash on the right by default, with a swap button),
   - skill order,
-  - items in a single row (starting, boots, core, situational),
-  - a collapsible rune page that highlights the recommended runes and shards.
-- **Picked / Banned** button to set a champion aside without counting a loss.
-- Progress stats, editable win dates and notes, search and filters, and a share-image button.
-- Google sign-in so progress syncs between devices. No ads.
+  - two item rows: **Starting Items** (starting items followed by a labelled **Boots:** group) and **Items** (core items, then situational),
+  - a larger rune panel that highlights the recommended runes and shards. It sizes itself to its content (the banner grows if needed) and is shown on screens 760px wide and up.
+- **Stats page** with a summary across all lists, a "By list" table and a detailed single-list view. A **mode toggle** (Classic, Hard, Insanity, Nuzlocke) lets you view any mode's stats without changing the mode you're playing, and a two-step list picker (list type, then list) follows the same order as the main page.
+- **How it works panel** that explains the selected mode. It opens by itself the first time you see each mode, then remembers your open or closed choice per mode. It can be turned off under **Settings > Preferences > Help**.
+- **Settings** in three tabs: **Account** (profile, sign-in methods, sharing, delete account), **Preferences** (theme, custom lists, help) and **Data** (export, import, reset all progress).
+- **Several ways to sign in** so progress syncs between devices: Google, Discord, username and password, or an emailed magic link. Choose which ones to offer with `LOGIN_TYPES`. Accounts can be linked to each other from Settings.
+- Editable win dates and notes, search and filters, read-only share links with a preview image, and a share-image button. No ads, no third-party analytics.
+
+> The How it works state and the theme are stored per browser in local storage, so they do not sync between devices.
 
 ## How it's built
 
@@ -31,7 +35,7 @@ LoLphabet consists of two components:
 
 | Folder | Purpose |
 | --- | --- |
-| [`lol-az-tracker/`](lol-az-tracker) | The web app: a dependency-free Node server (`server.js`) and a single-file front end (`index.html`). |
+| [`lol-az-tracker/`](lol-az-tracker) | The web app: a dependency-free Node server (`server.js`, plus `auth-server.js` for the login methods) and a front end (`index.html` with its JS and CSS under `assets/`). |
 | [`lol-meta-collector/`](lol-meta-collector) | An optional Python/Docker pipeline that collects champion analysis and suggested builds from OP.GG and resolves game assets against Riot Data Dragon. |
 
 The collector writes JSON and CSV files to a shared data directory. The tracker mounts that directory read-only and uses the generated data for the Next Up build display. The tracker works without the collector; builds simply won't be available in the Next Up banner.
@@ -51,16 +55,22 @@ cd lol-az-tracker
 docker compose up -d
 ```
 
-The `GOOGLE_CLIENT_ID` variable is required by the supplied Compose file. Set it in your shell or in a local `.env` file before running Compose. Do not commit a `.env` file containing private deployment settings.
+The supplied Compose file needs a local `.env` file (copy `.env.example`). The variables marked required in the table below must be set, plus the settings for each login method you turn on (see [Login methods](#login-methods)). Do not commit a `.env` file containing private deployment settings.
 
 Without Docker, the server can be run directly with Node 18+:
 
 ```bash
 cd lol-az-tracker/app
-GOOGLE_CLIENT_ID=your-id.apps.googleusercontent.com node server.js
+LOGIN_TYPES=Google GOOGLE_CLIENT_ID=your-id.apps.googleusercontent.com node server.js
 ```
 
-The server has no npm dependencies. Without a `GOOGLE_CLIENT_ID`, it can still run, but Google sign-in is disabled and progress stays in the browser.
+The server has no npm dependencies. It refuses to start, with a clear message, if an enabled login method is missing its settings. If `LOGIN_TYPES` is unset and there is no `GOOGLE_CLIENT_ID`, no login is offered and progress stays in the browser. (The supplied Compose file defaults `LOGIN_TYPES` to `Google`.)
+
+#### Upgrading from the single-login version
+
+- `LOGIN_TYPES` defaults to `Google`, so existing setups keep working and existing Google accounts migrate automatically.
+- Deploy the whole `app/` folder: `auth-server.js` is new and the front end now loads many files from `assets/`.
+- Progress from the removed Random modes is no longer shown.
 
 ### 2. LoL Meta Collector (optional)
 
@@ -103,7 +113,7 @@ For Dockhand Git stacks:
 
 1. Create a Git stack pointing to the LoLphabet repository.
 2. Set its Compose file path to `lol-az-tracker/docker-compose.yml`.
-3. Configure the tracker variables listed below in that stack's environment settings.
+3. Configure the tracker variables listed below in that stack's environment settings, including the settings for every login method in `LOGIN_TYPES`.
 4. Create a second Git stack using `lol-meta-collector/docker-compose.yml`.
 5. Configure the collector variables listed below in that stack's environment settings.
 6. Ensure `COLLECTOR_DATA_DIR` has exactly the same value in both stacks.
@@ -114,58 +124,92 @@ The collector's `build: .` expects the Compose file to be in the same directory 
 #### Tracker environment variables
 
 | Variable | Required | Purpose |
-| --- | --- | --- | --- |
-| `GOOGLE_CLIENT_ID` | **Yes** | Google OAuth client ID used for sign-in. |
-| `CONTAINER_NAME` | No | Docker container name. |
-| `BIND_IP` | No | Host IP on which the tracker port is published. Keep this at loopback when a reverse proxy runs on the same host. |
-| `HOST_PORT` | No | Host-side published port. |
-| `APP_PORT` | No | Port the Node application listens on inside the container. |
-| `TRACKER_APP_DIR` | No | Host directory containing `index.html`, `server.js` and `assets/`. |
-| `TRACKER_DATA_DIR` | No | Persistent host directory for accounts and progress. Back this directory up. |
-| `COLLECTOR_DATA_DIR` | No | Shared host directory containing collector output. Must match the collector stack's value. |
-| `CONTACT_EMAIL` | No | Contact address shown on the privacy and terms pages. |
-| `SITE_URL` | No | Public site URL used for canonical links and metadata. |
+| --- | --- | --- |
+| `CONTAINER_NAME` | **Yes** | Docker container name. |
+| `APP_PORT` | **Yes** | Port the Node application listens on inside the container. |
+| `BIND_IP` | **Yes** | Host IP on which the tracker port is published. Keep this at loopback when a reverse proxy runs on the same host. |
+| `HOST_PORT` | **Yes** | Host-side published port. |
+| `SITE_URL` | **Yes** | Public site URL used for canonical links, metadata, share links and the Discord redirect. |
+| `TRACKER_APP_DIR` | **Yes** | Host directory containing `index.html`, `server.js`, `auth-server.js` and `assets/`. |
+| `TRACKER_DATA_DIR` | **Yes** | Persistent host directory for accounts and progress. Back this directory up. |
+| `COLLECTOR_DATA_DIR` | **Yes** | Shared host directory containing collector output. Must match the collector stack's value. |
+| `LOGIN_TYPES` | No | Which login methods to offer (see below). Default `Google`. |
+| `GOOGLE_CLIENT_ID` | When Google is enabled | Google OAuth client ID used for sign-in. |
+| `DISCORD_CLIENT_ID` | When Discord is enabled | Discord application client ID. |
+| `DISCORD_CLIENT_SECRET` | When Discord is enabled | Discord application client secret. |
+| `RESEND_API_KEY` | When Password or Magic link is enabled | Resend API key used to send email. |
+| `MAIL_FROM` | When Password or Magic link is enabled | Sender, e.g. `LoLphabet <login@lolphabet.app>`. Must be on a domain verified in Resend. |
+| `MAIL_DAILY_LIMIT` | No | Emails per day before sending stops. Default `90`, to stay under Resend's free 100 a day. |
+| `CONTACT_EMAIL` | No | Contact address shown on the privacy and terms pages, and the default reply-to for email. |
 
 The Compose file sets these application environment variables internally:
 
 | Variable | Value | Purpose |
 | --- | --- | --- |
 | `DATA_FILE` | `/data/data.json` | Location of account and progress data inside the container. |
+| `PORT` | `APP_PORT` | Port the server listens on. |
 | `COLLECTOR_DIR` | `/collector` | Read-only collector output mount inside the container. |
 
-Other application settings documented by the tracker include:
+Other application settings read by the tracker (not passed through by the supplied Compose file; add them under `environment:` if you need them):
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `BUILD_STALE_DAYS` | `14` | After this many days, build data is flagged as stale. |
 | `ROLES_URL` | Meraki Analytics champion data | Source for the role lists. |
+| `MAIL_REPLY_TO` | `CONTACT_EMAIL` | Reply-to address on emails. |
+
+#### Login methods
+
+`LOGIN_TYPES` is a comma-separated list of any of `Google`, `Discord`, `Password` (also written `Username and password` or `Email`) and `Magic link`, for example `LOGIN_TYPES="Google, Magic link, Password, Discord"`. The order sets the button order within each group. In the login window, Google and Discord sit above an "or use your email" divider, with the magic link and password options below it. The default is Google only. If an enabled method is missing its settings, the server refuses to start and says which ones.
+
+- **Google:** needs `GOOGLE_CLIENT_ID`.
+- **Discord:** standard OAuth. Needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` and `SITE_URL`. In the Discord developer portal, register the redirect `<SITE_URL>/auth/discord/callback`.
+- **Email (Resend):** used for magic links, signup confirmation and password resets. Needs `RESEND_API_KEY`, `MAIL_FROM` and a domain verified in Resend. The app stops sending once `MAIL_DAILY_LIMIT` is reached for the day.
+- **Username and password:** signup needs a username, email and password. The email is confirmed by a link before the account exists. The username doubles as the display name, and login accepts the username or the email. Passwords are stored only as salted scrypt hashes.
+- **Magic link:** takes an email plus a username and creates an account on first use.
+
+Safety features: email links carry their token after a `#` so scanners can't use them up, and each works once; logins and emails are rate limited; unknown emails get the same response as known ones; a password reset signs out other devices.
+
+**Account linking.** From Settings you can link any other enabled login method to your account. Signing in with a provider whose verified email matches an existing account joins that account instead of creating a duplicate. If a login already belongs to another account, you choose which progress to keep, and the other account is merged in and deleted.
 
 To get a Google client ID, create an OAuth client in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials) and add your site's URL as an authorised JavaScript origin.
 
 #### Collector environment variables
 
-| Variable | Required | Purpose |
+| Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
-| `COLLECTOR_CONTAINER_NAME` | No | Docker container name. |
-| `COLLECTOR_DATA_DIR` | No | Host directory where the collector writes output. Must match the tracker stack's value. |
-| `COLLECTOR_LOG_DIR` | No | Host directory mounted for collector logs. |
-| `COLLECTOR_CONFIG_FILE` | No | Host path to the private, read-only collector configuration file. |
+| `COLLECTOR_CONTAINER_NAME` | No | - | Docker container name. |
+| `COLLECTOR_DATA_DIR` | No | - | Host directory where the collector writes output. Must match the tracker stack's value. |
+| `COLLECTOR_LOG_DIR` | No | - | Host directory mounted for collector logs. |
+| `COLLECTOR_CONFIG_FILE` | No | - | Host path to the private, read-only collector configuration file. |
 | `COLLECTION_INTERVAL_DAYS` | No | `7` | Scheduler interval in days. |
 | `TZ` | No | `Africa/Johannesburg` | Time zone used by the scheduler. |
 
-Dockhand supplies these variables to Compose when deploying each stack. Variables are configured per stack, so add `COLLECTOR_DATA_DIR` to both stacks and keep the values identical. `GOOGLE_CLIENT_ID` is the only required Compose variable; the other variables have defaults.
+Dockhand supplies these variables to Compose when deploying each stack. Variables are configured per stack, so add `COLLECTOR_DATA_DIR` to both stacks and keep the values identical. The tracker's Compose file requires the variables marked **Yes** above; the collector's variables all have defaults.
 
-Do not commit private `.env` files, collector `config.json`, account/progress data, logs, or generated collector output to the public repository. The Compose files contain defaults for a typical deployment, but you can override them in Dockhand for your host.
+Do not commit private `.env` files, collector `config.json`, account/progress data, logs, or generated collector output to the public repository. The collector's Compose file contains defaults for a typical deployment, but you can override them in Dockhand for your host.
 
 ### Running without Dockhand
 
-For a local/manual Compose deployment, create a local `.env` file in the relevant Compose directory or export the variables in your shell. Keep that file out of Git. For example, the tracker requires:
+For a local/manual Compose deployment, create a local `.env` file in the relevant Compose directory or export the variables in your shell. Keep that file out of Git. For example, a tracker `.env` for Google plus magic-link and password sign-in:
 
 ```dotenv
+CONTAINER_NAME=lol-tracker
+APP_PORT=3081
+BIND_IP=127.0.0.1
+HOST_PORT=3081
+SITE_URL=https://lolphabet.app
+TRACKER_APP_DIR=/path/to/app
+TRACKER_DATA_DIR=/path/to/data
+COLLECTOR_DATA_DIR=/path/to/collector-data
+
+LOGIN_TYPES="Google, Magic link, Password"
 GOOGLE_CLIENT_ID=your-id.apps.googleusercontent.com
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
+MAIL_FROM="LoLphabet <login@lolphabet.app>"
 ```
 
-The remaining variables can use their documented defaults or be added to the local `.env` file as needed.
+`.env.example` in `lol-az-tracker/` documents every setting.
 
 ## LoL Meta Collector
 
@@ -270,7 +314,7 @@ Data Dragon assets are patch-versioned. Cache assets/data locally or on your own
 
 ## Data and privacy
 
-User data (Google account ID, name, progress) is stored in a single JSON file on the server you run. Nothing is sent anywhere else. The hosted version at `lolphabet.app` has its own privacy policy, served by the app at `/privacy`.
+User data (login identifiers, name, email, password hashes if password login is enabled, and progress) is stored in a single JSON file on the server you run. The only outside services involved are the ones you enable: Google or Discord for sign-in, and Resend for sending login emails (which receives the recipient's email address). There are no ads and no third-party analytics. How it works, the theme and similar preferences are kept in the browser's local storage and do not sync between devices. The hosted version at `lolphabet.app` has its own privacy policy, served by the app at `/privacy`.
 
 Keep the tracker's persistent data directory backed up. The collector's `config.json`, logs, generated data and archive snapshots are deployment/runtime files and should not be committed to the public repository.
 

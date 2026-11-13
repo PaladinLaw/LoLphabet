@@ -1,9 +1,11 @@
 var DD=null;
 try{localStorage.removeItem("lol-az-rolesrc")}catch(e){}   // retired setting (Curated Lists was removed)
 var ROLEDATA=null; try{ROLEDATA=JSON.parse(localStorage.getItem("lol-az-roles"))}catch(e){}
+// Solid skull (no crossbones) used for "Fallen" in Nuzlocke; currentColor, sized by .sk in components.css
+const SKULL='<svg class="sk" aria-hidden="true" viewBox="0 0 16 16" focusable="false"><path fill-rule="evenodd" d="M8 1C4.7 1 2.5 3.3 2.5 6.4c0 1.6.7 2.9 2 3.8V13c0 .6.4 1 1 1H6v-1.4h1V14h2v-1.4h1V14h.5c.6 0 1-.4 1-1v-2.8c1.3-.9 2-2.2 2-3.8C13.5 3.3 11.3 1 8 1zM5.6 5.2a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm4.8 0a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zM8 8.6l-.9 1.8h1.8z"/></svg>';
 const ALL_KEY="all:All champs";   // progress is stored under this key like any other list
 const CLASS_KEYS=["Fighter","Mage","Assassin","Tank","Marksman","Support"].map(c=>"class:"+c);
-const CATS=[["roles","Roles",ROLE_KEYS],["races","Races",Object.keys(SETS).filter(k=>k.startsWith("race:"))],["classes","Classes",CLASS_KEYS],["regions","Regions",Object.keys(SETS).filter(k=>k.startsWith("region:"))],["all","All champs",[ALL_KEY]],["custom","Custom",null]];
+const CATS=[["all","All champs",[ALL_KEY]],["roles","Roles",ROLE_KEYS],["classes","Classes",CLASS_KEYS],["regions","Regions",Object.keys(SETS).filter(k=>k.startsWith("region:"))],["races","Races",Object.keys(SETS).filter(k=>k.startsWith("race:"))],["custom","Custom",null]];
 const catOf=r=>r.startsWith("race:")?"races":r.startsWith("region:")?"regions":r.startsWith("class:")?"classes":r.startsWith("all:")?"all":r.startsWith("c:")?"custom":"roles";
 const keysIn=c=>c==="custom"?Object.keys(LISTS).filter(k=>k.startsWith("c:")):CATS.find(x=>x[0]===c)[2];
 const lastIn={};
@@ -17,14 +19,14 @@ let all={};              // role -> name -> {won:bool, date:string|null, games:n
 if(!READONLY)try{all=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
 if(!READONLY&&!all.Jungle){try{const old=JSON.parse(localStorage.getItem("lol-az-tracker-v1"));if(old)all.Jungle=old}catch(e){}}
 let role="Top", CHAMPS, mode="classic";
-if(!READONLY)try{const m=localStorage.getItem("lol-az-mode");if(["classic","random","hard","randhard","hardcore","randhc"].includes(m))mode=m}catch(e){}
+if(!READONLY)try{const m=localStorage.getItem("lol-az-mode");if(["classic","hard","hardcore","nuzlocke"].includes(m))mode=m}catch(e){}
 rebuildLists();
 if(!READONLY)try{const r=localStorage.getItem("lol-az-role");if(LISTS[r])role=r}catch(e){}
 CHAMPS=LISTS[role];
 const save=()=>{if(READONLY)return;try{localStorage.setItem(KEY,JSON.stringify(all));localStorage.setItem("lol-az-role",role)}catch(e){}
   push();};
-const MODES=[["classic","Classic","A–Z, any order"],["random","Random","a fixed shuffled order; reset to reshuffle"],["hard","Hard","lose a game and you go back one champion"],["randhard","Random + Hard","shuffled order, and a loss sends you back one champion"],["hardcore","Insanity","lose a game and the whole run restarts"],["randhc","Random + Insanity","shuffled order, and a loss restarts the run"]];   // ids "hardcore"/"randhc" are kept so existing Insanity (ex-Hardcore) progress is not lost
-const pkey=r=>mode==="classic"?r:r+"|"+mode, isRand=()=>mode==="random"||mode==="randhc"||mode==="randhard", isHC=()=>mode==="hardcore"||mode==="randhc", isHard=()=>mode==="hard"||mode==="randhard", isLock=()=>isHC()||isHard();
+const MODES=[["classic","Classic","A-Z, alphabetical order"],["hard","Hard","lose a game and you go back one champion"],["hardcore","Insanity","lose a game and the whole run restarts"],["nuzlocke","Nuzlocke","play any champion; lose with one and it's gone for good"]];   // id "hardcore" is kept so existing Insanity (ex-Hardcore) progress is not lost
+const pkey=r=>mode==="classic"?r:r+"|"+mode, isHC=()=>mode==="hardcore", isHard=()=>mode==="hard", isNuz=()=>mode==="nuzlocke", isLock=()=>isHC()||isHard();
 const st=()=>all[pkey(role)]||(all[pkey(role)]={});
 const meta=()=>st().__meta||(st().__meta={});
 const get=n=>st()[n]||(st()[n]={won:false,date:null,games:0});

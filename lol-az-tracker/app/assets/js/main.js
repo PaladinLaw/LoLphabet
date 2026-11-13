@@ -29,9 +29,6 @@ function updateFooter(){
     ?"Your progress is saved to your account and synced across all your devices. Export/Import is there if you want a backup."
     :"Progress is saved in this browser (localStorage). Use Export/Import to move it between devices.";
 }
-const hw=$("howto");
-try{if(localStorage.getItem("lol-az-howto")==="1")hw.open=true}catch(e){}
-hw.addEventListener("toggle",()=>{try{localStorage.setItem("lol-az-howto",hw.open?"1":"0")}catch(e){}});
 lastIn[catOf(role)]=role;
 applyTheme();
 render(); updateFooter();

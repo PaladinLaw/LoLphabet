@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>LoLphabet | Free League of Legends A–Z Challenge Tracker</title>
-<meta name="description" content="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.">
+<title>LoLphabet | Free League of Legends A-Z Challenge Tracker</title>
+<meta name="description" content="Free League of Legends A-Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.">
 <meta name="keywords" content="League of Legends A-Z Challenge, League of Legends champion tracker, LoL champion checklist, League of Legends completion tracker, LoL completionist challenge, League of Legends champion collection, LoL role tracker, League of Legends statistics tracker">
 <meta name="author" content="PaladinLaw"><meta name="application-name" content="LoLphabet"><meta name="apple-mobile-web-app-title" content="LoLphabet">
 <!--ROBOTS-->
 <!--CANONICAL-->
 <!--JSONLD-->
 <meta property="og:type" content="website"><meta property="og:site_name" content="LoLphabet">
-<meta property="og:title" content="LoLphabet | Free League of Legends A–Z Challenge Tracker">
-<meta property="og:description" content="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.">
+<meta property="og:title" content="LoLphabet | Free League of Legends A-Z Challenge Tracker">
+<meta property="og:description" content="Free League of Legends A-Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds.">
 <meta property="og:url" content="%SITE_URL%/"><meta property="og:image" content="%SITE_URL%/assets/og-image.png?v=2">
-<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="LoLphabet, the League of Legends A–Z Challenge, by PaladinLaw">
-<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="LoLphabet | Free League of Legends A–Z Challenge Tracker">
-<meta name="twitter:description" content="Free League of Legends A–Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds."><meta name="twitter:image" content="%SITE_URL%/assets/og-image.png?v=2">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="LoLphabet, the League of Legends A-Z Challenge, by PaladinLaw">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="LoLphabet | Free League of Legends A-Z Challenge Tracker">
+<meta name="twitter:description" content="Free League of Legends A-Z Challenge tracker. Win a game with every champion by role, race, class or region, track progress, share it and see popular builds."><meta name="twitter:image" content="%SITE_URL%/assets/og-image.png?v=2">
 <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0f1318" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/favicon.ico" sizes="any"><link id="fav" rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
@@ -28,15 +28,17 @@
 <link rel="stylesheet" href="/assets/css/panels.css?v=%ASSET_V%">
 <link rel="stylesheet" href="/assets/css/dropdown.css?v=%ASSET_V%">
 <link rel="stylesheet" href="/assets/css/nav.css?v=%ASSET_V%">
+<link rel="stylesheet" href="/assets/css/auth.css?v=%ASSET_V%">
+<link rel="stylesheet" href="/assets/css/settings.css?v=%ASSET_V%">
 <link rel="stylesheet" href="/assets/css/mobile.css?v=%ASSET_V%">
 </head>
 <body>
 <main>
-  <noscript><p>LoLphabet is a free League of Legends A–Z Challenge tracker. It needs JavaScript to show your champion lists. See the <a href="/about">About page</a> for what it does.</p></noscript>
+  <noscript><p>LoLphabet is a free League of Legends A-Z Challenge tracker. It needs JavaScript to show your champion lists. See the <a href="/about">About page</a> for what it does.</p></noscript>
   <div class="hd">
     <header class="brand" id="home" role="link" tabindex="0" title="Home">
       <div class="bn"><span>LoL</span>phabet</div>
-      <h1 id="tl" class="tl">The League of Legends A–Z Challenge</h1>
+      <h1 id="tl" class="tl">The League of Legends A-Z Challenge</h1>
       <p class="by">By PaladinLaw</p>
     </header>
     <div class="hr"><span class="vis" id="visits"></span><div class="auth" id="auth"></div></div>
@@ -44,9 +46,9 @@
   <div class="note" id="snote" hidden></div>
   <details class="howto" id="howto">
     <summary>How it works</summary>
-    <div class="body">Win a game with every champion, in order.<br>Click a champion or press Complete to mark a win.<br>Use + / − to log losses.<br>See our <a href="/about" id="aboutlink">about section</a> for more details</div>
+    <div class="body">Win a game with every champion on the list.<br>See our <a href="/about" id="aboutlink">about section</a> for more details</div>
   </details>
-  <div id="opts" class="savenote">Not logged in? Progress is saved in this browser only.<span id="opt2" hidden><br><a href="#" id="loginlink">Log in</a> with your Google account to sync your progress across devices</span></div>
+  <div id="opts" class="savenote">Not logged in? Progress is saved in this browser only.<span id="opt2" hidden><br><a href="#" id="loginlink">Log in</a> to sync your progress across devices</span></div>
   <nav class="nav" id="nav" aria-label="Choose a list and challenge mode">
     <div id="cats"></div>
     <div id="tabs"></div>
@@ -75,9 +77,9 @@
 
   <div class="grid" id="grid"></div>
   <section id="intro" aria-labelledby="intro-h">
-    <h2 id="intro-h">Free League of Legends A–Z Challenge tracker</h2>
-    <p>LoLphabet helps you win a game with every League of Legends champion, one by one. Pick a list (roles, races, classes, regions or your own custom list) and a challenge mode: Classic, Random, Hard, Random + Hard, Insanity or Random + Insanity.</p>
-    <p>Your wins, attempts, dates and notes are saved in your browser, or synced across devices when you log in with Google. The Next up box shows each champion's pick rate, win rate and a popular build when data is available. It is free, with no ads and no third-party analytics. <a href="/about">Read more about LoLphabet</a>.</p>
+    <h2 id="intro-h">Free League of Legends A-Z Challenge tracker</h2>
+    <p>LoLphabet helps you win a game with every League of Legends champion, one by one. Pick a list (roles, races, classes, regions, every champion or your own custom list) and a challenge mode: Classic, Hard, Insanity or Nuzlocke. Not sure what to play? The Roll button picks a random role and champion for you.</p>
+    <p>Your wins, attempts, dates and notes are saved in your browser, or synced across devices when you log in. The Next up box shows each champion's pick rate, win rate and a popular build when data is available. It is free, with no ads and no third-party analytics. <a href="/about">Read more about LoLphabet</a>.</p>
   </section>
   </div>
   <div class="sp" id="stats" hidden></div>
@@ -85,28 +87,37 @@
   <div class="sp" id="builder" hidden></div>
   <section id="about" aria-labelledby="about-h">
     <h2 id="about-h">About LoLphabet</h2>
-    <p>LoLphabet is a free completion tracker for the League of Legends A–Z Challenge: win a game with every champion on a list, working through them one by one. It keeps your progress, attempts and notes in one place, so you can see how far you've come and what is left.</p>
+    <p>LoLphabet is a free completion tracker for the League of Legends A-Z Challenge: win a game with every champion on a list, working through them one by one. It keeps your progress, attempts and notes in one place, so you can see how far you've come and what is left. It works in your browser on desktop and phone, with no ads and no third-party analytics.</p>
     <h3>What you can track</h3>
     <ul>
+      <li><strong>All champs:</strong> every champion in the game, A-Z, in a single list.</li>
       <li><strong>Roles:</strong> Top, Jungle, Mid, Bot / ADC and Support, kept up to date from community-maintained champion data.</li>
-      <li><strong>Races:</strong> Yordles, Vastayan, Darkin, Void creatures, Celestials and the Undead.</li>
       <li><strong>Classes:</strong> Fighter, Mage, Assassin, Tank, Marksman and Support.</li>
       <li><strong>Regions:</strong> Demacia, Noxus, Ionia, Piltover &amp; Zaun, Freljord, Shadow Isles, Bilgewater, Shurima, Targon, Bandle City, Ixtal and the Void.</li>
+      <li><strong>Races:</strong> Yordles, Vastayan, Darkin, Void creatures, Celestials and the Undead.</li>
       <li><strong>Custom lists:</strong> build your own list from the full champion roster and share it with friends.</li>
     </ul>
     <h3>Challenge modes</h3>
+    <p>Every list can be played in any of four modes. Each mode keeps its own progress, so trying one never wipes another. Pick the mode from the challenge menu; the &ldquo;How it works&rdquo; box at the top always explains the mode you have selected.</p>
     <dl>
-      <dt>Classic</dt><dd>Work through a list alphabetically, completing champions in any order you like.</dd>
-      <dt>Random</dt><dd>The same list in a shuffled order that stays fixed until you reset it.</dd>
-      <dt>Hard</dt><dd>Only the next champion can be completed. A loss sends you back one champion: you have to beat the previous one again before trying the one you lost with.</dd>
-      <dt>Random + Hard</dt><dd>A shuffled order combined with the go-back-one-champion rule.</dd>
-      <dt>Insanity</dt><dd>Only the next champion can be completed, and a loss sends you back to the start of the run.</dd>
-      <dt>Random + Insanity</dt><dd>A shuffled order combined with the restart-on-loss rule.</dd>
+      <dt>Classic</dt><dd>Work through a list in alphabetical order. Next up always shows the next champion. If one is banned or taken in champ select you can skip it for now, or open any other champion from the list and play that instead.</dd>
+      <dt>Hard</dt><dd>Only the next champion can be played. A loss sends you back one champion: you have to beat the previous one again before trying the one you lost with.</dd>
+      <dt>Insanity</dt><dd>Only the next champion can be played, and a loss sends you back to the start of the run. Stats track your best run and how many times you have restarted.</dd>
+      <dt>Nuzlocke</dt><dd>Play any champion on the list, in any order, as often as you like. Each Victory is counted but never completes a champion. The moment you lose with one, it falls: it is greyed out and can no longer be picked or edited. The run, and the list, is complete when your last champion falls.</dd>
     </dl>
+    <h3>Roll: not sure what to play?</h3>
+    <p>The Roll button next to Stats is not a challenge and saves nothing. Press it and it picks a random role (Top, Jungle, Mid, Bot / ADC or Support) and then a random champion from that role, for example Darius, Top. When you close the result you land on the Roll page, which shows that champion and position in the Next up banner with its pick rate, win rate, items and runes. It never touches your lists or progress. Press Roll again for another, or go back to your lists.</p>
+    <h3>Next up, builds and notes</h3>
+    <p>The Next up box shows the champion to play next (in Nuzlocke, the one you are playing now). When data is available it shows that champion's pick rate, win rate and sample size, plus a popular build: summoner spells, level-up order, items and a rune page. Every champion also keeps your attempts, completion date and an optional note.</p>
+    <h3>Statistics</h3>
+    <p>The Stats page shows a summary across all your lists, a table of every list (filter by in progress, completed or not started) and a detailed view of any single list with win rate, average attempts, first-try wins, pace and estimated finish. You can switch the page between Classic, Hard, Insanity and Nuzlocke, since each mode keeps its own progress. Hard and Insanity add setbacks, best run and restarts. Nuzlocke has its own numbers: total wins, champions fallen, average wins before dying and your best champion.</p>
+    <h3>Accounts, sync and sharing</h3>
+    <p>You don't need an account: your progress is saved in your browser. A free account syncs it across devices. You can log in with Google, Discord, a username and password, or an emailed magic link, and you can link more than one of them to the same account from Settings so you always get back to the same progress. Settings is split into Account (your name, email, sign-in methods, sharing and deleting your account), Preferences (theme and custom lists) and Data (export, import and reset).</p>
+    <p>You can share a read-only view of your progress with a link, which shows a preview image of your progress when you paste it into Discord or a chat, and you can share a custom list so friends can add a copy. Sharing can be switched off at any time.</p>
     <h3>How progress works</h3>
-    <p>Pick a list, win a game with the champion shown as Next up, and mark it complete. Each champion keeps your attempts, completion date and an optional note. Progress bars and a statistics page (win rate, average attempts, pace and estimated finish) show how you are doing, and you can share a read-only view of your progress with a link. Role lists update as new champions are released.</p>
+    <p>Pick a list and a mode, win a game with the champion shown, and mark it. Progress bars and the Stats page show how you are doing. Role lists update as new champions are released.</p>
     <h3>Where the champion data comes from</h3>
-    <p>Champion roles come from the community-maintained <a href="https://github.com/meraki-analytics/lolstaticdata" target="_blank" rel="noopener noreferrer">lolstaticdata</a> project and are refreshed automatically each day, so newly released champions appear without anyone editing a list. Champion icons and classes (Fighter, Mage and so on) come from Riot\u2019s Data Dragon. Races and regions are lists maintained by hand, and a few champions sit in more than one on purpose. Builds and statistics under Next up are collected weekly from OP.GG.</p>
+    <p>Champion roles come from the community-maintained <a href="https://github.com/meraki-analytics/lolstaticdata" target="_blank" rel="noopener noreferrer">lolstaticdata</a> project and are refreshed automatically each day, so newly released champions appear without anyone editing a list. Champion icons and classes (Fighter, Mage and so on) come from Riot’s Data Dragon. Races and regions are lists maintained by hand, and a few champions sit in more than one on purpose. Builds and statistics under Next up are collected weekly from OP.GG.</p>
     <h3>Not the official League of Legends client</h3>
     <p>LoLphabet is an independent fan project. It is not the League of Legends client, it does not connect to your Riot account or match history, and you record your own wins. It is not endorsed by Riot Games.</p>
   </section>
@@ -116,6 +127,7 @@
 <div class="modal" id="dlg" hidden style="z-index:20"><div class="mc" id="dmc"><h2 id="dt"></h2><p id="dp"></p><img id="dimg" class="dimg" hidden alt=""><input class="fld" id="di" hidden style="width:100%;margin-bottom:14px"><div class="row" id="db" style="justify-content:flex-end;margin:0"></div></div></div>
 <div class="modal" id="modal" hidden><div class="mc"><button class="x" id="mx">×</button><h2 id="mt"></h2><p id="mp"></p><div id="gbtn"></div><p class="err" id="me"></p></div></div>
 
+<div class="modal" id="rollm" hidden style="z-index:20" role="dialog" aria-modal="true" aria-labelledby="rollh"><div class="mc rollc"><button class="x" id="rollx" aria-label="Close">×</button><h2 id="rollh">Roll the dice</h2><p>Not working on a challenge? Here's a random role and champion.</p><div class="rollres" id="rollres" aria-live="polite"></div><div class="row" style="justify-content:flex-end;margin:0"><button id="rollclose" class="pri">View build</button><button id="rollagain">Roll again</button></div></div></div>
 <script defer src="/assets/js/data.js?v=%ASSET_V%"></script>
 <script defer src="/assets/js/core.js?v=%ASSET_V%"></script>
 <script defer src="/assets/js/dropdown.js?v=%ASSET_V%"></script>
@@ -125,6 +137,8 @@
 <script defer src="/assets/js/settings.js?v=%ASSET_V%"></script>
 <script defer src="/assets/js/stats.js?v=%ASSET_V%"></script>
 <script defer src="/assets/js/nextup.js?v=%ASSET_V%"></script>
+<script defer src="/assets/js/howto.js?v=%ASSET_V%"></script>
+<script defer src="/assets/js/roll.js?v=%ASSET_V%"></script>
 <script defer src="/assets/js/render.js?v=%ASSET_V%"></script>
 <script defer src="/assets/js/auth.js?v=%ASSET_V%"></script>
 <script defer src="/assets/js/main.js?v=%ASSET_V%"></script>
