@@ -36,20 +36,23 @@ const LOSTLAB=()=>isHard()?"✗ Lost - Back one":"✗ Lost - Restart";
 const nzDead=n=>!!(st()[n]&&st()[n].dead), nzWins=n=>(st()[n]&&st()[n].wins)||0;
 const nzCount=()=>{const L=CHAMPS; let dead=0,wins=0; for(const c of L){const s=st()[c.name]; if(s){wins+=s.wins||0; if(s.dead)dead++}} return {total:L.length,dead,alive:L.length-dead,wins}};
 function nzSync(s){s.games=(s.wins||0)+(s.dead?1:0)}
-function nzWin(name){const s=get(name); if(s.dead) return; s.wins=(s.wins||0)+1; nzSync(s); if(isRandNuz()) nzRandFocus(name); touch(); save(); render();}
+function nzWin(name){const s=get(name); if(s.dead) return; s.wins=(s.wins||0)+1; nzSync(s); if(isRandNuz()) nzRandFocus(name); else if(meta().rolled===name) delete meta().rolled; touch(); save(); render();}
 function nzUndoWin(name){const s=get(name); if(s.dead||!s.wins) return; s.wins--; nzSync(s); touch(); save(); render();}
 async function nzDie(name){
   const s=get(name); if(s.dead) return; const n0=nzCount(), w=s.wins||0, last=n0.alive===1;
   if(!await confirmDlg("Lost with "+name+"?",name+" falls and is greyed out for good: it can't be picked or edited again. Its "+w+" win"+(w===1?" stays":"s stay")+" in your stats."+(last?"\n\nThis is your last champion, so the run (and this list) will be complete.":""),"Fallen",true)) return;
-  s.dead=true; s.diedOn=today(); nzSync(s); const m=meta(); if(m.focus===name) delete m.focus; m.last={champ:name,wins:w,date:today()};
+  s.dead=true; s.diedOn=today(); nzSync(s); const m=meta(); if(m.focus===name) delete m.focus; if(m.rolled===name) delete m.rolled; m.last={champ:name,wins:w,date:today()};
   touch(); save(); render();
   if(last){const c=nzCount(); await info("Nuzlocke complete","Your last champion has fallen. "+c.wins+" win"+(c.wins===1?"":"s")+" across "+c.total+" champions on "+label(role)+".");}
 }
 // ---- Nuzlocke dice roll: same as clicking a champion in the list, but you close your eyes first. Only living champions on the list you are on. ----
 const nzAlive=()=>CHAMPS.filter(c=>!nzDead(c.name));
+// A dice-rolled champion is locked in: no rerolls, no switching, no choosing another. The lock ends when you win or lose with it. Random Nuzlocke is always locked (the app picks).
+function nzRolled(){ const m=(all[pkey(role)]||{}).__meta||{}; return !!(isNuz()&&!isRandNuz()&&m.rolled&&m.rolled===m.focus&&!nzDead(m.rolled)&&CHAMPS.some(c=>c.name===m.rolled)); }
+const nzLock=()=>isRandNuz()||nzRolled();
 function nzRollName(exclude){ let p=nzAlive(); const o=exclude?p.filter(c=>c.name!==exclude):p; if(o.length) p=o; return p.length?p[Math.floor(Math.random()*p.length)].name:null; }
 function nzRandFocus(exclude){ const n=nzRollName(exclude); if(n) meta().focus=n; return n; }   // Random Nuzlocke: pick the next champion (never a fallen one, and not the one just played unless it's the only one left)
-function nzRoll(){ if(READONLY||!isNuz()||isRandNuz()) return; const n=nzRollName(); if(!n) return; meta().focus=n; save(); render(); }
+function nzRoll(){ if(READONLY||!isNuz()||isRandNuz()) return; if(nzRolled()) return; const n=nzRollName(); if(!n) return; const m=meta(); m.focus=n; m.rolled=n; save(); render(); }
 // Random Nuzlocke always has a champion open: the first time the mode is shown (or after the list changes) one is rolled.
 function ensureRandPick(){
   if(READONLY||!isRandNuz()||view!=="role") return;

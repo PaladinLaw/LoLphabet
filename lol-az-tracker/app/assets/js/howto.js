@@ -23,7 +23,7 @@ const HOWTO={
     "Press <b>✓ Victory</b> (or <b>＋ Victory</b> on its card) each time you win. Victories are counted, but they never complete a champion. Use <b>−</b> if you logged one by mistake.",
     "Lose a game and press <b>"+SKULL+" Fallen</b>: that champion is gone for good. It is greyed out and can't be picked or edited again.",
     "The run is over when you lose with your last champion. Progress shows how many have fallen, and Stats show your wins, fallen champions and best champion.",
-    "Can't decide? Press <b>Roll the dice</b> in the Pick your champion box to open a random living champion from this list. No rerolls: if it's picked or banned, it counts as a loss."
+    "Can't decide? Press <b>Roll the dice</b> in the Pick your champion box to open a random living champion from this list. No rerolls: you're locked into it until you win or lose with it, so if it's picked or banned, it counts as a loss."
   ],
   randnuz:[
     "Nuzlocke, but you don't choose. A random living champion from the list is picked for you and shown under <b>Now playing</b>.",
