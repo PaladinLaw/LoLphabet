@@ -70,8 +70,11 @@ function buildRows(j,fixed){
     if(maxOrder) rows.push(`<span class="k">Max priority</span><div class="skill-max" aria-label="Max abilities in this order">${esc(maxOrder)}</div>`);
   }
   const seen=new Set(), sitAll=["fourth","fifth","sixth","last"].flatMap(k=>b.situational_items[k]||[]).filter(x=>{const id=x.id!=null?x.id:x.name; if(seen.has(id))return false; seen.add(id); return true});
-  const groups=[["Starting items",b.starting_items],["Boots",b.core_items.boots],["Core items",b.core_items.items],["Situational items",sitAll]].filter(g=>g[1].length);
-  if(groups.length) rows.push(`<span class="k">Items</span><div class="nxr">${groups.map(g=>`<span class="grp" title="${g[0]}">${g[1].map(x=>bimg(x)).join("")}</span>`).join('<span class="sep">›</span>')}</div>`);
+  // Two rows: "Starting Items" (starting items, then a labelled Boots group), and "Items" (the actual build: core, then situational).
+  const grp=(t,l)=>`<span class="grp" title="${t}">${l.map(x=>bimg(x)).join("")}</span>`, boots=b.core_items.boots;
+  if(b.starting_items.length||boots.length) rows.push(`<span class="k">Starting Items</span><div class="nxr">${b.starting_items.length?grp("Starting items",b.starting_items):""}${boots.length?`<span class="lbl">Boots:</span>${grp("Boots",boots)}`:""}</div>`);
+  const buildGroups=[["Core items",b.core_items.items],["Situational items",sitAll]].filter(g=>g[1].length);
+  if(buildGroups.length) rows.push(`<span class="k">Items</span><div class="nxr">${buildGroups.map(g=>grp(g[0],g[1])).join('<span class="sep">›</span>')}</div>`);
   const r=b.runes; loadRunes();
   if(r&&r.primary_style&&r.primary.length){
     rows.push(`<div class="full rsp" aria-hidden="true"></div>`);          // keeps the row height the old "Runes" link used to take
@@ -130,7 +133,14 @@ function nzBox(){
   return `<div class="nxh"><div><div class="nxk">NUZLOCKE</div><div class="nxn"><b>${READONLY?"Run in progress":"Pick your champion"}</b></div><div class="nxm">${READONLY?"":"Click any living champion below to play it. "}${c.alive} alive · ${c.dead} fallen · ${plural(c.wins)}</div></div></div>`;
 }
 const rollButtons=()=>`<div class="nbg"><button class="pri nbr" data-a="rr">Roll again</button><button class="un-b nbr" data-a="rb">Back to my lists</button></div>`;
-function renderNext(){
+// The side rune panel is absolutely positioned, so make sure the build area is always at least as tall as it is (the banner grows instead of the runes spilling out).
+function fitRunes(){
+  const b=document.querySelector("#next .nxb"), r=b&&b.querySelector(".rp.side"); if(!b) return;
+  b.style.minHeight="";
+  if(r&&getComputedStyle(r).position==="absolute") b.style.minHeight=Math.ceil(r.offsetTop+r.offsetHeight+10)+"px";
+}
+function renderNext(){ renderNext0(); fitRunes(); }
+function renderNext0(){
   if(view==="roll"&&ROLLED){ $("next").innerHTML=nextBox({name:ROLLED.name},false,{},0,0,{role:ROLLED.role}); return; }
   const L=ordered(), hc=isLock(), m=meta(), won=L.filter(c=>get(c.name).won).length, total=L.length, cur=availNext(L);
   if(isNuz()){ $("next").innerHTML=cur?nextBox(cur,hc,m,won,total):nzBox(); return; }

@@ -17,6 +17,7 @@
 .nxb .full{grid-column:1/-1}
 .nxr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .nxr .sep{color:var(--muted)}
+.nxr .lbl{color:var(--muted);margin-left:10px}
 .nxr .grp{display:inline-flex;gap:4px;align-items:center}
 .bi{position:relative;width:26px;height:26px;border-radius:5px;background:var(--line);flex:none;overflow:hidden;display:inline-block}
 .bi img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -68,7 +69,7 @@
 .rp.side .ri.sh{width:16px;height:16px}
 .rp.side .ri.on{box-shadow:0 0 0 1.5px var(--gold)}
 .rp.side .rsh{gap:4px;padding-top:5px;margin-top:0}
-@media(min-width:760px){.nxb:has(.rp.side){padding-right:250px}}
+@media(min-width:760px){.nxb:has(.rp.side){padding-right:250px;align-content:start}}
 @media(max-width:759px){.rp.side{position:static;grid-column:1/-1;justify-self:end;margin-top:2px}.rsp{display:none}}
 .nxm{font-size:11px;color:var(--muted);line-height:1.5}
 .nxm a{color:var(--gold)}
