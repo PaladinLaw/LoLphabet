@@ -12,6 +12,7 @@ function nzCard(c,s,isCur){
     </div>`;
 }
 function render(){
+  if(view==="roll"&&!ROLLED) view="role";
   renderHowto();
   if(!READONLY){const p=location.pathname;
     if(view==="about"&&p!=="/about")history.pushState(null,"","/about");
@@ -19,7 +20,7 @@ function render(){
   renderStats(); renderSettings(); drawChips(); renderNav();
   $("about").hidden=view!=="about";
   if(!READONLY){
-    const T={stats:"Stats | LoLphabet",settings:"Settings | LoLphabet",build:"List builder | LoLphabet",about:"About LoLphabet | League of Legends A–Z Challenge Tracker"};
+    const T={stats:"Stats | LoLphabet",settings:"Settings | LoLphabet",build:"List builder | LoLphabet",about:"About LoLphabet | League of Legends A–Z Challenge Tracker",roll:"Roll a champion | LoLphabet"};
     document.title=T[view]||"LoLphabet | Free League of Legends A–Z Challenge Tracker";
     // one H1 per view: the tagline on the home view, "About LoLphabet" on /about
     const ab=view==="about"; swapTag("tl",ab?"p":"h1"); swapTag("about-h",ab?"h1":"h2");
@@ -83,7 +84,9 @@ $("next").addEventListener("click",e=>{
     if(k==="swap") bopen.swap=!bopen.swap;
     else if(k==="pos"&&cur&&POSORDER.includes(t.dataset.p)) pospick[cur.name]=t.dataset.p;
     bsave(); renderNext(); return;}
-  const b=e.target.closest("button"); if(!b||READONLY) return;
+  const b=e.target.closest("button");
+  if(b&&view==="roll"){ if(b.dataset.a==="rr") openRoll(); else if(b.dataset.a==="rb"){view="role";render();window.scrollTo&&window.scrollTo(0,0)} return; }   // Roll page buttons
+  if(!b||READONLY) return;
   const cur=nextUp(); if(!cur) return;
   if(isNuz()&&b.dataset.a==="w"){nzWin(cur.name);return}
   if(b.dataset.a==="x") loseRun(cur.name);
@@ -110,7 +113,7 @@ function navClick(e){                                   // Back / Stats / Settin
   const b=e.target.closest("button"); if(!b) return; const d=b.dataset;
   if(d.home){ view="role"; render(); return; }
   if(d.r==="__roll"){ openRoll(); return; }
-  if(d.r==="__stats") view="stats";
+  if(d.r==="__stats"){ view="stats"; sMode=null; }
   else if(d.r==="__settings"){ view="settings"; nameEdit=false; }
   else return;
   render();

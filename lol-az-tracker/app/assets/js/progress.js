@@ -59,13 +59,13 @@ const ROLL_ICON='<svg aria-hidden="true" viewBox="0 0 16 16" width="18" height="
 const STATS_ICON='<svg aria-hidden="true" viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.5h12"/><path d="M3.5 12V8.5h2V12M7 12V4.5h2V12M10.5 12V2.5h2V12"/></svg>';
 // Three searchable dropdowns (list type -> list -> challenge) plus Stats / Settings, which stay visible on every screen size.
 function renderNav(){
-  const cat=catOf(role), away=view==="stats"||view==="settings"||view==="about", build=view==="build";
+  const cat=catOf(role), away=view==="stats"||view==="settings"||view==="about"||view==="roll", build=view==="build";
   const crow=CATS.find(c=>c[0]===cat)||CATS[0], won=r=>entriesFor(r).filter(e=>e.s.won).length;
   $("cats").innerHTML=away?`<button type="button" class="back" data-home="1">← Back</button>`
     :ddHTML("cat",{label:crow[1],sub:"List type",ph:"Search list types…",pick:pickCat,
       items:CATS.map(([id,lab])=>{const n=keysIn(id).length; return {v:id,label:lab,on:id===cat,desc:id==="all"?"Every champion, A–Z":id==="custom"&&!n?"Make your own list":n+(n===1?" list":" lists")}})});
-  $("navbtns").innerHTML=`<button type="button" data-r="__roll" title="Roll a random champion" aria-label="Roll a random champion">${ROLL_ICON}<span class="lb">Roll</span></button>`
-    +`<button type="button" data-r="__stats" class="${view==="stats"?"on":""}" title="Stats" aria-label="Stats">${STATS_ICON}<span class="lb">Stats</span></button>`
+  const rollBtn=view==="role"||view==="roll"?`<button type="button" data-r="__roll" class="${view==="roll"?"on":""}" title="Roll a random champion" aria-label="Roll a random champion">${ROLL_ICON}<span class="lb">Roll</span></button>`:"";   // Roll lives on the main views, not on Stats / Settings
+  $("navbtns").innerHTML=rollBtn+`<button type="button" data-r="__stats" class="${view==="stats"?"on":""}" title="Stats" aria-label="Stats">${STATS_ICON}<span class="lb">Stats</span></button>`
     +`<button type="button" data-r="__settings" class="${view==="settings"?"on":""}" title="Settings" aria-label="Settings"><span class="ic" aria-hidden="true">⚙</span><span class="lb">Settings</span></button>`;
   $("tabs").hidden=away||build||cat==="all"; $("modes").hidden=away||build;
   $("tabs").innerHTML=ddHTML("list",{label:label(role),sub:LISTS[role]?`${CAT_ONE[cat]} · ${won(role)}/${LISTS[role].length} ${isNuz()?"fallen":"won"}`:CAT_ONE[cat],ph:"Search lists…",aria:"Search "+CAT_ONE[cat].toLowerCase()+" lists",pick:pickList,

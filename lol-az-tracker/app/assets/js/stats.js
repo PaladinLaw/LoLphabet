@@ -49,8 +49,13 @@ function listInfo(r){
 const sfSave=()=>{try{localStorage.setItem(SF_KEY,JSON.stringify(sf))}catch(e){}};
 const mbar=(w,t)=>`<i class="mb"><i style="width:${t?Math.round(w/t*100):0}%"></i></i>`;
 function pickedList(){return LISTS[sPick]?sPick:(LISTS[role]?role:Object.keys(LISTS)[0])}
+let sMode=null;                       // which mode's stats the Stats page shows (null = the mode you're playing); picking one here never changes your challenge mode
 function renderStats(){
-  $("stats").hidden=view!=="stats"; $("roleView").hidden=view!=="role"; $("settings").hidden=view!=="settings"; $("builder").hidden=view!=="build";
+  const real=mode; if(view==="stats"&&sMode&&MODES.some(m=>m[0]===sMode)) mode=sMode;
+  try{renderStatsBody()}finally{mode=real}
+}
+function renderStatsBody(){
+  $("stats").hidden=view!=="stats"; $("roleView").hidden=view!=="role"&&view!=="roll"; $("roleView").classList.toggle("rollmode",view==="roll"); $("settings").hidden=view!=="settings"; $("builder").hidden=view!=="build";
   if(view!=="stats") return;
   const nzs=isNuz(), tl=nzs?nzTiles:tiles, keys=Object.keys(LISTS), infos=keys.map(listInfo), shown=infos.filter(i=>sf[i.state]);
   const cnt=st=>infos.filter(i=>i.state===st).length;
@@ -61,7 +66,8 @@ function renderStats(){
     :`<div class="empty">${infos.some(i=>i.state!=="zero")?"No lists match these filters.":"Nothing tracked yet. Win a game and it shows up here."}</div>`;
   const runs=(title,head,cell)=>shown.length?`<h3>${title}</h3><div class="tw"><table><tr><th>List</th>${head.map(h=>`<th>${h}</th>`).join("")}</tr>${shown.map(i=>{const mm=(all[pkey(i.r)]||{}).__meta||{};return `<tr><td>${esc(label(i.r))}</td>${cell(mm,i.won).map(c=>`<td>${c}</td>`).join("")}</tr>`}).join("")}</table></div>`:"";
   const cur=pickedList(), ci=listInfo(cur);
-  $("stats").innerHTML=`<p class="smode"><small>Showing ${esc(MODES.find(m=>m[0]===mode)[1])} progress.</small></p>
+  $("stats").innerHTML=`<div class="stabs" role="tablist" aria-label="Challenge mode">${MODES.map(([id,lab])=>`<button type="button" role="tab" aria-selected="${id===mode}" class="${id===mode?"on":""}" data-sm="${id}">${esc(lab)}</button>`).join("")}</div>
+    <p class="smode"><small>Each mode keeps its own progress, so these stats are for ${esc(MODES.find(m=>m[0]===mode)[1])} only.</small></p>
     <h3>All lists</h3><div class="tg">${tl(keys.flatMap(entriesFor))}</div>
     <h3>By list</h3>
     <div class="chips sfc" role="group" aria-label="Which lists to show">${chip("prog","In progress")}${chip("done","Completed")}${chip("zero","Not started")}</div>
@@ -74,6 +80,7 @@ function renderStats(){
     <div class="tg">${tl(ci.es)}</div>`;
 }
 $("stats").addEventListener("click",e=>{
+  const sm=e.target.closest("[data-sm]"); if(sm){sMode=sm.dataset.sm; renderStats(); return}
   const f=e.target.closest("[data-sf]"); if(f){sf[f.dataset.sf]=!sf[f.dataset.sf]; sfSave(); renderStats()}
 });
 

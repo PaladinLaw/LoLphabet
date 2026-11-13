@@ -3,7 +3,7 @@ try{localStorage.removeItem("lol-az-rolesrc")}catch(e){}   // retired setting (C
 var ROLEDATA=null; try{ROLEDATA=JSON.parse(localStorage.getItem("lol-az-roles"))}catch(e){}
 const ALL_KEY="all:All champs";   // progress is stored under this key like any other list
 const CLASS_KEYS=["Fighter","Mage","Assassin","Tank","Marksman","Support"].map(c=>"class:"+c);
-const CATS=[["roles","Roles",ROLE_KEYS],["races","Races",Object.keys(SETS).filter(k=>k.startsWith("race:"))],["classes","Classes",CLASS_KEYS],["regions","Regions",Object.keys(SETS).filter(k=>k.startsWith("region:"))],["all","All champs",[ALL_KEY]],["custom","Custom",null]];
+const CATS=[["all","All champs",[ALL_KEY]],["roles","Roles",ROLE_KEYS],["classes","Classes",CLASS_KEYS],["regions","Regions",Object.keys(SETS).filter(k=>k.startsWith("region:"))],["races","Races",Object.keys(SETS).filter(k=>k.startsWith("race:"))],["custom","Custom",null]];
 const catOf=r=>r.startsWith("race:")?"races":r.startsWith("region:")?"regions":r.startsWith("class:")?"classes":r.startsWith("all:")?"all":r.startsWith("c:")?"custom":"roles";
 const keysIn=c=>c==="custom"?Object.keys(LISTS).filter(k=>k.startsWith("c:")):CATS.find(x=>x[0]===c)[2];
 const lastIn={};

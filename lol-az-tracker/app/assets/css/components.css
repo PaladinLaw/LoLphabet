@@ -67,3 +67,7 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
 .rolli:not(.fin){opacity:.75}
 .rollt b{display:block;font-size:26px;color:var(--text);line-height:1.15}
 .rollr{display:inline-block;margin-top:6px;padding:2px 12px;border:1px solid var(--gold);color:var(--gold);border-radius:999px;font-size:13px;font-weight:600}
+
+/* Roll page: only the Next up banner is shown, no list, progress bar or tools */
+#roleView.rollmode>:not(#next){display:none}
+.sp .smode{margin:10px 0 0}

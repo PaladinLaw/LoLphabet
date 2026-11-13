@@ -87,14 +87,15 @@ function buildRows(j,fixed){
   }
   return rows.join("");
 }
-function nextBox(cur,hc,m,won,total){
-  const nz=isNuz();
-  const fixed=!!POSMAP[role], want=POSMAP[role]||pospick[cur.name]||"";     // role lists fix the position; other lists use the user's chip (or the most-played position, shown openly)
+// R = a Roll result ({role}): shown in the same banner with its build, but it reads and writes nothing in your lists.
+function nextBox(cur,hc,m,won,total,R){
+  const nz=!R&&isNuz();
+  const fixed=R?true:!!POSMAP[role], want=R?(POSMAP[R.role]||""):(POSMAP[role]||pospick[cur.name]||"");     // role lists fix the position; other lists use the user's chip (or the most-played position, shown openly)
   loadBuild(cur.name,want);
   const e=BUILDS[bkey(cur.name,want)], j=e&&e.j, ok=j&&j.state==="ok", pos=(j&&j.position)||want, letter=esc(cur.name[0]);
   const ic=iconUrl(cur.name)||(ok&&j.champion_icon)||"", st=ok?j.statistics:null;
-  const att=get(cur.name).games, real=listNext(ordered()), warn=(!READONLY&&!isLock()&&!nz&&real&&real.name!==cur.name)?`<div class="nxw" role="status">⚠ <strong>This isn’t the next champion in your list.</strong> The next one is <strong>${esc(real.name)}</strong>. <button class="un-c" data-a="bf">Switch back to ${esc(real.name)}</button></div>`:"";
-  const sk=m.skip||[], left=ordered().filter(c=>!get(c.name).won), nSk=left.filter(c=>sk.includes(c.name)).length, canSkip=!nz&&left.filter(c=>!sk.includes(c.name)).length>1;
+  const att=R?0:get(cur.name).games, real=R?null:listNext(ordered()), warn=(!R&&!READONLY&&!isLock()&&!nz&&real&&real.name!==cur.name)?`<div class="nxw" role="status">⚠ <strong>This isn’t the next champion in your list.</strong> The next one is <strong>${esc(real.name)}</strong>. <button class="un-c" data-a="bf">Switch back to ${esc(real.name)}</button></div>`:"";
+  const sk=R?[]:(m.skip||[]), left=R?[]:ordered().filter(c=>!get(c.name).won), nSk=left.filter(c=>sk.includes(c.name)).length, canSkip=!nz&&left.filter(c=>!sk.includes(c.name)).length>1;
   let panel;
   if(j&&j.positions&&j.positions.length) BPOS[cur.name]=j.positions;
   if(!j) panel=`<div class="nxm full">Loading build…</div>`+(!fixed&&BPOS[cur.name]?posChips(BPOS[cur.name],want):"");
@@ -108,13 +109,13 @@ function nextBox(cur,hc,m,won,total){
     panel=`<div class="nxm full" style="font-size:13px">${msg}</div>${chips}${j.state==="error"||j.state==="no_data"?"":freshHtml(j.data)}`;
   }
   return `<div class="nxh"><div class="nxl"><div class="nxi${ic?"":" noimg"}"><span>${letter}</span>${ic?`<img src="${esc(ic)}" alt="" onerror="var p=this.parentNode;this.remove();p.classList.add('noimg')">`:""}<i>${letter}</i></div>
-    <div><div class="nxk">${nz?"NOW PLAYING":"NEXT UP"}${isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc((pos?(POSNAME[pos]||pos)+" - ":"")+(nz?nzWins(cur.name)+" win"+(nzWins(cur.name)===1?"":"s")+" · "+nzCount().alive+" alive":(total-won)+" left to go"))})</span></div>
+    <div><div class="nxk">${R?"ROLLED":nz?"NOW PLAYING":"NEXT UP"}${!R&&isHC()?" · run "+((m.resets||0)+1):""}</div><div class="nxn"><b>${esc(cur.name)}</b><span class="nxp">(${esc(R?R.role.toLowerCase():(pos?(POSNAME[pos]||pos)+" - ":"")+(nz?nzWins(cur.name)+" win"+(nzWins(cur.name)===1?"":"s")+" · "+nzCount().alive+" alive":(total-won)+" left to go"))})</span></div>
     ${st?`<div class="nxs"><span>Pick Rate: <b>${pct(st.pick_rate)}</b></span><span>Win Rate: <b>${pct(st.win_rate)}</b></span><span title="Games analysed for this champion in this position">Sample Size: <b>${nfmt(st.games)}</b></span></div>`:""}</div></div>
-    <div class="nb">${nSk?`<span>${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button></span>`:""}${nz?nzButtons(cur):hc
+    <div class="nb">${nSk?`<span>${nSk} unavailable <button class="un-c" data-a="uc" title="Make all champions available again">clear</button></span>`:""}${R?rollButtons():nz?nzButtons(cur):hc
       ?`<div class="nbg"><button class="danger nb-loss nbl" data-a="x">${LOSTLAB()}</button><button class="pri nbr" data-a="w">✓ Complete</button>${canSkip?'<button class="un-b nbr" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`
       :`<div class="nbg"><button class="danger nb-loss nbl" data-a="l" title="Log a loss (adds an attempt, same as the + button on the champion's card)">✗ Loss</button><button class="pri nbr" data-a="w">✓ Complete</button><span class="nat nbl">${att} attempt${att===1?"":"s"}</span>${canSkip?'<button class="un-b nbr" data-a="u" title="Banned or picked? Skip to the next available champion for now">Picked / Banned</button>':""}</div>`}</div></div>
     ${warn}
-    <div class="nxb">${panel}</div>`;
+    <div class="nxb">${panel}${R?'<div class="nxm full">Random pick. It isn’t part of any challenge, so your lists and progress are untouched.</div>':""}</div>`;
 }
 // Nuzlocke: Now playing shows a win / died pair instead of Complete / Loss, and a summary box when no champion is open.
 function nzButtons(cur){const w=nzWins(cur.name);
@@ -128,7 +129,9 @@ function nzBox(){
   }
   return `<div class="nxh"><div><div class="nxk">NUZLOCKE</div><div class="nxn"><b>${READONLY?"Run in progress":"Pick your champion"}</b></div><div class="nxm">${READONLY?"":"Click any living champion below to play it. "}${c.alive} alive · ${c.dead} fallen · ${plural(c.wins)}</div></div></div>`;
 }
+const rollButtons=()=>`<div class="nbg"><button class="pri nbr" data-a="rr">Roll again</button><button class="un-b nbr" data-a="rb">Back to my lists</button></div>`;
 function renderNext(){
+  if(view==="roll"&&ROLLED){ $("next").innerHTML=nextBox({name:ROLLED.name},false,{},0,0,{role:ROLLED.role}); return; }
   const L=ordered(), hc=isLock(), m=meta(), won=L.filter(c=>get(c.name).won).length, total=L.length, cur=availNext(L);
   if(isNuz()){ $("next").innerHTML=cur?nextBox(cur,hc,m,won,total):nzBox(); return; }
   $("next").innerHTML=cur?nextBox(cur,hc,m,won,total)
