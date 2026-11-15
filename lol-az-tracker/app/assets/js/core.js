@@ -17,6 +17,7 @@ if(READONLY) document.body.classList.add("ro","loading");
 const KEY="lol-az-tracker-v2";
 let all={};              // role -> name -> {won:bool, date:string|null, games:number}
 if(!READONLY)try{all=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+if(!READONLY)for(const k of Object.keys(all)) if(/\|(random|randhard|randhc)$/.test(k)) delete all[k];   // retired modes (Random, Random Hard, Random Insanity): drop any copy still in this browser
 if(!READONLY&&!all.Jungle){try{const old=JSON.parse(localStorage.getItem("lol-az-tracker-v1"));if(old)all.Jungle=old}catch(e){}}
 let role="Top", CHAMPS, mode="classic";
 if(!READONLY)try{const m=localStorage.getItem("lol-az-mode");if(["classic","hard","hardcore","nuzlocke","randnuz"].includes(m))mode=m}catch(e){}
@@ -82,12 +83,24 @@ function loadShare(){
 }
 DD=null;
 try{DD=JSON.parse(localStorage.getItem("lol-az-dd"))}catch(e){}
-function iconUrl(name){
-  if(!DD||!DD.ver) return "";
-  const id=(DD.ids&&DD.ids[name])||name.replace(/[^A-Za-z]/g,"");
-  return "https://ddragon.leagueoflegends.com/cdn/"+DD.ver+"/img/champion/"+id+".png";
-}
+// Champion icons come from our own server by NAME (/img/champ/<name>.png), so they never wait for the champion data to load first.
+function iconUrl(name){ return "/img/champ/"+encodeURIComponent(name)+".png"; }
+let RIOT_PEND=false;   // true while /api/riot is loading, so nextup.js doesn't start its own Riot request in parallel
 function loadDD(){
+  if(DD&&DD.tags&&DD.t&&Date.now()-DD.t<864e5&&typeof RD!=="undefined"&&RD&&RD.trees&&RD.t&&Date.now()-RD.t<864e5) return;
+  RIOT_PEND=true;
+  // One request to our own server (champion ids and classes + rune trees, refreshed daily there); falls back to Riot directly if it isn't available.
+  const first=window.__riot||fetch("/api/riot").then(r=>r.ok?r.json():null,()=>null); window.__riot=null;
+  first.then(d=>{
+    if(!d||!d.ver||!d.tags||!d.trees) throw 0;
+    const was=JSON.stringify([DD&&DD.ver,DD&&DD.tags,RD&&RD.trees]);
+    DD={ver:d.ver,ids:d.ids||{},tags:d.tags,t:Date.now()}; RD={t:Date.now(),trees:d.trees};
+    try{localStorage.setItem("lol-az-dd",JSON.stringify(DD));localStorage.setItem("lol-az-runes",JSON.stringify(RD))}catch(e){}
+    RIOT_PEND=false;
+    if(was!==JSON.stringify([DD.ver,DD.tags,RD.trees])){rebuildLists(); render(); renderNext();}   // nothing to redraw when the cached copy was already current
+  }).catch(()=>{RIOT_PEND=false; loadDDDirect();});
+}
+function loadDDDirect(){
   if(DD&&DD.tags&&DD.t&&Date.now()-DD.t<864e5) return;
   fetch("https://ddragon.leagueoflegends.com/api/versions.json").then(r=>r.json()).then(v=>{
     const ver=v[0];

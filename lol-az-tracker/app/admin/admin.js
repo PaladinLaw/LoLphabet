@@ -177,7 +177,7 @@ async function dashView(my){
         line("Signed-in devices",o.sessions),line("Progress share links",o.shares,go(o.shares,"shared")),line("Shared custom lists",o.templates),
         line("Visitors, all time",o.visits),line("Suspended accounts",o.suspended,go(o.suspended,"suspended"))),
       h("div",{class:"card"},h("h2",{text:"Server"}),
-        line("Data file",bytes(o.dataBytes)),line("Uptime",up),line("Emails sent today",o.mail.n),line("Login types on",o.login.length?o.login.join(", "):"none"),
+        line("Database",bytes(o.dataBytes)),line("Uptime",up),line("Emails sent today",o.mail.n),line("Login types on",o.login.length?o.login.join(", "):"none"),
         line("Panel locks after",Math.round(o.idleSeconds/60)+" min idle"),line("Node",o.node),
         orph?h("p",{class:"small muted",text:"Leftover records from deleted or merged accounts (harmless): "+o.orphan.shares+" share links, "+o.orphan.templates+" shared lists, "+o.orphan.sessions+" sessions, "+o.orphan.meta+" admin notes."}):null)));
 }

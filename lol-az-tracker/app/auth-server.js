@@ -75,12 +75,12 @@ module.exports=function initAuth(ctx){
   function mkToken(rec,ttl){
     const t=crypto.randomBytes(32).toString("base64url"), now=Date.now();
     for(const k in db.authTokens) if(db.authTokens[k].exp<now) delete db.authTokens[k];
-    db.authTokens[sha(t)]=Object.assign({},rec,{exp:now+ttl}); persist(); return t;
+    db.authTokens[sha(t)]=Object.assign({},rec,{exp:now+ttl}); persist("tokens"); return t;
   }
   function getToken(t,types,consume){
     t=String(t||""); if(!/^[\w-]{20,80}$/.test(t)) return null;
     const k=sha(t), r=db.authTokens[k]; if(!r) return null;
-    if(consume){delete db.authTokens[k];persist()}
+    if(consume){delete db.authTokens[k];persist("tokens")}
     return r.exp>Date.now()&&(!types||types.includes(r.type))?r:null;
   }
 
@@ -107,7 +107,7 @@ module.exports=function initAuth(ctx){
     if(isSuspended&&isSuspended(uid)) throw Object.assign(new Error("This account has been suspended."),{suspended:true});   // set from the admin panel
     u.lastLogin=now;
     for(const k in db.sessions) if(db.sessions[k].exp<now) delete db.sessions[k];
-    const token=crypto.randomBytes(32).toString("hex"); db.sessions[token]={sub:uid,exp:now+TTL}; persist();
+    const token=crypto.randomBytes(32).toString("hex"); db.sessions[token]={sub:uid,exp:now+TTL}; persist("sessions","user:"+uid);
     return {token,name:u.name,given:u.given,email:u.email||"",label:labelOf(u),isNew:!!isNew};
   }
   const dropSessions=(uid,except)=>{for(const k in db.sessions) if(db.sessions[k].sub===uid&&k!==except) delete db.sessions[k]};
@@ -187,11 +187,11 @@ module.exports=function initAuth(ctx){
   async function sendMail(to,subject,c){
     const day=new Date().toISOString().slice(0,10); if(!db.mail||db.mail.day!==day) db.mail={day,n:0};
     if(db.mail.n>=MAIL_LIMIT) throw Object.assign(new Error("daily limit"),{limit:true});
-    db.mail.n++; persist();
+    db.mail.n++; persist("mail");
     const msg={from:MAIL_FROM,to:[to],subject,text:c.text,html:c.html}; if(REPLY_TO) msg.reply_to=REPLY_TO;
     let r; try{r=await fetch(RESEND_API+"/emails",{method:"POST",headers:{Authorization:"Bearer "+RESEND_KEY,"Content-Type":"application/json","User-Agent":UA},body:JSON.stringify(msg)})}
-    catch(e){db.mail.n--;throw e}
-    if(!r.ok){db.mail.n--;throw new Error("Resend "+r.status+": "+(await r.text()).slice(0,300))}
+    catch(e){db.mail.n--;persist("mail");throw e}
+    if(!r.ok){db.mail.n--;persist("mail");throw new Error("Resend "+r.status+": "+(await r.text()).slice(0,300))}
   }
   async function mail(res,to,subject,c){
     try{await sendMail(to,subject,c);return true}
