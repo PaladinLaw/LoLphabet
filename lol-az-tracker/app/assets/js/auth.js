@@ -1,19 +1,23 @@
 // ---- Optional accounts: Google, Discord, username + password, magic link (which are on comes from /api/config) ----
-let session=null, authOn=false, gReady=false, tokenClient, pushT, visitN=0, gcid="", gLoading=false, gMode="login", logins=[], acct, acctLoading=false, resetTok="";
+let session=null, progRev=0, authOn=false, gReady=false, tokenClient, pushT, visitN=0, gcid="", gLoading=false, gMode="login", logins=[], acct, acctLoading=false, resetTok="";
 try{session=JSON.parse(localStorage.getItem("lol-az-session"))}catch(e){}
-const api=(m,u,b)=>fetch(u,{method:m,headers:{"Content-Type":"application/json",...(session?{Authorization:"Bearer "+session.token}:{})},body:b===undefined?undefined:JSON.stringify(b)})
+const api=(m,u,b,hx)=>fetch(u,{method:m,headers:{"Content-Type":"application/json",...(session?{Authorization:"Bearer "+session.token}:{}),...(hx||{})},body:b===undefined?undefined:JSON.stringify(b)})
   .then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||r.status),{status:r.status,merge:j.merge,code:j.code});return j});
 const setSync=t=>{const e=$("sync");if(e)e.textContent=t==="Sync failed"?t:""};
 function push(){
   if(!session) return;
   setSync("Saving…"); clearTimeout(pushT);
-  pushT=setTimeout(()=>api("PUT","/api/progress",all).then(()=>setSync("Saved")).catch(e=>{
-    if(e.status===401) signOut(); else setSync("Sync failed");}),600);
+  pushT=setTimeout(()=>api("PUT","/api/progress",all,{"X-Rev":String(progRev)}).then(()=>setSync("Saved")).catch(e=>{
+    if(e.status===401) signOut();
+    else if(e.status===409&&e.code==="stale") pull(false).then(()=>info("Your progress was updated","An admin changed your saved progress, so this page loaded the corrected copy. Anything you just did here was not saved. Please do it again.")).catch(()=>setSync("Sync failed"));
+    else setSync("Sync failed");}),600);
 }
 const hasData=o=>o&&Object.values(o).some(r=>r&&typeof r==="object"&&Object.keys(r).length);
 async function pull(fresh){
-  const {data,name}=await api("GET","/api/progress");
+  const {data,name,rev}=await api("GET","/api/progress");
+  const srvRev=+rev||0, adminFixed=!fresh&&srvRev&&srvRev!==progRev; progRev=srvRev;   // an admin changed this account's progress: the server copy wins, even if it is empty
   if(name&&session){session.name=session.given=name;try{localStorage.setItem("lol-az-session",JSON.stringify(session))}catch(e){}renderAuth();}
+  if(adminFixed){ all=data&&typeof data==="object"?data:{}; rebuildLists(); try{localStorage.setItem(KEY,JSON.stringify(all))}catch(e){} render(); setSync("Saved"); return; }
   if(hasData(data)){
     if(fresh&&hasData(all)&&JSON.stringify(all)!==JSON.stringify(data)){
       const useAcct=await ask({title:"Which progress do you want to keep?",body:"This browser and your account both have saved progress.\n\nUsing your account's progress replaces what's in this browser. Keeping this browser's progress overwrites your account.",

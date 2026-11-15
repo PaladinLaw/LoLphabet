@@ -108,7 +108,7 @@ const html=(res,h)=>{res.writeHead(200,{"Content-Type":"text/html; charset=utf-8
 
 let db={users:{},sessions:{}};
 try{db=JSON.parse(fs.readFileSync(FILE,"utf8"))}catch(e){}
-db.shares=db.shares||{}; db.templates=db.templates||{}; db.visits=db.visits||{total:0,day:"",salt:"",seen:{},ip:{}};
+db.shares=db.shares||{}; db.templates=db.templates||{}; db.adminMeta=db.adminMeta||{}; db.visits=db.visits||{total:0,day:"",salt:"",seen:{},ip:{}};
 const persist=()=>fs.writeFileSync(FILE,JSON.stringify(db));
 // Reads the pixel size of a JPEG (so only our 1200x630 share image is accepted).
 function jpegSize(b){
@@ -145,13 +145,15 @@ const send=(res,code,obj)=>{res.writeHead(code,{"Content-Type":"application/json
 const body=req=>new Promise((ok,no)=>{let b="";req.on("data",c=>{b+=c;if(b.length>1e6){no(new Error("too big"));req.destroy()}});
   req.on("end",()=>{try{ok(JSON.parse(b||"{}"))}catch(e){no(e)}})});
 const token=req=>(req.headers.authorization||"").replace("Bearer ","");
-const userOf=req=>{const s=db.sessions[token(req)];return s&&s.exp>Date.now()?s.sub:null};
+const isSuspended=uid=>!!(db.adminMeta[uid]&&db.adminMeta[uid].suspended);   // set from the admin panel
+const userOf=req=>{const s=db.sessions[token(req)];return s&&s.exp>Date.now()&&!isSuspended(s.sub)?s.sub:null};
 
 const SITE_URL=(process.env.SITE_URL||"").replace(/\/+$/,"");   // set SITE_URL=https://your.domain for fixed canonical URLs
 const baseUrl=req=>SITE_URL||(String(req.headers["x-forwarded-proto"]||"http").split(",")[0].trim()+"://"+(req.headers["x-forwarded-host"]||req.headers.host||"localhost"));
 // ---- Visitor counter: cookieless. A visitor = one hash of (daily random salt + IP + browser) per day. ----
 const clientIp=req=>String(req.headers["cf-connecting-ip"]||String(req.headers["x-forwarded-for"]||"").split(",")[0]||req.socket.remoteAddress||"").trim();
-const AUTH=require("./auth-server.js")({db,persist,send,body,baseUrl,clientIp,TTL,rmImg});   // exits with a clear message if LOGIN_TYPES is set up wrongly
+const AUTH=require("./auth-server.js")({db,persist,send,body,baseUrl,clientIp,TTL,rmImg,isSuspended});   // exits with a clear message if LOGIN_TYPES is set up wrongly
+const ADMIN=require("./admin-server.js")({db,persist,body,baseUrl,clientIp,userOf,token,AUTH,rmImg,TTL,FILE});   // hidden admin panel (off unless ADMIN_PATH, ADMIN_USER_IDS and ADMIN_PASSPHRASE are set)
 function countVisit(req){
   const V=db.visits, day=new Date().toISOString().slice(0,10);
   if(V.day!==day){V.day=day;V.salt=crypto.randomBytes(16).toString("hex");V.seen={};V.ip={};}
@@ -277,6 +279,7 @@ loadBuilds(true);
 http.createServer(async(req,res)=>{
   try{
     const url=req.url.split("?")[0];
+    if(ADMIN.enabled&&await ADMIN.route(req,res,url)) return;                       // hidden admin panel: answers only its secret address and, for the admin, /api/admin/*
     if(url==="/index.html"){res.writeHead(301,{Location:"/"});return res.end()}   // one URL for the landing page
     if(url==="/about/"||url==="/privacy/"||url==="/terms/"){res.writeHead(301,{Location:url.slice(0,-1)});return res.end()}
     if(url==="/favicon.ico"||url==="/favicon-96.png"){res.writeHead(200,{"Content-Type":"image/png","Cache-Control":"public, max-age=86400","Content-Length":FAVICON_BUF.length});return res.end(FAVICON_BUF)}
@@ -373,10 +376,12 @@ http.createServer(async(req,res)=>{
     const sub=userOf(req);
     if(!sub) return send(res,401,{error:"not signed in"});
     if(await AUTH.authed(req,res,url,sub)) return;                                // account info, linking, password, email
-    if(url==="/api/progress"&&req.method==="GET") return send(res,200,{data:db.users[sub].progress,name:db.users[sub].given||db.users[sub].name});
+    if(url==="/api/progress"&&req.method==="GET") return send(res,200,{data:db.users[sub].progress,name:db.users[sub].given||db.users[sub].name,rev:db.users[sub].rev||0});
     if(url==="/api/progress"&&req.method==="PUT"){
       const data=await body(req);
       if(!data||typeof data!=="object"||Array.isArray(data)) return send(res,400,{error:"bad data"});
+      // An admin fix bumps `rev`. A browser tab that still holds the old copy sends the old rev and is refused, so it can't overwrite the fix.
+      const rv=req.headers["x-rev"]; if(rv!==undefined&&(parseInt(rv,10)||0)!==(db.users[sub].rev||0)) return send(res,409,{error:"stale",code:"stale"});
       db.users[sub].progress=data; persist(); return send(res,200,{ok:true});
     }
     if(url==="/api/template"&&req.method==="POST"){
@@ -412,10 +417,10 @@ http.createServer(async(req,res)=>{
       const u=db.users[sub]; u.name=u.given=n; u.custom=true; persist(); return send(res,200,{name:n});
     }
     if(url==="/api/account"&&req.method==="DELETE"){
-      {const o=db.users[sub]; if(o&&o.share){ delete db.shares[o.share]; rmImg(o.share); } for(const k in db.templates) if(db.templates[k].sub===sub) delete db.templates[k];} delete db.users[sub]; for(const k in db.sessions) if(db.sessions[k].sub===sub) delete db.sessions[k];
+      {const o=db.users[sub]; if(o&&o.share){ delete db.shares[o.share]; rmImg(o.share); } for(const k in db.templates) if(db.templates[k].sub===sub) delete db.templates[k];} delete db.users[sub]; delete db.adminMeta[sub]; for(const k in db.sessions) if(db.sessions[k].sub===sub) delete db.sessions[k];
       persist(); return send(res,200,{ok:true});
     }
     if(url==="/api/logout"&&req.method==="POST"){delete db.sessions[token(req)];persist();return send(res,200,{ok:true})}
     send(res,404,{error:"not found"});
-  }catch(e){send(res,500,{error:String(e.message||e)})}
+  }catch(e){ if(e&&e.suspended) return send(res,403,{error:e.message}); send(res,500,{error:String(e.message||e)}) }
 }).listen(PORT,()=>{refreshRoles(); setInterval(refreshRoles,864e5).unref(); console.log("LoL A-Z tracker on http://localhost:"+PORT+"  (login: "+(AUTH.types.length?AUTH.types.join(", "):"none, sign-in disabled")+")");});

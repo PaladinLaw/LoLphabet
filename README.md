@@ -25,6 +25,7 @@ Live site: **[https://lolphabet.app](https://lolphabet.app)**
 - **How it works panel** that explains the selected mode. It opens by itself the first time you see each mode, then remembers your open or closed choice per mode. It can be turned off under **Settings > Preferences > Help**.
 - **Settings** in three tabs: **Account** (profile, sign-in methods, sharing, delete account), **Preferences** (theme, custom lists, help) and **Data** (export, import, reset all progress).
 - **Several ways to sign in** so progress syncs between devices: Google, Discord, username and password, or an emailed magic link. Choose which ones to offer with `LOGIN_TYPES`. Accounts can be linked to each other from Settings.
+- **Hidden admin panel (optional).** A locked-down page for the site owner to look up accounts, fix progress, reset lists, reset passwords, unlink logins and merge duplicate accounts. Off unless configured. See [Admin panel](#admin-panel).
 - Editable win dates and notes, search and filters, read-only share links with a preview image, and a share-image button. No ads, no third-party analytics.
 
 > The How it works state and the theme are stored per browser in local storage, so they do not sync between devices.
@@ -35,7 +36,7 @@ LoLphabet consists of two components:
 
 | Folder | Purpose |
 | --- | --- |
-| [`lol-az-tracker/`](lol-az-tracker) | The web app: a dependency-free Node server (`server.js`, plus `auth-server.js` for the login methods) and a front end (`index.html` with its JS and CSS under `assets/`). |
+| [`lol-az-tracker/`](lol-az-tracker) | The web app: a dependency-free Node server (`server.js`, plus `auth-server.js` for the login methods and `admin-server.js` for the optional admin panel) and a front end (`index.html` with its JS and CSS under `assets/`). |
 | [`lol-meta-collector/`](lol-meta-collector) | An optional Python/Docker pipeline that collects champion analysis and suggested builds from OP.GG and resolves game assets against Riot Data Dragon. |
 
 The collector writes JSON and CSV files to a shared data directory. The tracker mounts that directory read-only and uses the generated data for the Next Up build display. The tracker works without the collector; builds simply won't be available in the Next Up banner.
@@ -70,6 +71,8 @@ The server has no npm dependencies. It refuses to start, with a clear message, i
 
 - `LOGIN_TYPES` defaults to `Google`, so existing setups keep working and existing Google accounts migrate automatically.
 - Deploy the whole `app/` folder: `auth-server.js` is new and the front end now loads many files from `assets/`.
+- The admin panel adds `admin-server.js` and an `admin/` folder, which `server.js` now loads, so those must be deployed too. The panel stays off until you set the `ADMIN_*` variables.
+- Accounts made from now on record a sign-up date and last sign-in. Older accounts simply show these as unknown.
 - Progress from the removed Random modes is no longer shown.
 
 ### 2. LoL Meta Collector (optional)
@@ -130,7 +133,7 @@ The collector's `build: .` expects the Compose file to be in the same directory 
 | `BIND_IP` | **Yes** | Host IP on which the tracker port is published. Keep this at loopback when a reverse proxy runs on the same host. |
 | `HOST_PORT` | **Yes** | Host-side published port. |
 | `SITE_URL` | **Yes** | Public site URL used for canonical links, metadata, share links and the Discord redirect. |
-| `TRACKER_APP_DIR` | **Yes** | Host directory containing `index.html`, `server.js`, `auth-server.js` and `assets/`. |
+| `TRACKER_APP_DIR` | **Yes** | Host directory containing `index.html`, `server.js`, `auth-server.js`, `admin-server.js`, `admin/` and `assets/`. |
 | `TRACKER_DATA_DIR` | **Yes** | Persistent host directory for accounts and progress. Back this directory up. |
 | `COLLECTOR_DATA_DIR` | **Yes** | Shared host directory containing collector output. Must match the collector stack's value. |
 | `LOGIN_TYPES` | No | Which login methods to offer (see below). Default `Google`. |
@@ -141,6 +144,10 @@ The collector's `build: .` expects the Compose file to be in the same directory 
 | `MAIL_FROM` | When Password or Magic link is enabled | Sender, e.g. `LoLphabet <login@lolphabet.app>`. Must be on a domain verified in Resend. |
 | `MAIL_DAILY_LIMIT` | No | Emails per day before sending stops. Default `90`, to stay under Resend's free 100 a day. |
 | `CONTACT_EMAIL` | No | Contact address shown on the privacy and terms pages, and the default reply-to for email. |
+| `ADMIN_PATH` | No | Secret address of the admin panel, `<SITE_URL>/<ADMIN_PATH>`: 16 to 64 letters, numbers, `-` or `_`. Leave empty to keep the panel off. See [Admin panel](#admin-panel). |
+| `ADMIN_USER_IDS` | With `ADMIN_PATH` | Internal user id(s) of the account(s) allowed to use the panel, comma separated. |
+| `ADMIN_PASSPHRASE` | With `ADMIN_PATH` | Second lock typed each time the panel is opened. At least 8 characters. |
+| `ADMIN_IDLE_MINUTES` | No | The panel re-locks after this many minutes without activity. Default `20`. |
 
 The Compose file sets these application environment variables internally:
 
@@ -173,6 +180,21 @@ Safety features: email links carry their token after a `#` so scanners can't use
 **Account linking.** From Settings you can link any other enabled login method to your account. Signing in with a provider whose verified email matches an existing account joins that account instead of creating a duplicate. If a login already belongs to another account, you choose which progress to keep, and the other account is merged in and deleted.
 
 To get a Google client ID, create an OAuth client in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials) and add your site's URL as an authorised JavaScript origin.
+
+#### Admin panel
+
+An optional, hidden page for the site owner. It is off unless `ADMIN_PATH`, `ADMIN_USER_IDS` and `ADMIN_PASSPHRASE` are all set; if any is missing or invalid the server logs why and starts without it.
+
+It lets the owner search all accounts, see which logins each one has linked and unlink them, merge duplicate accounts (for example one made with Discord and another with Google), view and edit progress (revive a champion marked Fallen by mistake, undo a win, reset a list or everything), reset a password through a single-use link, sign people out, suspend or delete accounts, and review an audit log.
+
+How it is kept private:
+
+- It lives at a secret address, is never linked, and is sent with `noindex` headers. Do not list the address in `robots.txt`.
+- Its API only answers a signed-in session that belongs to an account in `ADMIN_USER_IDS`. For everyone else those URLs behave like any other nonexistent URL.
+- Even then, nothing loads until the passphrase is entered. Wrong guesses are rate limited and locked out, and the panel re-locks after a period of inactivity.
+- Every change is written to an audit log and preceded by a backup of the account, so it can be undone. Both are stored under `admin/` in the data directory.
+
+The code is open, so security does not depend on hiding it: the secret address, the account id and the passphrase live only in your environment settings. Never commit them. For an extra layer, put the panel's paths behind something like Cloudflare Access. See [`lol-az-tracker/ADMIN.md`](lol-az-tracker/ADMIN.md) for setup and the full feature list.
 
 #### Collector environment variables
 
@@ -316,7 +338,7 @@ Data Dragon assets are patch-versioned. Cache assets/data locally or on your own
 
 User data (login identifiers, name, email, password hashes if password login is enabled, and progress) is stored in a single JSON file on the server you run. The only outside services involved are the ones you enable: Google or Discord for sign-in, and Resend for sending login emails (which receives the recipient's email address). There are no ads and no third-party analytics. How it works, the theme and similar preferences are kept in the browser's local storage and do not sync between devices. The hosted version at `lolphabet.app` has its own privacy policy, served by the app at `/privacy`.
 
-Keep the tracker's persistent data directory backed up. The collector's `config.json`, logs, generated data and archive snapshots are deployment/runtime files and should not be committed to the public repository.
+The site owner can see accounts and progress through the optional admin panel, and its audit log and pre-change backups are stored in the same data directory (`admin/`). Keep the tracker's persistent data directory backed up. The collector's `config.json`, logs, generated data and archive snapshots are deployment/runtime files and should not be committed to the public repository.
 
 ## Contributing
 
