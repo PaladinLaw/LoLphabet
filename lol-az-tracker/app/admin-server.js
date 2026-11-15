@@ -289,7 +289,7 @@ module.exports=function initAdmin(ctx){
         }
         const orphan={shares:Object.keys(db.shares).filter(t=>!has(db.shares[t])).length,templates:Object.keys(db.templates).filter(t=>!has(db.templates[t].sub)).length,
           sessions:Object.keys(db.sessions).filter(t=>!has(db.sessions[t].sub)).length,meta:Object.keys(db.adminMeta).filter(k=>!has(k)).length};
-        let dataBytes=0; try{dataBytes=fs.statSync(FILE).size}catch(e){}
+        let dataBytes=0; for(const x of ["","-wal"]) try{dataBytes+=fs.statSync(FILE+x).size}catch(e){}
         return out(res,200,Object.assign(o,{sessions:Object.values(db.sessions).filter(s=>s.exp>now).length,shares:Object.keys(db.shares).length,templates:Object.keys(db.templates).length,
           visits:db.visits?db.visits.total:0,mail:{n:db.mail&&db.mail.day===today()?db.mail.n:0},dataBytes,orphan,noLoginList:noLogin,dupGroups:dupGroups().length,
           login:AUTH.types,uptime:Math.round(process.uptime()),node:process.version,idleSeconds:IDLE/1000,now}));

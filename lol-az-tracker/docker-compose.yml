@@ -1,10 +1,10 @@
 services:
   lol-tracker:
-    image: node:20-alpine
+    image: node:22-alpine
     container_name: ${CONTAINER_NAME:?CONTAINER_NAME is required}
     restart: unless-stopped
     working_dir: /app
-    command: ["node", "server.js"]
+    command: ["node", "--disable-warning=ExperimentalWarning", "server.js"]
     environment:
       LOGIN_TYPES: ${LOGIN_TYPES:-Google}                                                                         # which logins to offer: Google, Discord, Password, Magic link (comma separated)
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}                                                                     # needed when Google is enabled

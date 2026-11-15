@@ -31,7 +31,7 @@ function freshHtml(d){
 let RD=null; try{RD=JSON.parse(localStorage.getItem("lol-az-runes"))}catch(e){}
 let RDPEND=false;
 function loadRunes(){
-  if(RDPEND||(RD&&RD.trees&&RD.t&&Date.now()-RD.t<864e5)) return; RDPEND=true;
+  if(RDPEND||RIOT_PEND||(RD&&RD.trees&&RD.t&&Date.now()-RD.t<864e5)) return; RDPEND=true;
   (DD&&DD.ver?Promise.resolve(DD.ver):fetch("https://ddragon.leagueoflegends.com/api/versions.json").then(r=>r.json()).then(v=>v[0]))
     .then(ver=>fetch("https://ddragon.leagueoflegends.com/cdn/"+ver+"/data/en_US/runesReforged.json"))
     .then(r=>r.json()).then(d=>{
@@ -39,7 +39,7 @@ function loadRunes(){
       try{localStorage.setItem("lol-az-runes",JSON.stringify(RD))}catch(e){}
     }).catch(()=>{}).finally(()=>{RDPEND=false;renderNext()});
 }
-const RIMG="https://ddragon.leagueoflegends.com/cdn/img/", SHIMG="https://raw.communitydragon.org/latest/game/assets/perks/statmods/";
+const RIMG="/img/ddragon/cdn/img/", SHIMG="/img/cdragon/latest/game/assets/perks/statmods/";   // served (and cached) by our own server, see riot.js
 const SHARDS=[[5008,5005,5007],[5008,5010,5001],[5011,5013,5001]];   // offense / flex / defense rows
 const SHN={5008:["Adaptive Force","statmodsadaptiveforceicon"],5005:["Attack Speed","statmodsattackspeedicon"],5007:["Ability Haste","statmodscdrscalingicon"],5010:["Move Speed","statmodsmovementspeedicon"],5001:["Scaling Health","statmodshealthscalingicon"],5011:["Health","statmodshealthplusicon"],5013:["Tenacity and Slow Resist","statmodstenacityicon"]};
 const sameR=(a,b)=>(a.id!=null&&b.id!=null&&String(a.id)===String(b.id))||(a.name&&b.name&&a.name.toLowerCase()===b.name.toLowerCase());

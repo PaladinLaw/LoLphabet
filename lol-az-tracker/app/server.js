@@ -1,8 +1,10 @@
-// Zero-dependency server (Node 18+). Serves the site and saves progress per account.
+// Zero-dependency server (Node 22+: uses the built-in node:sqlite). Serves the site and saves progress per account.
 // Login methods (Google, Discord, username + password, magic link) live in auth-server.js and are chosen with LOGIN_TYPES.
 const http=require("http"),fs=require("fs"),path=require("path"),crypto=require("crypto"),zlib=require("zlib");
 const PORT=process.env.PORT||3081;
-const FILE=process.env.DATA_FILE||path.join(__dirname,"data.json");
+const DATA_DIR=process.env.DATA_DIR||(process.env.DATA_FILE?path.dirname(process.env.DATA_FILE):path.join(__dirname,"data"));
+const LEGACY_FILE=process.env.DATA_FILE||path.join(DATA_DIR,"data.json");        // the old single-file store: only read by migrate.js
+const FILE=path.join(DATA_DIR,"lolphabet.db");                                   // SQLite database (accounts, progress, sessions, shares)
 // Share-link preview images (Open Graph), one JPEG per share token, stored next to the data file so they persist with it.
 const IMG_DIR=path.join(path.dirname(FILE),"share-images");
 try{fs.mkdirSync(IMG_DIR,{recursive:true})}catch(e){console.log("share-images dir:",e.message)}
@@ -76,8 +78,33 @@ const fileMtime=f=>{try{return fs.statSync(path.join(__dirname,f)).mtime}catch(e
 // Front-end files live in assets/css and assets/js. Their newest mtime becomes the ?v= cache-buster in index.html and part of the page-cache key,
 // so editing any of them is picked up without restarting the container.
 const ASSET_DIRS=["assets/css","assets/js"];
-const assetVer=()=>{let t=fileMtime("index.html").getTime();for(const d of ASSET_DIRS){try{for(const f of fs.readdirSync(path.join(__dirname,d)))t=Math.max(t,fileMtime(d+"/"+f).getTime())}catch(e){}}return String(t)};
+const assetVerRaw=()=>{let t=fileMtime("index.html").getTime();for(const d of ASSET_DIRS){try{for(const f of fs.readdirSync(path.join(__dirname,d)))t=Math.max(t,fileMtime(d+"/"+f).getTime())}catch(e){}}return String(t)};
+let _av=[0,""]; const assetVer=()=>{const n=Date.now(); if(n-_av[0]>2000) _av=[n,assetVerRaw()]; return _av[1]};      // re-checked at most every 2 s instead of on every request
 const STATIC_TYPES={".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8"};
+// Compressed copies are made once and kept (brotli/gzip used to be recomputed on every request).
+const packBuf=buf=>({buf,gz:zlib.gzipSync(buf,{level:9}),br:zlib.brotliCompressSync(buf,{params:{[zlib.constants.BROTLI_PARAM_QUALITY]:9}}),etag:'"'+crypto.createHash("sha1").update(buf).digest("base64url").slice(0,20)+'"'});
+function sendPacked(req,res,e,headers){
+  const h={...headers,"ETag":e.etag,"Vary":"Accept-Encoding"};
+  if(req.headers["if-none-match"]===e.etag){res.writeHead(304,h);return res.end()}
+  const ae=String(req.headers["accept-encoding"]||""); let body=e.buf;
+  if(/\bbr\b/.test(ae)){h["Content-Encoding"]="br";body=e.br}else if(/\bgzip\b/.test(ae)){h["Content-Encoding"]="gzip";body=e.gz}
+  h["Content-Length"]=body.length; res.writeHead(200,h); res.end(req.method==="HEAD"?undefined:body);
+}
+// One CSS and one JS file instead of 10 + 14 requests on a first visit. Built from the tags in index.html (same order), so index.html stays the single source.
+const BUNDLE_ON=process.env.NO_BUNDLE!=="1", STATIC_CACHE=new Map(), BUNDLES=new Map();
+const CSS_TAG=/<link rel="stylesheet" href="\/assets\/css\/([\w-]+\.css)\?v=%ASSET_V%">\s*/g, JS_TAG=/<script defer src="\/assets\/js\/([\w-]+\.js)\?v=%ASSET_V%"><\/script>\s*/g;
+function bundleHtml(h){
+  let a=true,b=true;
+  h=h.replace(CSS_TAG,()=>{if(!a)return"";a=false;return'<link rel="stylesheet" href="/assets/css/bundle.css?v=%ASSET_V%">\r\n'});
+  return h.replace(JS_TAG,()=>{if(!b)return"";b=false;return'<script defer src="/assets/js/bundle.js?v=%ASSET_V%"></script>\r\n'});
+}
+function getBundle(kind,ver){
+  const k=kind+"|"+ver; let e=BUNDLES.get(k); if(e) return e;
+  const html=fs.readFileSync(path.join(__dirname,"index.html"),"utf8"), re=kind==="css"?CSS_TAG:JS_TAG, names=[...html.matchAll(new RegExp(re.source,"g"))].map(m=>m[1]);
+  if(!names.length) return null;
+  const buf=Buffer.from(names.map(n=>fs.readFileSync(path.join(__dirname,"assets",kind,n),"utf8")).join(kind==="js"?"\n;\n":"\n"),"utf8");
+  if(BUNDLES.size>6) BUNDLES.clear(); e=packBuf(buf); BUNDLES.set(k,e); return e;
+}
 const jsonLd=base=>'<script type="application/ld+json">'+JSON.stringify({"@context":"https://schema.org","@graph":[
   {"@type":"WebSite","@id":base+"/#website","url":base+"/","name":"LoLphabet","alternateName":"LoLphabet: The League of Legends A-Z Challenge","description":HOME_DESC,"inLanguage":"en","publisher":{"@id":base+"/#author"}},
   {"@type":"WebApplication","@id":base+"/#app","url":base+"/","name":"LoLphabet","alternateName":"The League of Legends A-Z Challenge","description":HOME_DESC,"applicationCategory":"GameApplication","operatingSystem":"Any (web browser)","isAccessibleForFree":true,"inLanguage":"en","image":base+"/assets/og-image.png?v=2","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@id":base+"/#author"},"isPartOf":{"@id":base+"/#website"},
@@ -106,10 +133,10 @@ function servePage(req,res,key,version,build,extra){
 }
 const html=(res,h)=>{res.writeHead(200,{"Content-Type":"text/html; charset=utf-8"});res.end(h)};
 
-let db={users:{},sessions:{}};
-try{db=JSON.parse(fs.readFileSync(FILE,"utf8"))}catch(e){}
-db.shares=db.shares||{}; db.templates=db.templates||{}; db.adminMeta=db.adminMeta||{}; db.visits=db.visits||{total:0,day:"",salt:"",seen:{},ip:{}};
-const persist=()=>fs.writeFileSync(FILE,JSON.stringify(db));
+// Storage lives in store.js. `db` is the same in-memory shape as the old data.json; persist() saves only what changed, in one transaction.
+let STORE; try{STORE=require("./store.js").open(FILE,{legacyFile:LEGACY_FILE})}catch(e){console.error("\n"+e.message+"\n"); process.exit(1)}
+const db=STORE.db, persist=STORE.persist;
+const {isLegacyKey}=require("./store.js");
 // Reads the pixel size of a JPEG (so only our 1200x630 share image is accepted).
 function jpegSize(b){
   if(b.length<4||b[0]!==0xff||b[1]!==0xd8) return null;
@@ -154,6 +181,7 @@ const baseUrl=req=>SITE_URL||(String(req.headers["x-forwarded-proto"]||"http").s
 const clientIp=req=>String(req.headers["cf-connecting-ip"]||String(req.headers["x-forwarded-for"]||"").split(",")[0]||req.socket.remoteAddress||"").trim();
 const AUTH=require("./auth-server.js")({db,persist,send,body,baseUrl,clientIp,TTL,rmImg,isSuspended});   // exits with a clear message if LOGIN_TYPES is set up wrongly
 const ADMIN=require("./admin-server.js")({db,persist,body,baseUrl,clientIp,userOf,token,AUTH,rmImg,TTL,FILE});   // hidden admin panel (off unless ADMIN_PATH, ADMIN_USER_IDS and ADMIN_PASSPHRASE are set)
+const RIOT=require("./riot.js")({db,persist,dir:DATA_DIR,packBuf,sendPacked});   // Riot static data + image cache served from our own origin
 function countVisit(req){
   const V=db.visits, day=new Date().toISOString().slice(0,10);
   if(V.day!==day){V.day=day;V.salt=crypto.randomBytes(16).toString("hex");V.seen={};V.ip={};}
@@ -161,7 +189,7 @@ function countVisit(req){
   const ip=clientIp(req), a=h(ip+"|"+String(req.headers["user-agent"]||"")), b=h(ip);
   if(V.seen[a]) return V.seen[a];                 // same device already counted today (refreshing doesn't add)
   if((V.ip[b]||0)>=5) return V.total;             // many "new" browsers from one address in a day: don't inflate
-  V.total++; V.seen[a]=V.total; V.ip[b]=(V.ip[b]||0)+1; persist(); return V.total;
+  V.total++; V.seen[a]=V.total; V.ip[b]=(V.ip[b]||0)+1; persist.soon(); return V.total;
 }
 // ---- Role lists: refreshed daily from open champion data (lolstaticdata via Meraki CDN) ----
 const ROLES_URL=process.env.ROLES_URL||"https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/champions.json";
@@ -173,7 +201,7 @@ async function refreshRoles(){
     for(const p of Object.values(POS)) lists[p]=[];
     for(const c of arr) if(c&&c.name&&Array.isArray(c.positions)) for(const p of c.positions) if(POS[String(p).toUpperCase()]) lists[POS[String(p).toUpperCase()]].push(c.name);
     for(const k in lists){ lists[k]=[...new Set(lists[k])].sort((a,b)=>a.localeCompare(b,"en",{sensitivity:"base"})); if(lists[k].length<10) throw new Error("suspicious data for "+k); }
-    db.roles={updated:Date.now(),source:ROLES_URL,lists}; persist(); console.log("roles refreshed:",Object.entries(lists).map(([k,a])=>k+" "+a.length).join(", "));
+    db.roles={updated:Date.now(),source:ROLES_URL,lists}; persist("roles"); console.log("roles refreshed:",Object.entries(lists).map(([k,a])=>k+" "+a.length).join(", "));
   }catch(e){console.log("roles refresh failed:",e.message)}
 }
 // ---- Champion builds: read-only view of the lol-meta-collector output (the collector runs as its own container) ----
@@ -185,7 +213,7 @@ const IMG_HOSTS=new Set(["ddragon.leagueoflegends.com","raw.communitydragon.org"
 const POSITIONS=["TOP","JUNGLE","MID","ADC","SUPPORT"];
 const nkey=s=>String(s==null?"":s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
 const num=v=>typeof v==="number"&&isFinite(v)?v:null;
-const safeImg=u=>{try{const x=new URL(String(u));return x.protocol==="https:"&&IMG_HOSTS.has(x.hostname)?x.href:null}catch(e){return null}};
+const safeImg=u=>{try{const x=new URL(String(u));return x.protocol==="https:"&&IMG_HOSTS.has(x.hostname)?RIOT.proxied(x.href):null}catch(e){return null}};
 const readJson=f=>JSON.parse(fs.readFileSync(f,"utf8"));
 const mtimeOf=f=>{try{return fs.statSync(f).mtimeMs}catch(e){return 0}};
 const BUILDS={checked:0,sig:"",index:new Map(),meta:null,assets:null,from:"none",total:0,skipped:0,dir:""};
@@ -282,6 +310,7 @@ http.createServer(async(req,res)=>{
     if(ADMIN.enabled&&await ADMIN.route(req,res,url)) return;                       // hidden admin panel: answers only its secret address and, for the admin, /api/admin/*
     if(url==="/index.html"){res.writeHead(301,{Location:"/"});return res.end()}   // one URL for the landing page
     if(url==="/about/"||url==="/privacy/"||url==="/terms/"){res.writeHead(301,{Location:url.slice(0,-1)});return res.end()}
+    if(await RIOT.route(req,res,url)) return;                                       // /api/riot and /img/* (Riot data + image cache, see riot.js)
     if(url==="/favicon.ico"||url==="/favicon-96.png"){res.writeHead(200,{"Content-Type":"image/png","Cache-Control":"public, max-age=86400","Content-Length":FAVICON_BUF.length});return res.end(FAVICON_BUF)}
     const im=url.match(/^\/s\/([\w-]+)\/og\.jpg$/);                                 // preview image of a progress share link
     if(im){
@@ -293,7 +322,7 @@ http.createServer(async(req,res)=>{
       const about=url==="/about", priv=url!=="/"&&!about, base=baseUrl(req);          // private share/template views are never indexed
       const ver0=assetVer(), sh=url.startsWith("/s/")?shareInfo(url.slice(3).split("/")[0],base):null, ver=sh?ver0+"|"+sh.ver:ver0;
       return servePage(req,res,(sh?"share-"+sh.tok:priv?"priv":about?"about":"home")+"|"+base,ver,()=>{
-        let page=fs.readFileSync(path.join(__dirname,"index.html"),"utf8").replace(/%SITE_URL%/g,base).replace(/%ASSET_V%/g,ver0)
+        let page=(BUNDLE_ON?bundleHtml:x=>x)(fs.readFileSync(path.join(__dirname,"index.html"),"utf8")).replace(/%SITE_URL%/g,base).replace(/%ASSET_V%/g,ver0)
           .replace("<!--ROBOTS-->",priv?'<meta name="robots" content="noindex, nofollow">':'<meta name="robots" content="index, follow, max-image-preview:large">')
           .replace("<!--CANONICAL-->",priv?"":`<link rel="canonical" href="${base}${about?"/about":"/"}">`)
           .replace("<!--JSONLD-->",priv?"":jsonLd(base));
@@ -328,15 +357,14 @@ http.createServer(async(req,res)=>{
     }
     const fm=url.match(/^\/assets\/(css|js)\/([\w-]+\.(?:css|js))$/);                    // front-end files (cache-busted with ?v=, so they can be cached for a long time)
     if(fm){
-      const f=path.join(__dirname,"assets",fm[1],fm[2]), ext=path.extname(f);
-      if(STATIC_TYPES[ext]&&fs.existsSync(f)){
-        const buf=fs.readFileSync(f), etag='"'+crypto.createHash("sha1").update(buf).digest("base64url").slice(0,20)+'"';
-        const h={"Content-Type":STATIC_TYPES[ext],"Cache-Control":"public, max-age=31536000, immutable","ETag":etag,"Vary":"Accept-Encoding"};
-        if(req.headers["if-none-match"]===etag){res.writeHead(304,h);return res.end()}
-        const ae=String(req.headers["accept-encoding"]||""); let body=buf;
-        if(/\bbr\b/.test(ae)){h["Content-Encoding"]="br";body=zlib.brotliCompressSync(buf)}
-        else if(/\bgzip\b/.test(ae)){h["Content-Encoding"]="gzip";body=zlib.gzipSync(buf)}
-        h["Content-Length"]=body.length; res.writeHead(200,h); return res.end(body);
+      const f=path.join(__dirname,"assets",fm[1],fm[2]), ext=path.extname(f), CC={"Content-Type":STATIC_TYPES[ext],"Cache-Control":"public, max-age=31536000, immutable"};
+      if(fm[2]==="bundle."+fm[1]){const b=BUNDLE_ON&&getBundle(fm[1],assetVer()); if(b) return sendPacked(req,res,b,CC)}
+      else if(STATIC_TYPES[ext]){
+        let st=null; try{st=fs.statSync(f)}catch(e){}
+        if(st){
+          let c=STATIC_CACHE.get(f); if(!c||c.m!==st.mtimeMs||c.s!==st.size){c={m:st.mtimeMs,s:st.size,e:packBuf(fs.readFileSync(f))};STATIC_CACHE.set(f,c)}
+          return sendPacked(req,res,c.e,CC);
+        }
       }
     }
     const am=url.match(/^\/assets\/([\w-]+\.png)$/);
@@ -382,7 +410,8 @@ http.createServer(async(req,res)=>{
       if(!data||typeof data!=="object"||Array.isArray(data)) return send(res,400,{error:"bad data"});
       // An admin fix bumps `rev`. A browser tab that still holds the old copy sends the old rev and is refused, so it can't overwrite the fix.
       const rv=req.headers["x-rev"]; if(rv!==undefined&&(parseInt(rv,10)||0)!==(db.users[sub].rev||0)) return send(res,409,{error:"stale",code:"stale"});
-      db.users[sub].progress=data; persist(); return send(res,200,{ok:true});
+      for(const k of Object.keys(data)) if(isLegacyKey(k)) delete data[k];            // retired modes (Random, Random Hard, Random Insanity) are never stored again
+      db.users[sub].progress=data; persist("user:"+sub); return send(res,200,{ok:true});
     }
     if(url==="/api/template"&&req.method==="POST"){
       const b=await body(req), u=db.users[sub];
@@ -390,7 +419,7 @@ http.createServer(async(req,res)=>{
       if(!name||!champs.length) return send(res,400,{error:"name and champions required"});
       if(Object.values(db.templates).filter(t=>t.sub===sub).length>=100) return send(res,429,{error:"too many shared lists"});
       const tok=crypto.randomBytes(9).toString("base64url");
-      db.templates[tok]={sub,name,champs,by:u.given||u.name,created:Date.now()}; persist();
+      db.templates[tok]={sub,name,champs,by:u.given||u.name,created:Date.now()}; persist("templates");
       return send(res,200,{token:tok});
     }
     if(url==="/api/share"){
@@ -398,29 +427,49 @@ http.createServer(async(req,res)=>{
       if(req.method==="GET") return send(res,200,{token:u.share||null});
       if(req.method==="POST"){
         if(u.share){ delete db.shares[u.share]; rmImg(u.share); }
-        u.share=crypto.randomBytes(18).toString("base64url"); db.shares[u.share]=sub; delete u.shareDesc; persist();
+        u.share=crypto.randomBytes(18).toString("base64url"); db.shares[u.share]=sub; delete u.shareDesc; persist("user:"+sub,"shares");
         return send(res,200,{token:u.share});
       }
-      if(req.method==="DELETE"){ if(u.share){ delete db.shares[u.share]; rmImg(u.share); } u.share=null; delete u.shareDesc; persist(); return send(res,200,{ok:true}); }
+      if(req.method==="DELETE"){ if(u.share){ delete db.shares[u.share]; rmImg(u.share); } u.share=null; delete u.shareDesc; persist("user:"+sub,"shares"); return send(res,200,{ok:true}); }
     }
     if(url==="/api/share/image"&&req.method==="PUT"){                                // the browser renders the progress image and stores it for the link preview
       const u=db.users[sub]; if(!u.share) return send(res,409,{error:"no share link"});
       const b=await body(req), buf=Buffer.from(String(b.img||""),"base64"), dim=jpegSize(buf);
       if(buf.length<1000||buf.length>700000||!dim||dim.w!==1200||dim.h!==630) return send(res,400,{error:"bad image"});
       fs.writeFileSync(imgFile(u.share),buf);
-      u.shareDesc=String(b.desc||"").replace(/[\u0000-\u001f]/g," ").trim().slice(0,160); persist();
+      u.shareDesc=String(b.desc||"").replace(/[\u0000-\u001f]/g," ").trim().slice(0,160); persist("user:"+sub);
       return send(res,200,{ok:true});
     }
     if(url==="/api/profile"&&req.method==="PUT"){
       const n=String((await body(req)).name||"").trim().slice(0,40);
       if(!n) return send(res,400,{error:"name required"});
-      const u=db.users[sub]; u.name=u.given=n; u.custom=true; persist(); return send(res,200,{name:n});
+      const u=db.users[sub]; u.name=u.given=n; u.custom=true; persist("user:"+sub); return send(res,200,{name:n});
     }
     if(url==="/api/account"&&req.method==="DELETE"){
       {const o=db.users[sub]; if(o&&o.share){ delete db.shares[o.share]; rmImg(o.share); } for(const k in db.templates) if(db.templates[k].sub===sub) delete db.templates[k];} delete db.users[sub]; delete db.adminMeta[sub]; for(const k in db.sessions) if(db.sessions[k].sub===sub) delete db.sessions[k];
       persist(); return send(res,200,{ok:true});
     }
-    if(url==="/api/logout"&&req.method==="POST"){delete db.sessions[token(req)];persist();return send(res,200,{ok:true})}
+    if(url==="/api/logout"&&req.method==="POST"){delete db.sessions[token(req)];persist("sessions");return send(res,200,{ok:true})}
     send(res,404,{error:"not found"});
   }catch(e){ if(e&&e.suspended) return send(res,403,{error:e.message}); send(res,500,{error:String(e.message||e)}) }
-}).listen(PORT,()=>{refreshRoles(); setInterval(refreshRoles,864e5).unref(); console.log("LoL A-Z tracker on http://localhost:"+PORT+"  (login: "+(AUTH.types.length?AUTH.types.join(", "):"none, sign-in disabled")+")");});
+}).listen(PORT,()=>{RIOT.start(); refreshRoles(); setInterval(refreshRoles,864e5).unref(); console.log("LoL A-Z tracker on http://localhost:"+PORT+"  (login: "+(AUTH.types.length?AUTH.types.join(", "):"none, sign-in disabled")+")");});
+
+// ---- Housekeeping: daily database backup, expired sessions, clean shutdown ----
+const BACKUP_DIR=path.join(DATA_DIR,"backups"), BACKUP_KEEP=Math.max(1,parseInt(process.env.BACKUP_KEEP,10)||14);
+function dailyBackup(){
+  try{
+    let newest=0; try{for(const f of fs.readdirSync(BACKUP_DIR)) if(/^lolphabet-.*\.db$/.test(f)) newest=Math.max(newest,fs.statSync(path.join(BACKUP_DIR,f)).mtimeMs)}catch(e){}
+    if(Date.now()-newest<20*36e5) return;                               // already have one from the last 20 hours (restarts don't make extra copies)
+    console.log("backup written:",path.basename(STORE.backup(BACKUP_DIR,BACKUP_KEEP)));
+  }catch(e){console.log("backup failed:",e.message)}
+}
+function purgeExpired(){
+  const now=Date.now(); let n=0;
+  for(const k in db.sessions) if(db.sessions[k].exp<now){delete db.sessions[k];n++}
+  for(const k in db.authTokens) if(db.authTokens[k].exp<now){delete db.authTokens[k];n++}
+  if(n){try{persist("sessions","tokens")}catch(e){console.log("purge failed:",e.message)}}
+}
+setTimeout(dailyBackup,30000).unref(); setInterval(dailyBackup,36e5).unref(); setInterval(purgeExpired,36e5).unref(); purgeExpired();
+let closing=false;
+const shutdown=sig=>{ if(closing) return; closing=true; console.log(sig+": saving and closing the database"); try{STORE.close()}catch(e){} process.exit(0) };
+process.on("SIGTERM",()=>shutdown("SIGTERM")); process.on("SIGINT",()=>shutdown("SIGINT"));
