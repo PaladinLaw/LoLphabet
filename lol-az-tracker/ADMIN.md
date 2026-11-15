@@ -5,7 +5,7 @@ Off by default. Turned on by three values in your `.env` (they are already passe
 | Variable | What it is |
 |---|---|
 | `ADMIN_PATH` | The secret address, `https://lolphabet.app/<ADMIN_PATH>`. 16-64 characters. Generate one with `openssl rand -hex 16`. |
-| `ADMIN_USER_IDS` | Internal user id of your account (for older Google accounts this is the Google ID; for newer ones it looks like `u_1a2b3c...`). Find it in the panel's user list, or in `data.json`. |
+| `ADMIN_USER_IDS` | Internal user id of your account (for older Google accounts this is the Google ID; for newer ones it looks like `u_1a2b3c...`). Run `node list-users.js` (see below) to see every id with its name and email, or find it in the panel's user list. |
 | `ADMIN_PASSPHRASE` | A second lock you type each time. 8+ characters, different from every other password. |
 | `ADMIN_IDLE_MINUTES` | Optional. Re-locks after this long without activity (default 20). |
 
@@ -37,3 +37,11 @@ Extra layer worth adding (free, no code): in Cloudflare Zero Trust create an **A
 * `auth-server.js`: new accounts get a `created` date, sign-ins record `lastLogin`, suspended accounts can't sign in, and a few helpers are exported for the panel.
 * `server.js`: loads the panel, enforces suspension, and adds a revision check to `/api/progress`.
 * `assets/js/auth.js`: sends that revision. If you fix someone's progress while they have the site open, their tab reloads your corrected copy instead of overwriting it with its stale one (they get a short "Your progress was updated" message).
+
+## Finding user ids
+
+`node list-users.js` prints every account's id, name and email from `lolphabet.db`, for example:
+
+```
+docker compose run --rm lol-tracker node --disable-warning=ExperimentalWarning list-users.js
+```

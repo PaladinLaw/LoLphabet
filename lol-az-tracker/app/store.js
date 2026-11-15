@@ -1,6 +1,6 @@
 // SQLite storage for LoLphabet (Node 22+, built-in node:sqlite, no npm packages).
 //
-// The rest of the app still works with one in-memory object, `db`, shaped exactly like the old data.json:
+// The rest of the app works with one in-memory object, `db`, shaped like this:
 //   db.users[id] (with .progress), db.sessions, db.shares, db.templates, db.roles, db.visits, db.authTokens, db.adminMeta, db.mail
 // What changed is how it is saved. Instead of rewriting one big file on every change, persist() writes only the rows that
 // actually changed, inside one SQLite transaction. A crash can never leave a half-written database, and a user's progress is
@@ -60,8 +60,6 @@ CREATE TABLE IF NOT EXISTS admin_meta (k TEXT PRIMARY KEY, data TEXT NOT NULL) W
 CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, data TEXT NOT NULL) WITHOUT ROWID;
 `;
 
-// Top-level sections of the old data.json. Anything else found there makes the migration stop instead of silently dropping it.
-const LEGACY_SECTIONS = ["users", "sessions", "shares", "templates", "roles", "visits", "authTokens", "adminMeta", "mail"];
 const KEYED = [   // [db property, table]
   ["sessions", "sessions"], ["authTokens", "auth_tokens"], ["shares", "shares"], ["templates", "templates"], ["adminMeta", "admin_meta"],
 ];
@@ -77,12 +75,8 @@ function normalise(db) {
 
 class StoreError extends Error { constructor(msg, code) { super(msg); this.code = code; } }
 
-function open(file, opts = {}) {
-  const legacyFile = opts.legacyFile || null;
+function open(file) {
   const existed = fs.existsSync(file);
-  if (!existed && legacyFile && fs.existsSync(legacyFile) && !opts.allowEmpty)
-    throw new StoreError("Found the old " + path.basename(legacyFile) + " but no " + path.basename(file) + " yet.\n" +
-      "Run the migration first so no accounts are lost:\n  node migrate.js            (dry run, changes nothing)\n  node migrate.js --apply    (creates " + path.basename(file) + ")", "NEEDS_MIGRATION");
   fs.mkdirSync(path.dirname(file), { recursive: true });
 
   const sql = new DatabaseSync(file);
@@ -202,17 +196,7 @@ function open(file, opts = {}) {
 
   function close() { try { persist.flush(); } catch (e) {} try { sql.exec("PRAGMA wal_checkpoint(TRUNCATE)"); } catch (e) {} try { sql.close(); } catch (e) {} }
 
-  // Used by migrate.js: fill an empty database from the old data.json structure.
-  function importLegacy(legacy) {
-    for (const k of Object.keys(legacy)) if (!LEGACY_SECTIONS.includes(k)) throw new StoreError("Unknown section in the old file: " + k, "UNKNOWN_SECTION");
-    for (const k of ["users", ...KEYED.map(x => x[0])]) db[k] = isObj(legacy[k]) ? legacy[k] : {};
-    for (const k of KV_KEYS) if (legacy[k] !== undefined) db[k] = legacy[k];
-    normalise(db);
-    persist();
-    setMeta("imported_from", "data.json"); setMeta("imported_at", new Date().toISOString());
-  }
-
-  return { db, persist, backup, close, file, sql, importLegacy, getMeta, setMeta, isEmpty: () => !Object.keys(db.users).length && !snap.users.size };
+  return { db, persist, backup, close, file, sql, getMeta, setMeta };
 }
 
-module.exports = { open, isLegacyKey, LEGACY_MODE, LEGACY_SECTIONS, StoreError, normalise, freshVisits, SCHEMA_VERSION };
+module.exports = { open, isLegacyKey, LEGACY_MODE, StoreError, SCHEMA_VERSION };

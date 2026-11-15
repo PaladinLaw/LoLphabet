@@ -2,8 +2,7 @@
 // Login methods (Google, Discord, username + password, magic link) live in auth-server.js and are chosen with LOGIN_TYPES.
 const http=require("http"),fs=require("fs"),path=require("path"),crypto=require("crypto"),zlib=require("zlib");
 const PORT=process.env.PORT||3081;
-const DATA_DIR=process.env.DATA_DIR||(process.env.DATA_FILE?path.dirname(process.env.DATA_FILE):path.join(__dirname,"data"));
-const LEGACY_FILE=process.env.DATA_FILE||path.join(DATA_DIR,"data.json");        // the old single-file store: only read by migrate.js
+const DATA_DIR=process.env.DATA_DIR||path.join(__dirname,"data");
 const FILE=path.join(DATA_DIR,"lolphabet.db");                                   // SQLite database (accounts, progress, sessions, shares)
 // Share-link preview images (Open Graph), one JPEG per share token, stored next to the data file so they persist with it.
 const IMG_DIR=path.join(path.dirname(FILE),"share-images");
@@ -133,8 +132,8 @@ function servePage(req,res,key,version,build,extra){
 }
 const html=(res,h)=>{res.writeHead(200,{"Content-Type":"text/html; charset=utf-8"});res.end(h)};
 
-// Storage lives in store.js. `db` is the same in-memory shape as the old data.json; persist() saves only what changed, in one transaction.
-let STORE; try{STORE=require("./store.js").open(FILE,{legacyFile:LEGACY_FILE})}catch(e){console.error("\n"+e.message+"\n"); process.exit(1)}
+// Storage lives in store.js. `db` is the in-memory copy of the data; persist() saves only what changed, in one transaction.
+let STORE; try{STORE=require("./store.js").open(FILE)}catch(e){console.error("\n"+e.message+"\n"); process.exit(1)}
 const db=STORE.db, persist=STORE.persist;
 const {isLegacyKey}=require("./store.js");
 // Reads the pixel size of a JPEG (so only our 1200x630 share image is accepted).
