@@ -122,6 +122,8 @@ function showLock(msg){
   inp.focus();
 }
 function lockNow(msg){ api("POST","lock").catch(()=>{}).finally(()=>{saveTok(""); showLock(typeof msg==="string"?msg:"")}) }
+// One click: lock the panel (the server forgets the unlock token), then go back to the main site.
+function exitAdmin(){ api("POST","lock").catch(()=>{}).finally(()=>{saveTok(""); location.assign("/")}) }
 function tick(){
   if(!idleEl) return; const left=Math.max(0,idleSec-(Date.now()-lastOk)/1e3);
   idleEl.firstChild.textContent=pad(Math.floor(left/60))+":"+pad(Math.floor(left%60)); idleEl.lastChild.firstChild.style.width=Math.min(100,left/idleSec*100)+"%"; idleEl.classList.toggle("low",left<120);
@@ -136,7 +138,7 @@ function startApp(){
   idleEl=h("div",{class:"idle",title:"The panel locks itself after this much quiet time"},h("span",{text:"--:--"}),h("i",{},h("b")));
   pgEl=h("main",{class:"pg"});
   root.replaceChildren(h("header",{class:"top"},h("div",{class:"brand"},"LoLphabet ",h("span",{text:"Admin"})),nav,h("div",{class:"grow"}),idleEl,
-    h("button",{class:"btn sm",text:"Lock",onclick:lockNow}),h("a",{class:"btn sm",href:"/",text:"Back to site"})),pgEl);
+    h("button",{class:"btn sm",text:"Lock and exit",title:"Lock the admin panel and go back to the site",onclick:e=>{e.target.disabled=true;exitAdmin()}})),pgEl);
   clearInterval(timer); timer=setInterval(tick,1000); tick(); setView(S.view);
 }
 function setView(v){
