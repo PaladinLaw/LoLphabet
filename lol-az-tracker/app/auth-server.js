@@ -5,7 +5,7 @@
 const crypto=require("crypto");
 
 module.exports=function initAuth(ctx){
-  const {db,persist,send,body,baseUrl,clientIp,TTL,rmImg}=ctx, env=process.env;
+  const {db,persist,send,body,baseUrl,clientIp,TTL,rmImg,isSuspended}=ctx, env=process.env;
 
   // ---------- configuration ----------
   const NAMES={google:"google",discord:"discord",
@@ -97,13 +97,15 @@ module.exports=function initAuth(ctx){
   const byHandle=h=>find(u=>u.handle&&u.handle.toLowerCase()===String(h).toLowerCase());
   function createUser(f){
     const id="u_"+crypto.randomBytes(12).toString("hex"), name=cleanName(f.name)||(f.email?f.email.split("@")[0].slice(0,40):"Player");
-    db.users[id]={v:2,progress:{},name,given:cleanName(f.given)||name};
+    db.users[id]={v:2,created:Date.now(),progress:{},name,given:cleanName(f.given)||name};
     if(f.email) db.users[id].email=f.email;
     return id;
   }
   const labelOf=u=>u.email||(u.discord&&"Discord: "+u.discord.name)||u.handle||u.given||u.name||"";
   function sessionFor(uid,isNew){
     const u=db.users[uid], now=Date.now();
+    if(isSuspended&&isSuspended(uid)) throw Object.assign(new Error("This account has been suspended."),{suspended:true});   // set from the admin panel
+    u.lastLogin=now;
     for(const k in db.sessions) if(db.sessions[k].exp<now) delete db.sessions[k];
     const token=crypto.randomBytes(32).toString("hex"); db.sessions[token]={sub:uid,exp:now+TTL}; persist();
     return {token,name:u.name,given:u.given,email:u.email||"",label:labelOf(u),isNew:!!isNew};
@@ -401,5 +403,6 @@ module.exports=function initAuth(ctx){
     return false;
   }
 
-  return {types:TYPES,on:ON,pub,authed};
+  return {types:TYPES,on:ON,pub,authed,
+    util:{usable,mergeUsers,mkToken,mailBody,sendMail,dropSessions,byEmail,byHandle,cleanEmail,cleanHandle,cleanName,hasData}};   // used by admin-server.js
 };

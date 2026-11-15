@@ -18,6 +18,10 @@ services:
       CONTACT_EMAIL: ${CONTACT_EMAIL:-}                                                                           # optional, shown on the privacy/terms pages
       COLLECTOR_DIR: /collector                                                                                   # where the collector's output is mounted (read-only)
       SITE_URL: ${SITE_URL:?SITE_URL is required}                                                                 # used for canonical URLs and metadata
+      ADMIN_PATH: ${ADMIN_PATH:-}                                                                                 # secret address of the hidden admin panel, 16+ random characters (leave empty to switch the panel off)
+      ADMIN_USER_IDS: ${ADMIN_USER_IDS:-}                                                                         # internal user id(s) of the admin account(s), comma separated
+      ADMIN_PASSPHRASE: ${ADMIN_PASSPHRASE:-}                                                                     # second lock on the panel, 8+ characters
+      ADMIN_IDLE_MINUTES: ${ADMIN_IDLE_MINUTES:-20}                                                               # the panel locks itself after this many quiet minutes
     ports:
       - "${BIND_IP:?BIND_IP is required}:${HOST_PORT:?HOST_PORT is required}:${APP_PORT:?APP_PORT is required}"   # bound to localhost: put a reverse proxy in front
     volumes:
