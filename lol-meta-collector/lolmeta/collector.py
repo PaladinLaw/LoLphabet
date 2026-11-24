@@ -453,8 +453,31 @@ def validate_record(record: dict[str, Any]) -> None:
         raise ValueError("Incomplete champion record: " + ", ".join(errors))
 
 
+def _unwrap_provider_payload(raw: Any, champion: dict[str, Any], position: str) -> Any:
+    """OP.GG now wraps the analysis object in a list (``[{champion, position, data}]``).
+
+    Unwrap it to the single analysis dict, preferring the entry that matches the
+    requested champion/position, then the first entry that carries ``data``.
+    """
+    if isinstance(raw, dict) and isinstance(raw.get("result"), (list, dict)) and "data" not in raw:
+        raw = raw["result"]
+    if not isinstance(raw, list):
+        return raw
+    entries = [e for e in raw if isinstance(e, dict)]
+    wanted_names = {str(champion.get("name", "")).casefold(), str(champion.get("id", "")).casefold()}
+    wanted_pos = {position.casefold(), {"adc": "bottom", "support": "utility"}.get(position.casefold(), position.casefold())}
+    for entry in entries:
+        if str(entry.get("champion", "")).casefold() in wanted_names and str(entry.get("position", "")).casefold() in wanted_pos:
+            return entry
+    for entry in entries:
+        if isinstance(entry.get("data"), dict):
+            return entry
+    return entries[0] if len(entries) == 1 else raw
+
+
 def normalise_record(champion: dict[str, Any], position: str, patch: str, raw: Any, static: dict[str, Any] | None = None) -> dict[str, Any]:
     """Project the live OP.GG analysis model into a validated, frontend-ready record."""
+    raw = _unwrap_provider_payload(raw, champion, position)
     if not isinstance(raw, dict):
         raise ValueError("OP.GG response is not a structured object")
     data = raw.get("data") if isinstance(raw.get("data"), dict) else None
