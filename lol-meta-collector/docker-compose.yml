@@ -1,6 +1,7 @@
 services:
   lol-meta-collector:
     build: .
+    image: lol-meta-collector:latest
     container_name: ${COLLECTOR_CONTAINER_NAME:?COLLECTOR_CONTAINER_NAME is required}
     restart: unless-stopped
     command: ["python", "-m", "lolmeta", "schedule", "--interval-days", "7"]
