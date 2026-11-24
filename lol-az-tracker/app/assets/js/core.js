@@ -31,7 +31,9 @@ const pkey=r=>mode==="classic"?r:r+"|"+mode, isHC=()=>mode==="hardcore", isHard=
 const st=()=>all[pkey(role)]||(all[pkey(role)]={});
 const meta=()=>st().__meta||(st().__meta={});
 const get=n=>st()[n]||(st()[n]={won:false,date:null,games:0});
+const FILTER_KEY="lol-az-filter";
 let filter="all",query="";
+try{const f=localStorage.getItem(FILTER_KEY); if(f==="all"||f==="todo"||f==="win") filter=f}catch(e){}   // remember All / To do / Won across refreshes
 
 const $=id=>document.getElementById(id);
 const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));

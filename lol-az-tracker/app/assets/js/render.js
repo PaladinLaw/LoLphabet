@@ -29,6 +29,7 @@ function render(){
   const nz=isNuz(), L=ordered(), hc=isLock(), m=meta(), done=n=>nz?!!get(n).dead:!!get(n).won, won=L.filter(c=>done(c.name)).length, total=L.length;
   const cur=availNext(L);
   const fb=k=>document.querySelector('[data-f="'+k+'"]'); fb("todo").textContent=nz?"Alive":"To do"; fb("win").textContent=nz?"Fallen":"Won";
+  document.querySelectorAll("[data-f]").forEach(x=>x.classList.toggle("on",x.dataset.f===filter));   // keep the highlighted button in step with the (restored) filter
   $("fill").style.width=(total?won/total*100:0)+"%";
   $("count").textContent=won+" / "+total+(nz?" fallen":" won"); $("pct").textContent=(total?Math.round(won/total*100):0)+"%";
   $("grid").classList.toggle("rnd",nzLock());
@@ -125,7 +126,7 @@ function navClick(e){                                   // Back / Stats / Settin
 $("cats").addEventListener("click",navClick); $("navbtns").addEventListener("click",navClick);
 $("q").addEventListener("input",e=>{query=e.target.value;render()});
 document.querySelectorAll("[data-f]").forEach(b=>b.addEventListener("click",()=>{
-  filter=b.dataset.f;
+  filter=b.dataset.f; try{localStorage.setItem(FILTER_KEY,filter)}catch(e){}
   document.querySelectorAll("[data-f]").forEach(x=>x.classList.toggle("on",x===b));
   render();
 }));
