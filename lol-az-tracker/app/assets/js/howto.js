@@ -59,7 +59,7 @@ function renderHowto(){
   const b=document.querySelector("#howto .body"), mm=MODES.find(m=>m[0]===mode)||MODES[0];
   if(!b) return;
   hwSync();
-  const html=`<b>${esc(mm[1])}</b> · ${esc(mm[2])}<br>`+(HOWTO[mode]||HOWTO.classic).join("<br>")+(isNuz()?"":`<br>Not sure what to play? Press <b>Roll</b> for a random role and champion, shown with its build and kept separate from your lists.`)+`<br>See our <a href="/about" id="aboutlink">about section</a> for more details · <a href="#" id="hwauto"></a>`;
+  const html=`<b>${esc(mm[1])}</b> · ${esc(mm[2])}<br>`+(HOWTO[mode]||HOWTO.classic).join("<br>")+(isNuz()?"":`<br>Not sure what to play? Press <b>Roll</b>, then choose All roles or a single lane, for a random champion, shown with its build and kept separate from your lists.`)+`<br>See our <a href="/about" id="aboutlink">about section</a> for more details · <a href="#" id="hwauto"></a>`;
   if(b.dataset.m===mode&&b.dataset.ok){hwLink(); return}       // only touch the DOM when the mode changed
   b.dataset.m=mode; b.dataset.ok="1"; b.innerHTML=html;
   const l=$("aboutlink"); if(l) l.onclick=e=>{e.preventDefault();view="about";render();window.scrollTo&&window.scrollTo(0,0)};

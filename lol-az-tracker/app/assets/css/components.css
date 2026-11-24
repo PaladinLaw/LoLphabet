@@ -73,6 +73,10 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600;margin-bottom:8px}
 .rolli img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .rolli:not(.fin){opacity:.75}
 .rollt b{display:block;font-size:26px;color:var(--text);line-height:1.15}
+.rollsel{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:4px 0 14px}
+.rollsel button{padding:6px 14px;border-radius:999px;font-size:13px;font-weight:600}
+.rollsel button.on{border-color:var(--gold);color:var(--gold)}
+.rollhint{color:var(--muted);font-size:14px;text-align:center}
 .rollr{display:inline-block;margin-top:6px;padding:2px 12px;border:1px solid var(--gold);color:var(--gold);border-radius:999px;font-size:13px;font-weight:600}
 
 /* Roll page: only the Next up banner is shown, no list, progress bar or tools */
